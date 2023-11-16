@@ -4,8 +4,9 @@ import {title} from "@/components/primitives";
 import {useState} from "react";
 import {Link} from "@nextui-org/link";
 
-interface Tournament {
+export interface Tournament {
     name: string;
+    abbreviation: string;
     description: string;
     start_date: string;
     end_date: string;
@@ -22,12 +23,12 @@ export const TournamentComponent = (tournament: Tournament) => {
     const handleMouseLeave = () => {
         setIsHovered(false);
     };
-
+    let tournament_href = "/tournaments/" + tournament
     return (
         <Link
             key={tournament.name}
             className="items-center justify-center"
-            href={tournament.name}
+            href={tournament_href}
             target="_blank"
         >
         <div
@@ -51,7 +52,9 @@ export const TournamentComponent = (tournament: Tournament) => {
                 </div>
             </div>
             <div className="absolute top-0 left-0 right-0 flex items-center justify-center">
-                <h1 className={title({ size: 'sm' })}>{tournament.name}</h1>
+                <h1 className={title({ size: 'sm' })}>{
+                    isHovered ? tournament.name : tournament.abbreviation
+                }</h1>
             </div>
         </div>
         </Link>
