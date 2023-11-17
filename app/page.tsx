@@ -6,8 +6,8 @@ import {title, subtitle, description_container} from "@/components/primitives";
 import { GithubIcon } from "@/components/icons";
 import {Navbar} from "@/components/navbar";
 import Image from "next/image";
-import {TournamentComponent} from "@/components/tournament";
-import {Tournament} from "@/components/tournament";
+import {TournamentComponent} from "@/components/tournament_pic";
+import {Tournament} from "@/components/tournament_pic";
 
 
 export default async function Home() {

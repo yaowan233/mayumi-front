@@ -139,9 +139,8 @@ export const Navbar = () => {
 };
 
 
-export const TournamentNavbar = () => {
-	// todo
-	let tournament_href_start = "/tournaments/" + "test"
+export const TournamentNavbar = ({ tournament_name }: { tournament_name: string }) => {
+	let tournament_href_start = "/tournaments/" + tournament_name
 	return (
 		<NextUINavbar maxWidth="xl" position="sticky">
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
@@ -160,7 +159,7 @@ export const TournamentNavbar = () => {
 									"data-[active=true]:text-primary data-[active=true]:font-medium"
 								)}
 								color="foreground"
-								href={item.href}
+								href={`${tournament_href_start}${item.href}`}
 							>
 								{item.label}
 							</NextLink>
