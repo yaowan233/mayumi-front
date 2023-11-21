@@ -25,6 +25,7 @@
     "@nextui-org/modal": "2.0.28",
     "@nextui-org/checkbox": "2.0.25",
     "@nextui-org/radio": "2.0.25",
+    "@nextui-org/tabs": "2.0.26",
     "@react-aria/ssr": "^3.8.0",
     "@react-aria/visually-hidden": "^3.8.6",
     "@types/node": "20.5.7",
