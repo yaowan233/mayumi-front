@@ -39,7 +39,9 @@ export default function StatsPage({params}: { params: { tournament: string } }) 
         async sort({items, sortDescriptor}) {
             return {
                 items: items.sort((a, b) => {
+                    // @ts-ignore
                     let first = a[sortDescriptor.column];
+                    // @ts-ignore
                     let second = b[sortDescriptor.column];
                     let cmp = (parseInt(first) || first) < (parseInt(second) || second) ? -1 : 1;
 
@@ -59,6 +61,7 @@ export default function StatsPage({params}: { params: { tournament: string } }) 
             tabContent: "group-data-[selected=true]:text-[#06b6d4]"
         }} aria-label="Dynamic tabs" items={list.items}>
             {(item) => (
+                // @ts-ignore
                 <Tab key={item.stage_name} title={item.stage_name}>
                     <Table
                         sortDescriptor={list.sortDescriptor}
@@ -77,6 +80,7 @@ export default function StatsPage({params}: { params: { tournament: string } }) 
                             }
                         </TableHeader>
                         <TableBody
+                            // @ts-ignore
                             items={item.map_pool_stats}
                             isLoading={isLoading}
                             loadingContent={<Spinner label="Loading..." />}

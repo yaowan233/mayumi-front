@@ -1,7 +1,8 @@
 "use client"
-import {Card, CardBody, CardHeader} from "@nextui-org/card";
+import {Card, CardBody, CardFooter, CardHeader} from "@nextui-org/card";
 import {Tab, Tabs} from "@nextui-org/tabs";
 import {Image} from "@nextui-org/image";
+import {Link} from "@nextui-org/link";
 
 export default function MapPollsPage({ params }: { params: { tournament: string }}) {
     let tabs: Stage[] = [
@@ -22,7 +23,7 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                             cs: "1",
                             hp: "1",
                             bpm: "1",
-                            length: "1",
+                            length: "1:12",
                             drain_time: "1",
                             number: "1",
                         },
@@ -37,7 +38,7 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                             cs: "2",
                             hp: "2",
                             bpm: "2",
-                            length: "2",
+                            length: "2:12",
                             drain_time: "2",
                             number: "2",
                         },
@@ -52,7 +53,7 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                             cs: "3",
                             hp: "3",
                             bpm: "3",
-                            length: "3",
+                            length: "3:12",
                             drain_time: "3",
                             number: "3",
                         },
@@ -72,7 +73,7 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                             cs: "1",
                             hp: "1",
                             bpm: "1",
-                            length: "1",
+                            length: "1:12",
                             drain_time: "1",
                             number: "1",
                         },
@@ -87,7 +88,7 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                             cs: "2",
                             hp: "2",
                             bpm: "2",
-                            length: "2",
+                            length: "2:12",
                             drain_time: "2",
                             number: "2",
                         },
@@ -102,7 +103,7 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                             cs: "3",
                             hp: "3",
                             bpm: "3",
-                            length: "3",
+                            length: "3:12",
                             drain_time: "3",
                             number: "3",
                         },
@@ -111,11 +112,7 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
             ]
         }]
     return (
-        <Tabs classNames={{
-            cursor: "w-full bg-[#22d3ee]",
-            tab: "max-w-fit px-0 h-8",
-            tabContent: "group-data-[selected=true]:text-[#06b6d4]"
-        }} aria-label="Dynamic tabs" items={tabs}>
+        <Tabs aria-label="Dynamic tabs" items={tabs}>
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>
                     <div className="grid grid-cols-1 gap-6">
@@ -129,20 +126,47 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                                     {
                                         mod_bracket.maps.map((map) => (
                                             <Card key={map.map_id}>
-                                                <CardHeader className="absolute z-10 top-1 flex-col items-start">
-                                                    <p className="text-center">
+                                                <CardHeader className="absolute z-10 top-0 flex-col items-center">
+                                                    <Link isExternal size={"lg"} color={"foreground"} className="font-bold" href={`https://osu.ppy.sh/b/${map.map_id}`}>
                                                         {map.map_name}
-                                                    </p>
-                                                    <p className="text-center">
+                                                    </Link>
+                                                    <Link isExternal color={"foreground"} className="" href={`https://osu.ppy.sh/users/${map.mapper}`}>
                                                         {map.mapper}
-                                                    </p>
+                                                    </Link>
                                                 </CardHeader>
                                                     <Image
                                                         removeWrapper
-                                                        className="z-0 w-full h-full object-cover"
+                                                        className="z-0 w-full h-full object-cover dark:brightness-50"
                                                         alt="Card background"
                                                         height={400}
                                                         src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}/>
+                                                <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
+                                                        <div className="grid grid-cols-3 place-items-center">
+                                                            <div>
+                                                                ★{map.star_rating}
+                                                            </div>
+                                                            <div>
+                                                                bpm {map.bpm}
+                                                            </div>
+                                                            <div>
+                                                                {map.length}
+                                                            </div>
+                                                        </div>
+                                                        <div className="grid grid-cols-4 place-items-center">
+                                                            <div>
+                                                                CS {map.cs}
+                                                            </div>
+                                                            <div>
+                                                                HP {map.hp}
+                                                            </div>
+                                                            <div>
+                                                                OD {map.od}
+                                                            </div>
+                                                            <div>
+                                                                AR {map.ar}
+                                                            </div>
+                                                        </div>
+                                                </CardFooter>
                                             </Card>
                                         ))
                                     }
