@@ -118,11 +118,13 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                     <div className="grid grid-cols-1 gap-6">
                         {item.mod_bracket.map((mod_bracket) => (
                             <Card key={mod_bracket.mod}>
-                                <CardHeader>
-                                    {mod_bracket.mod}
+                                <CardHeader className={"flex justify-center"}>
+                                        <div className="text-4xl">
+                                            {mod_bracket.mod}
+                                        </div>
                                 </CardHeader>
                                 <CardBody>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {
                                         mod_bracket.maps.map((map) => (
                                             <Card key={map.map_id}>
@@ -136,9 +138,9 @@ export default function MapPollsPage({ params }: { params: { tournament: string 
                                                 </CardHeader>
                                                     <Image
                                                         removeWrapper
-                                                        className="z-0 w-full h-full object-cover dark:brightness-50"
+                                                        className="z-0 w-full h-[180px] object-cover dark:brightness-50"
                                                         alt="Card background"
-                                                        height={400}
+                                                        width="100%"
                                                         src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}/>
                                                 <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
                                                         <div className="grid grid-cols-3 place-items-center">

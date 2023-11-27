@@ -27,7 +27,7 @@ export default async function Home() {
 						<TournamentComponent {...tournament} />
 					))}
 				</div>
-			</div>\
+			</div>
 			<div className="container flex mx-auto justify-center">
 				<h1 className={title()}> 已结束的比赛 </h1>
 			</div>

@@ -1,8 +1,8 @@
 'use client'
-import {title} from "@/components/primitives";
 import {useState} from "react";
 import {Link} from "@nextui-org/link";
 import {Image} from "@nextui-org/image";
+import {Card, CardFooter, CardHeader} from "@nextui-org/card";
 
 export interface Tournament {
     name: string;
@@ -35,26 +35,25 @@ export const TournamentComponent = (tournament: Tournament) => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <div className="image-container">
+            <Card>
+                <CardHeader className="absolute z-10 top-0 flex items-center justify-center text-xl font-bold bg-clip-content bg-black/30">
+                    {isHovered ? tournament.name : tournament.abbreviation}
+                </CardHeader>
+
                 <Image
-                    width={300}
-                    height={200}
+                    className="z-0 w-full h-[180px] object-cover"
+                    width="100%"
                     src={tournament.pic_url}
                     alt={tournament.name}
                 />
-                <div
-                    className={`description-container opacity-0 ${
+                <CardFooter
+                    className={`absolute z-10 bottom-0 opacity-0 ${
                         isHovered ? 'opacity-100' : ''
-                    } transition-opacity duration-300`}
+                    } transition-opacity duration-300  bg-clip-content bg-black/30`}
                 >
-                    <h2 className={title({ size: 'sm' })}>{tournament.description}</h2>
-                </div>
-            </div>
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-center">
-                <h1 className={title({ size: 'sm' })}>{
-                    isHovered ? tournament.name : tournament.abbreviation
-                }</h1>
-            </div>
+                    {tournament.description}
+                </CardFooter>
+            </Card>
         </div>
         </Link>
     );
