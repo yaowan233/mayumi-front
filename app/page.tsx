@@ -47,7 +47,7 @@ export default async function Home() {
 
 async function GetTournamentInfo() : Promise<Tournament[]> {
 	const res = await fetch('http://127.0.0.1:8421/api/tournament_info',
-		{ next: { revalidate: 0 }})
+		{ next: { revalidate: 30 }})
 	if (!res.ok) {
 		throw new Error('Failed to fetch data')
 	}

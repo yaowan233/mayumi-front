@@ -23,7 +23,7 @@ export const TournamentComponent = (tournament: Tournament) => {
     const handleMouseLeave = () => {
         setIsHovered(false);
     };
-    let tournament_href = "/tournaments/" + tournament.name + "/home"
+    let tournament_href = "/tournaments/" + tournament.abbreviation + "/home"
     return (
         <Link
             key={tournament.name}

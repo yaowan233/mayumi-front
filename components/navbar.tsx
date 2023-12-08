@@ -1,3 +1,5 @@
+"use client"
+
 import {
 	Navbar as NextUINavbar,
 	NavbarContent,
@@ -25,6 +27,9 @@ import {
 } from "@/components/icons";
 
 import { Logo } from "@/components/icons";
+import {useContext} from "react";
+import CurrentUserContext from "@/app/user_context";
+import {Avatar} from "@nextui-org/avatar";
 
 export const Navbar = () => {
 	// const searchInput = (
@@ -47,7 +52,8 @@ export const Navbar = () => {
 	// 		type="search"
 	// 	/>
 	// );
-
+	const currentUser  = useContext(CurrentUserContext);
+	console.log(currentUser)
 	return (
 		<NextUINavbar maxWidth="xl" position="sticky">
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
@@ -104,6 +110,10 @@ export const Navbar = () => {
 						Sponsor
 					</Button>
 				</NavbarItem>
+
+				{
+					currentUser?.currentUser != null ? <Avatar src={`https://a.ppy.sh/${currentUser.currentUser?.uid}`} />: LoginButton()
+				}
 			</NavbarContent>
 
 			<NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -229,3 +239,18 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 		</NextUINavbar>
 	);
 };
+
+const LoginButton = () => {
+	return (
+		<NavbarItem className="hidden md:flex">
+			<Button
+				as={Link}
+				className="text-sm font-normal text-default-600 bg-default-100"
+				href={"https://osu.ppy.sh/oauth/authorize?client_id=28516&redirect_uri=http://localhost:3000/api/oauth&response_type=code&scope=public"}
+				variant="flat"
+			>
+				登录
+			</Button>
+		</NavbarItem>
+	)
+}
