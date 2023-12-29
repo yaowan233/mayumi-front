@@ -4,7 +4,7 @@ import {MappoolsComponents, Stage} from "@/components/mappools";
 export default async function MapPollsPage({params}: { params: { tournament: string } }) {
     let tabs: Stage[] = await getStages(params.tournament)
     return (
-        <MappoolsComponents {...{items: tabs}}/>
+        <MappoolsComponents tabs={tabs}/>
     )
 }
 

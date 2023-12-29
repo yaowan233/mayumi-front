@@ -3,6 +3,11 @@ import {cookies} from "next/headers";
 
 export async function getMe(): Promise<Me | null> {
     const cookieStore = cookies()
+    const uuid = cookieStore.get('uuid')?.value
+    if (!uuid) {
+        return null
+    }
+    cookieStore.set('uuid', uuid, { path: '/' , expires: new Date(Date.now() + 30 * 60 * 60 * 24 * 1000)})
     const res = await fetch('http://localhost:8421/api/me', {  headers: {
             Cookie: `uuid=${cookieStore.get('uuid')?.value}`,
         },

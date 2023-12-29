@@ -1,4 +1,3 @@
-import {Card, CardBody} from "@nextui-org/card";
 import {ScheduleComp, ScheduleStage} from "@/components/schedule_comp";
 
 export default async function SchedulePage({ params }: { params: { tournament: string }}) {

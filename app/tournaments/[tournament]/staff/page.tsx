@@ -3,66 +3,26 @@ import {Link} from "@nextui-org/link";
 import {Image} from "@nextui-org/image";
 
 export default async function StaffPage({params}: { params: { tournament: string } }) {
-    // let staff = await GetStaff(params.tournament)
-    let staff : Staff = {
-        '直播': [
-            {
-                name: '123qsedafsdf',
-                osu_id: '3162675',
-            },
-            {
-                name: 'asdsdfgsdf',
-                osu_id: '6237768',
-            },
-        ],
-        '裁判': [
-            {
-                name: 'asdas dasd as',
-                osu_id: '16891746',
-            },
-            {
-                name: 'aaaa asdads',
-                osu_id: '10286018',
-            },
-            {
-                name: 'ddddddddddda',
-                osu_id: '3162675',
-            },
-            {
-                name: 'sadqwedasdb',
-                osu_id: '6237768',
-            },
-            {
-                name: 'aasdasdasd',
-                osu_id: '3162675',
-            },
-            {
-                name: 'asdasdqweqwe qas',
-                osu_id: '6237768',
-            },
-        ],
-    }
+    let staff = await GetStaff(params.tournament)
     return (
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-3">
             {/*遍历 staff*/}
-            {Object.keys(staff).map((role) => (
-                <Card>
-                    <CardHeader>
-                        <h1>
-                            {role}
-                        </h1>
+            {Object.keys(staff).filter((member) => staff[member].length > 0).map((role) => (
+                <Card key={role}>
+                    <CardHeader className={"p-2 text-center text-4xl justify-center"}>
+                        {role}
                     </CardHeader>
-                    <CardBody>
-                        <div className="grid grid-cols-4 gap-4">
+                    <CardBody className={"pt-0"}>
+                        <div className="flex flex-row justify-center gap-2 flex-wrap">
                             {staff[role].map((staff) => (
-                                        <Link className={"grid grid-cols-1 border-2"} key={staff.osu_id} href={`https://osu.ppy.sh/users/${staff.osu_id}`} target='_blank'>
-                                            <div className="flex justify-center">
-                                                <Image className={""} width={60} height={60} src={`https://a.ppy.sh/${staff.osu_id}`}/>
-                                            </div>
-                                            <div className="flex justify-center">
-                                                {staff.name}
-                                            </div>
-                                        </Link>
+                                <Link isExternal color={"foreground"} className={"grid grid-cols-1 border-2 p-2 min-w-[130px]"} key={staff.uid} href={`https://osu.ppy.sh/users/${staff.uid}`}>
+                                    <div className="flex justify-center">
+                                        <Image loading={"lazy"} className={""} width={60} height={60} src={`https://a.ppy.sh/${staff.uid}`}/>
+                                    </div>
+                                    <div className="flex justify-center">
+                                        {staff.name}
+                                    </div>
+                                </Link>
                             ))}
                         </div>
                     </CardBody>
@@ -73,7 +33,8 @@ export default async function StaffPage({params}: { params: { tournament: string
 }
 
 async function GetStaff(tournament: string) : Promise<Staff> {
-    const res = await fetch('http://127.0.0.1:8421/api/satff?tournament=' + tournament,
+    const res = await fetch('http://127.0.0.1:8421/api/staff' +
+        '?tournament_name=' + tournament,
         { next: { revalidate: 0 }})
     if (!res.ok) {
         throw new Error('Failed to fetch data')
@@ -84,6 +45,6 @@ async function GetStaff(tournament: string) : Promise<Staff> {
 interface Staff{
     [role: string]: {
         name: string,
-        osu_id: string,
+        uid: string,
     }[]
 }

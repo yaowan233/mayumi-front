@@ -10,7 +10,7 @@ import React from 'react';
 // import {TabPanel} from "@mui/joy";
 
 
-export const MappoolsComponents = (tabs: {items: Stage[] }) => {
+export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
     return (
         // <Tabs aria-label="Flex auto tabs"  orientation="vertical" sx={{ minWidth: 1000, height: 50 }}>
         //     <TabList tabFlex="auto">
@@ -89,7 +89,7 @@ export const MappoolsComponents = (tabs: {items: Stage[] }) => {
         //     ))}
         // </Tabs>
         //
-        <Tabs aria-label="Dynamic tabs" items={tabs.items} className={"flex justify-center"} size={"lg"} classNames={{
+        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"} classNames={{
             tabList: "gap-6 flex",
             tab: "min-w-[100px] min-h-[50px]",
             tabContent: "text-3xl",
@@ -124,6 +124,7 @@ export const MappoolsComponents = (tabs: {items: Stage[] }) => {
                                                     className="z-0 w-full h-[180px] object-cover dark:brightness-50"
                                                     alt="Card background"
                                                     width="100%"
+                                                    loading={"lazy"}
                                                     src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}/>
                                                 <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
                                                     <div className="grid grid-cols-3 place-items-center">

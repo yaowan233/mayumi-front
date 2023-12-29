@@ -27,35 +27,14 @@ import {
 } from "@/components/icons";
 
 import { Logo } from "@/components/icons";
-import {useContext} from "react";
+import {useContext, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Avatar} from "@nextui-org/avatar";
 
 export const Navbar = () => {
-	// const searchInput = (
-	// 	<Input
-	// 		aria-label="Search"
-	// 		classNames={{
-	// 			inputWrapper: "bg-default-100",
-	// 			input: "text-sm",
-	// 		}}
-	// 		endContent={
-	// 			<Kbd className="hidden lg:inline-block" keys={["command"]}>
-	// 				K
-	// 			</Kbd>
-	// 		}
-	// 		labelPlacement="outside"
-	// 		placeholder="Search..."
-	// 		startContent={
-	// 			<SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-	// 		}
-	// 		type="search"
-	// 	/>
-	// );
-	const currentUser  = useContext(CurrentUserContext);
-	console.log(currentUser)
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	return (
-		<NextUINavbar maxWidth="xl" position="sticky">
+		<NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen} className="">
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
 					<NextLink className="flex justify-start items-center gap-1" href="/">
@@ -110,10 +89,7 @@ export const Navbar = () => {
 						Sponsor
 					</Button>
 				</NavbarItem>
-
-				{
-					currentUser?.currentUser != null ? <Avatar src={`https://a.ppy.sh/${currentUser.currentUser?.uid}`} />: LoginButton()
-				}
+				<UserStatus/>
 			</NavbarContent>
 
 			<NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -150,9 +126,10 @@ export const Navbar = () => {
 
 
 export const TournamentNavbar = ({ tournament_name }: { tournament_name: string }) => {
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	let tournament_href_start = "/tournaments/" + tournament_name
 	return (
-		<NextUINavbar maxWidth="xl" position="sticky">
+		<NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
 					<NextLink className="flex justify-start items-center gap-1" href="/">
@@ -206,6 +183,7 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 						Sponsor
 					</Button>
 				</NavbarItem>
+				<UserStatus/>
 			</NavbarContent>
 
 			<NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -239,6 +217,15 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 		</NextUINavbar>
 	);
 };
+
+export const UserStatus = () => {
+	const currentUser  = useContext(CurrentUserContext);
+	console.log(currentUser)
+	return (
+		currentUser?.currentUser != null ? <Avatar src={`https://a.ppy.sh/${currentUser.currentUser?.uid}`} />: LoginButton()
+	)
+}
+
 
 const LoginButton = () => {
 	return (

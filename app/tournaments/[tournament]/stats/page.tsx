@@ -4,7 +4,7 @@ import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, Tabl
 import {Spinner} from "@nextui-org/spinner";
 import React from "react";
 import {Tab, Tabs} from "@nextui-org/tabs";
-import {useAsyncList} from "@react-stately/data";
+import {AsyncListData, useAsyncList} from "@react-stately/data";
 
 
 const columns = [
@@ -27,32 +27,15 @@ const columns = [
 
 export default function StatsPage({params}: { params: { tournament: string } }) {
     const [isLoading, setIsLoading] = React.useState(true);
-    let list = useAsyncList({
+    let list: AsyncListData<RoundStats> = useAsyncList({
         async load({signal}) {
-            let res = await fetch('http://127.0.0.1:8421/api/round_stats?name=' + params.tournament);
+            let res = await fetch('http://127.0.0.1:8421/api/round_stats?tournament=' + params.tournament);
             let json = await res.json();
             setIsLoading(false);
             return {
                 items: json,
             };
-        },
-        async sort({items, sortDescriptor}) {
-            return {
-                items: items.sort((a, b) => {
-                    // @ts-ignore
-                    let first = a[sortDescriptor.column];
-                    // @ts-ignore
-                    let second = b[sortDescriptor.column];
-                    let cmp = (parseInt(first) || first) < (parseInt(second) || second) ? -1 : 1;
-
-                    if (sortDescriptor.direction === "descending") {
-                        cmp *= -1;
-                    }
-
-                    return cmp;
-                }),
-            };
-        },
+        }
     })
     return (
         <Tabs classNames={{
@@ -61,11 +44,9 @@ export default function StatsPage({params}: { params: { tournament: string } }) 
             tabContent: "group-data-[selected=true]:text-[#06b6d4]"
         }} aria-label="Dynamic tabs" items={list.items}>
             {(item) => (
-                // @ts-ignore
                 <Tab key={item.stage_name} title={item.stage_name}>
                     <Table
                         sortDescriptor={list.sortDescriptor}
-                        onSortChange={list.sort}
                         classNames={{
                             table: "min-h-[400px]",
                         }}
@@ -80,7 +61,6 @@ export default function StatsPage({params}: { params: { tournament: string } }) 
                             }
                         </TableHeader>
                         <TableBody
-                            // @ts-ignore
                             items={item.map_pool_stats}
                             isLoading={isLoading}
                             loadingContent={<Spinner label="Loading..." />}

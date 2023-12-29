@@ -1,96 +1,15 @@
-"use client"
-import {Card, CardBody} from "@nextui-org/card";
-import {Tab, Tabs} from "@nextui-org/tabs";
-import {UserInfo} from "@/components/user_info";
+import {Player} from "@/components/user_info";
+import {ParticipantsComp} from "@/components/participants_comp";
 
-export default function ParticipantsPage({ params }: { params: { tournament: string }}) {
-    const users = [
-        UserInfo({
-        osu_id: "3162675",
-        name: "Kyu",
-        country: "CN",
-        pp: "12345",
-        rank: "123",
-        timezone: "+8",
-    }),
-        UserInfo({
-            osu_id: "3162675",
-            name: "Kyu",
-            country: "CN",
-            pp: "12345",
-            rank: "123",
-            timezone: "+8",
-        }),
-        UserInfo({
-            osu_id: "3162675",
-            name: "Kyu",
-            country: "CN",
-            pp: "12345",
-            rank: "123",
-            timezone: "+8",
-        }),
-        UserInfo({
-            osu_id: "3162675",
-            name: "Kyu",
-            country: "CN",
-            pp: "12345",
-            rank: "123",
-            timezone: "+8",
-        }),
-        UserInfo({
-            osu_id: "3162675",
-            name: "Kyu",
-            country: "CN",
-            pp: "12345",
-            rank: "123",
-            timezone: "+8",
-        }),
-        UserInfo({
-            osu_id: "3162675",
-            name: "Kyu",
-            country: "CN",
-            pp: "12345",
-            rank: "123",
-            timezone: "+8",
-        }),
-        UserInfo({
-            osu_id: "3162675",
-            name: "Kyu",
-            country: "CN",
-            pp: "12345",
-            rank: "123",
-            timezone: "+8",
-        }),
-        UserInfo({
-            osu_id: "3162675",
-            name: "Kyu",
-            country: "CN",
-            pp: "12345",
-            rank: "123",
-            timezone: "+8",
-        }),
-    ];
+export default async function ParticipantsPage({params}: { params: { tournament: string } }) {
+    const players = await getPlayers(params.tournament)
     return (
-        <Tabs aria-label="Options">
-            <Tab key="solo" title="报名人员">
-                <Card>
-                    <CardBody>
-                        <div className={"grid md:grid-cols-4 sm:grid-cols-3 gap-3"}>
-                            {users.map((user, num) => (
-                                <div key={num}>
-                                    {user}
-                                </div>
-                                ))}
-                        </div>
-                    </CardBody>
-                </Card>
-            </Tab>
-            <Tab key="teams" title="队伍">
-                <Card>
-                    <CardBody>
-                    </CardBody>
-                </Card>
-            </Tab>
-        </Tabs>
+        <ParticipantsComp players={players}/>
     )
+}
+
+export async function getPlayers(tournament_name: string): Promise<Player[]> {
+    const res = await fetch('http://localhost:8421/api/players?tournament_name=' + tournament_name,
+        { next: { revalidate: 0 }})
+    return await res.json()
 }

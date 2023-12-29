@@ -13,7 +13,7 @@ export interface Tournament {
     pic_url: string;
 }
 
-export const TournamentComponent = (tournament: Tournament) => {
+export const TournamentComponent = ({tournament}: { tournament: Tournament }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     const handleMouseEnter = () => {
@@ -36,7 +36,7 @@ export const TournamentComponent = (tournament: Tournament) => {
             onMouseLeave={handleMouseLeave}
         >
             <Card>
-                <CardHeader className="absolute z-10 top-0 flex items-center justify-center text-xl font-bold bg-clip-content bg-black/30">
+                <CardHeader className="absolute z-10 top-0 flex items-center justify-center text-center text-xl font-bold bg-clip-content bg-black/30">
                     {isHovered ? tournament.name : tournament.abbreviation}
                 </CardHeader>
 

@@ -5,10 +5,8 @@ import { fontSans } from "@/config/fonts";
 import { Providers } from "./providers";
 import { Link } from "@nextui-org/link";
 import clsx from "clsx";
-import {cookies} from "next/headers";
 import {UserProvider} from "@/app/user_context";
-import { CssVarsProvider } from '@mui/joy/styles';
-
+import React from "react";
 
 export const metadata: Metadata = {
 	title: {
@@ -36,7 +34,7 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="zh" suppressHydrationWarning>
-			<head />
+			<head><title>OSU web</title></head>
 			<body
 				className={clsx(
 					"min-h-screen bg-background font-sans antialiased",
@@ -44,8 +42,8 @@ export default function RootLayout({
 				)}
 			>
 				<Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-					<UserProvider>
-						<div className="relative flex flex-col h-screen">
+						<UserProvider>
+						<div className="relative flex flex-col min-h-screen">
 							{children}
 							<footer className="w-full flex items-center justify-center py-3">
 								<Link
@@ -61,16 +59,7 @@ export default function RootLayout({
 						</div>
 					</UserProvider>
 				</Providers>
-
 			</body>
 		</html>
 	);
-}
-
-async function checkCookie() {
-	"use server"
-	const cookieStore = cookies()
-	const uuid = cookieStore.get('uuid')
-	const res = await fetch(`http://localhost:8421/api/check_cookie?uuid=${uuid}`,
-		{ next: { revalidate: 30 }})
 }

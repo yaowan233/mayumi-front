@@ -24,7 +24,7 @@ export default async function Home() {
 					{tournaments_data.filter((tournament) => (
 						new Date(tournament.end_date) >= new Date()
 					)).map((tournament) => (
-						<TournamentComponent {...tournament} />
+						<TournamentComponent key={tournament.name} tournament={tournament} />
 					))}
 				</div>
 			</div>
@@ -36,7 +36,7 @@ export default async function Home() {
 					{tournaments_data.filter((tournament) => (
 						new Date(tournament.end_date) < new Date()
 					)).map((tournament) => (
-						<TournamentComponent {...tournament} />
+						<TournamentComponent key={tournament.name} tournament={tournament} />
 					))}
 				</div>
 			</div>
@@ -46,7 +46,7 @@ export default async function Home() {
 
 
 async function GetTournamentInfo() : Promise<Tournament[]> {
-	const res = await fetch('http://127.0.0.1:8421/api/tournament_info',
+	const res = await fetch('http://127.0.0.1:8421/api/tournaments',
 		{ next: { revalidate: 30 }})
 	if (!res.ok) {
 		throw new Error('Failed to fetch data')

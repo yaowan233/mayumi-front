@@ -1,4 +1,3 @@
-import {Card, CardBody} from "@nextui-org/card";
 import {Image} from "@nextui-org/image";
 
 export default function PlayersPage({ params }: { params: { tournament: string }}) {

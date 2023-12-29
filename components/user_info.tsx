@@ -1,11 +1,12 @@
 import {Image} from "@nextui-org/image";
+import {Link} from "@nextui-org/link";
 
 
-export const UserInfo = (user: User) => {
+export const UserInfo = ({user}: { user: Player }) => {
     return(
-        <div className={"flex gap-3 justify-start border-2"}>
+        <Link color={"foreground"} isExternal className={"flex gap-3 justify-start border-2"} href={`https://osu.ppy.sh/u/${user.uid}`}>
             <div className={"grid content-center px-2"}>
-                <Image height={60} width={60} src={`https://a.ppy.sh/${user.osu_id}`}/>
+                <Image height={60} width={60} src={`https://a.ppy.sh/${user.uid}`}/>
             </div>
             <div className={"flex-col"}>
                 <div>
@@ -26,12 +27,12 @@ export const UserInfo = (user: User) => {
                     <p className={"text-foreground"}>UTC{user.timezone}</p>
                 </div>
             </div>
-        </div>
+        </Link>
     )
 }
 
-interface User {
-    osu_id: string;
+export interface Player {
+    uid: string;
     name: string;
     country: string;
     pp: string;
