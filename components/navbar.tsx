@@ -220,7 +220,6 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 
 export const UserStatus = () => {
 	const currentUser  = useContext(CurrentUserContext);
-	console.log(currentUser)
 	return (
 		currentUser?.currentUser != null ? <Avatar src={`https://a.ppy.sh/${currentUser.currentUser?.uid}`} />: LoginButton()
 	)

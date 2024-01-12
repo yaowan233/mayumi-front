@@ -25,36 +25,24 @@ export const TournamentComponent = ({tournament}: { tournament: Tournament }) =>
     };
     let tournament_href = "/tournaments/" + tournament.abbreviation + "/home"
     return (
-        <Link
-            key={tournament.name}
-            className="items-center justify-center"
-            href={tournament_href}
-        >
-        <div
-            className="relative flex-auto"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-        >
-            <Card>
-                <CardHeader className="absolute z-10 top-0 flex items-center justify-center text-center text-xl font-bold bg-clip-content bg-black/30">
-                    {isHovered ? tournament.name : tournament.abbreviation}
-                </CardHeader>
+        <Card onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} as={Link} className="items-center justify-center min-w-[300px] min-h-[180px]" href={tournament_href}>
+            <CardHeader className="absolute z-10 top-0 flex items-center justify-center text-center text-xl font-bold bg-clip-content bg-black/30">
+                {isHovered ? tournament.name : tournament.abbreviation}
+            </CardHeader>
 
-                <Image
-                    className="z-0 w-full h-[180px] object-cover"
-                    width="100%"
-                    src={tournament.pic_url}
-                    alt={tournament.name}
-                />
-                <CardFooter
-                    className={`absolute z-10 bottom-0 opacity-0 ${
-                        isHovered ? 'opacity-100' : ''
-                    } transition-opacity duration-300  bg-clip-content bg-black/30`}
-                >
-                    {tournament.description}
-                </CardFooter>
-            </Card>
-        </div>
-        </Link>
+            <Image
+                className="z-0 w-full h-[180px] object-cover"
+                width="100%"
+                src={tournament.pic_url}
+                alt={tournament.name}
+            />
+            <CardFooter
+                className={`absolute z-10 bottom-0 opacity-0 ${
+                    isHovered ? 'opacity-100' : ''
+                } transition-opacity duration-300  bg-clip-content bg-black/30`}
+            >
+                {tournament.description}
+            </CardFooter>
+        </Card>
     );
 };

@@ -288,7 +288,7 @@ type LobbyInfo = {
     participants?: SimpleInfo[];
 }
 
-type MatchInfo = {
+export type MatchInfo = {
     time: string;
     date: string;
     is_winner_bracket: boolean;

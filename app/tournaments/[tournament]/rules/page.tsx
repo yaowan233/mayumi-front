@@ -4,10 +4,8 @@ export default async function TournamentRulesPage({params}: { params: { tourname
     const info = await getTournamentRule(params.tournament)
     return (
         <Card>
-            <CardBody>
-                <h1>
-                    {info.data}
-                </h1>
+            <CardBody className={"whitespace-pre-wrap"}>
+                {info.data}
             </CardBody>
         </Card>
     )

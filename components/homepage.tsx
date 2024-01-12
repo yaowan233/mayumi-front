@@ -36,7 +36,6 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
         }
         else {
             // 执行报名操作或其他相关逻辑
-            console.log(JSON.stringify(formData))
             const res = await fetch('http://localhost:8421/api/tournament-info', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}})
             if (res.status != 200) {
                 // 失败
@@ -63,17 +62,16 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
             })
         }
     }, [isOpen]);
-    console.log(formData)
     // 更新表单字段的事件处理程序
     return (
         <div className="grid grid-cols-1 gap-y-5">
             <h1 className={"text-3xl text-center"}>
                 {tournament_info.name}
             </h1>
-            <h1 className={"text-xl text-center"}>
+            <h1 className={"text-xl text-center whitespace-pre-wrap"}>
                 {tournament_info.description}
             </h1>
-            <div className={"flex justify-center"}>
+            <div className={"flex justify-center gap-3"}>
                 {tournament_info.links.map((link) => (
                     <Button isExternal href={link.url} as={Link} size="md" key={link.name}>{link.name}</Button>
                 ))}
@@ -83,7 +81,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                     <p>Staff报名</p>
                 </CardBody>
                 <Divider/>
-                <CardBody>
+                <CardBody className={"whitespace-pre-wrap"}>
                     <p>{tournament_info.staff_registration_info}</p>
                 </CardBody>
                 <div className="flex gap-4 items-center py-2 px-2">
@@ -126,7 +124,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                                         {tournament_info.mappooler? <Checkbox value="选图">选图</Checkbox>: null}
                                         {tournament_info.donator? <Checkbox value="赞助">赞助</Checkbox>: null}
                                         {tournament_info.designer? <Checkbox value="设计">设计</Checkbox>: null}
-                                        {tournament_info.sheduler? <Checkbox value="赛程安排">赛程安排</Checkbox>: null}
+                                        {tournament_info.scheduler? <Checkbox value="赛程安排">赛程安排</Checkbox>: null}
                                         {tournament_info.map_tester? <Checkbox value="测图">测图</Checkbox>: null}
                                     </CheckboxGroup>
                                     <Textarea
@@ -160,8 +158,8 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                     <p>赛程</p>
                 </CardBody>
                 <Divider/>
-                <CardBody>
-                    <p>{tournament_info.tournament_schedule_info}</p>
+                <CardBody className="whitespace-pre-wrap">
+                    {tournament_info.tournament_schedule_info}
                 </CardBody>
             </Card>
             <Card>
@@ -169,8 +167,8 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                     <p>奖金</p>
                 </CardBody>
                 <Divider/>
-                <CardBody>
-
+                <CardBody className="whitespace-pre-wrap">
+                    {tournament_info.prize_info}
                 </CardBody>
             </Card>
             <Card>
@@ -190,10 +188,11 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
 export interface TournamentInfo {
     name: string;
     abbreviation: string;
-    start_date: Date
-    end_date: Date
+    start_date: string
+    end_date: string
     pic_url: string;
     links: Link[];
+    is_group: boolean;
     description?: string;
     staff_registration_info?: string;
     tournament_schedule_info?: string;
@@ -209,9 +208,11 @@ export interface TournamentInfo {
     custom_mapper: boolean;
     donator: boolean;
     designer: boolean;
-    sheduler: boolean;
+    scheduler: boolean;
     map_tester: boolean;
     mode: string;
+    challonge_api_key?: string;
+    challonge_tournament_url?: string;
 }
 
 type Link = {
