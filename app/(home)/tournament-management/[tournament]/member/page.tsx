@@ -449,7 +449,7 @@ const AddMember = ({
         setFieldState((prevState) => ({
             inputValue: fieldState.inputValue,
             selectedKey: prevState.selectedKey,
-            items: members.filter((item) => contains(item.uid + item.name, fieldState.inputValue || "")),
+            items: members,
         }));
     };
     const handleAddMember = async () => {

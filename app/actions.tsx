@@ -40,8 +40,8 @@ interface UserStatistics {
     replays_watched_by_others: number;
     total_hits: number;
     total_score: number;
-    global_rank?: number;
-    country_rank?: number;
+    global_rank: number;
+    country_rank: number;
     badges?: Badge[];
 
 }

@@ -11,6 +11,8 @@ import {Radio, RadioGroup} from "@nextui-org/radio";
 import {Checkbox, CheckboxGroup} from "@nextui-org/checkbox";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
+import {Tooltip} from "@nextui-org/tooltip";
+import {getTournamentMembers, TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
 
 export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) => {
     const currentUser  = useContext(CurrentUserContext);
@@ -26,6 +28,16 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
         otherDetails: '',
         additionalComments: ''
     });
+    const [members, setMembers] = useState<TournamentMember[]>([]);
+    useEffect(() => {
+        const fetchData = async () => {
+            if (currentUser?.currentUser?.uid) {
+                const data = await getTournamentMembers(tournament_info.abbreviation);
+                setMembers(data);
+            }
+        };
+        fetchData();
+    }, [currentUser]);
     const handleRegistration = async (onClose: () => void) => {
         if (!formData.qqNumber || !formData.isFirstTimeStaff || formData.selectedPositions.length === 0) {
             // 显示错误消息或采取其他适当的操作
@@ -47,6 +59,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
             }
         }
     };
+    const regNotAvailable = currentUser?.currentUser ? (tournament_info.rank_min? currentUser?.currentUser.statistics_rulesets.fruits.global_rank < tournament_info.rank_min: false) || (tournament_info.rank_max? currentUser?.currentUser.statistics_rulesets.fruits.global_rank > tournament_info.rank_max: false) : false;
     useEffect(() => {
         if (!isOpen) {
             setErrMsg('');
@@ -171,15 +184,70 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                     {tournament_info.prize_info}
                 </CardBody>
             </Card>
+            {currentUser?.currentUser?
             <Card>
                 <CardBody>
                     <p>报名</p>
                 </CardBody>
                 <Divider/>
-                <CardBody>
-
+                <CardBody className="gap-3">
+                    {tournament_info.rank_max || tournament_info.rank_min ?
+                        <div>
+                            本比赛有排名限制
+                            {tournament_info.rank_max ? <div>最高排名：{tournament_info.rank_max}</div>: null}
+                            {tournament_info.rank_min ? <div>最低排名：{tournament_info.rank_min}</div>: null}
+                        </div>:null
+                    }
+                    <div>
+                        {tournament_info.registration_info}
+                    </div>
+                    <div className="flex flex-row gap-3">
+                        <Tooltip content="排名需符合赛事要求才能报名">
+                            <Button color="primary"
+                                    isDisabled={regNotAvailable || members.some((member) => {
+                                return member.player && member.uid === currentUser?.currentUser?.uid.toString()
+                            })}
+                                    onPress={async () => {
+                                        const res = await fetch(`http://localhost:8421/api/reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                                        if (res.status != 200) {
+                                            // 失败
+                                            alert(await res.text());
+                                        }
+                                        else {
+                                            // 关闭模态框
+                                            alert('报名成功');
+                                            setMembers(await res.json())
+                                        }
+                                    }}
+                            >
+                                报名比赛
+                            </Button>
+                        </Tooltip>
+                        <Button color="danger" isDisabled={
+                            !members.some((member) => {
+                                return member.player && member.uid === currentUser?.currentUser?.uid.toString()
+                            })
+                        }
+                            onPress={async () => {
+                                const res = await fetch(`http://localhost:8421/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                                if (res.status != 200) {
+                                    // 失败
+                                    alert(await res.text());
+                                }
+                                else {
+                                    // 关闭模态框
+                                    alert('取消报名成功');
+                                    setMembers(await res.json())
+                                }
+                            }}
+                        >
+                            取消报名
+                        </Button>
+                    </div>
                 </CardBody>
-            </Card>
+            </Card>:
+                <div>若要报名比赛请点击右上角登录</div>
+            }
         </div>
     );
 }
