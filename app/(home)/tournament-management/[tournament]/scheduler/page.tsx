@@ -56,21 +56,6 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                     </SelectItem>
                 ))}
             </Select>
-            <Button color="primary" className="max-w-fit" onPress={()=>{
-                let newScheduleInfo = [...scheduleInfo];
-                newScheduleInfo.push({
-                    tournament_name: params.tournament,
-                    stage_name: Array.from(round)[0],
-                    match_id: "",
-                    is_lobby: roundInfo.find((round1) => round1.stage_name === Array.from(round)[0])?.is_lobby || false,
-                    is_winner_bracket: true,
-                    team1: "",
-                    team2: ""
-                });
-                setScheduleInfo(newScheduleInfo);
-            }}>
-                添加新赛程
-            </Button>
             {
                 scheduleInfo.map((schedule, index) => {
                 if (schedule.stage_name === Array.from(round)[0]) {
@@ -104,31 +89,62 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                     <Input type="date" label="日期" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[0]:""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
-                                                            let datetime = new Date();
-                                                            datetime.setFullYear(parseInt(e.target.value.split('-')[0]));
-                                                            datetime.setMonth(parseInt(e.target.value.split('-')[1])-1);
-                                                            datetime.setDate(parseInt(e.target.value.split('-')[2]));
+                                                            let datetime;
+                                                            if (schedule.match_time !== undefined) {
+                                                                datetime = new Date(schedule.match_time);
+                                                            }
+                                                            else {
+                                                                datetime = new Date();
+                                                            }
+                                                            datetime.setUTCFullYear(parseInt(e.target.value.split('-')[0]));
+                                                            datetime.setUTCMonth(parseInt(e.target.value.split('-')[1])-1);
+                                                            datetime.setUTCDate(parseInt(e.target.value.split('-')[2]));
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                         }}
                                                            placeholder="Enter your email" />
-                                                    <Input type="time" label="时间" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toTimeString().split(' ')[0].substring(0, 5):""} onChange={
+                                                    <Input type="time" label="时间" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[1].substring(0, 5):""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
-                                                            let datetime = new Date();
-                                                            datetime.setHours(parseInt(e.target.value.split(':')[0]));
-                                                            datetime.setMinutes(parseInt(e.target.value.split(':')[1]));
+                                                            let datetime;
+                                                            if (schedule.match_time !== undefined) {
+                                                                datetime = new Date(schedule.match_time);
+                                                            }
+                                                            else {
+                                                                datetime = new Date();
+                                                            }
+                                                            datetime.setUTCHours(parseInt(e.target.value.split(':')[0]));
+                                                            datetime.setUTCMinutes(parseInt(e.target.value.split(':')[1]));
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                         }
                                                     } placeholder="Enter your email" />
-                                                    <Input label="比赛网址" value={schedule.match_url}
-                                                           description="格式为https://osu.ppy.sh/community/matches/xxxxxxx" onChange={(e) => {
-                                                        let newScheduleInfo = [...scheduleInfo];
-                                                        newScheduleInfo[index].match_url = e.target.value;
-                                                        setScheduleInfo(newScheduleInfo);
-                                                    }}
-                                                    />
+                                                    {
+                                                        schedule.match_url?.map((url, urlIndex) => {
+                                                            return (
+                                                                <Input key={urlIndex} label="比赛网址" value={url}
+                                                                       description="格式为https://osu.ppy.sh/community/matches/xxxxxxx" onChange={(e) => {
+                                                                    let newScheduleInfo = [...scheduleInfo];
+                                                                    newScheduleInfo[index].match_url?.splice(urlIndex, 1, e.target.value);
+                                                                    setScheduleInfo(newScheduleInfo);
+                                                                }}/>
+                                                            )
+                                                        })
+                                                    }
+                                                    <div className="flex-col self-start">
+                                                        <Button radius={"none"} color="primary" isIconOnly onPress={() => {
+                                                            let newScheduleInfo = [...scheduleInfo];
+                                                            newScheduleInfo[index].match_url?.push("");
+                                                            setScheduleInfo(newScheduleInfo);
+                                                        }}>+</Button>
+                                                        <Button radius={"none"} color="danger" isIconOnly onPress={() => {
+                                                            let newScheduleInfo = [...scheduleInfo];
+                                                            if (newScheduleInfo[index].match_url.length > 1) {
+                                                                newScheduleInfo[index].match_url?.pop();
+                                                            }
+                                                            setScheduleInfo(newScheduleInfo);
+                                                        }}>-</Button>
+                                                    </div>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-5">
                                                     <div className={"flex flex-col gap-5"}>
@@ -370,12 +386,6 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-row gap-5 items-baseline">
-                                                    <Input label="比赛网址" value={schedule.match_url}
-                                                           description="格式为https://osu.ppy.sh/community/matches/xxxxxxx" onChange={(e) => {
-                                                        let newScheduleInfo = [...scheduleInfo];
-                                                        newScheduleInfo[index].match_url = e.target.value;
-                                                        setScheduleInfo(newScheduleInfo);
-                                                    }}/>
                                                     <Input label="队伍1分数" value={schedule.team1_score?.toString() || ""}
                                                            onChange={(e) => {
                                                                let newScheduleInfo = [...scheduleInfo];
@@ -388,6 +398,32 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                                 newScheduleInfo[index].team2_score = parseInt(e.target.value);
                                                                 setScheduleInfo(newScheduleInfo);
                                                           }}/>
+                                                    {
+                                                        schedule.match_url?.map((url, urlIndex) => {
+                                                            return (
+                                                                <Input key={urlIndex} label="比赛网址" value={url}
+                                                                       description="格式为https://osu.ppy.sh/community/matches/xxxxxxx" onChange={(e) => {
+                                                                    let newScheduleInfo = [...scheduleInfo];
+                                                                    newScheduleInfo[index].match_url?.splice(urlIndex, 1, e.target.value);
+                                                                    setScheduleInfo(newScheduleInfo);
+                                                                }}/>
+                                                            )
+                                                        })
+                                                    }
+                                                    <div className="flex-col self-start">
+                                                        <Button radius={"none"} color="primary" isIconOnly onPress={() => {
+                                                            let newScheduleInfo = [...scheduleInfo];
+                                                            newScheduleInfo[index].match_url?.push("");
+                                                            setScheduleInfo(newScheduleInfo);
+                                                        }}>+</Button>
+                                                        <Button radius={"none"} color="danger" isIconOnly onPress={() => {
+                                                            let newScheduleInfo = [...scheduleInfo];
+                                                            if (newScheduleInfo[index].match_url.length > 1) {
+                                                                newScheduleInfo[index].match_url?.pop();
+                                                            }
+                                                            setScheduleInfo(newScheduleInfo);
+                                                        }}>-</Button>
+                                                    </div>
                                                 </div>
                                                 <div className="flex flex-row gap-5 items-baseline">
                                                     <Button className="max-w-fit" color="danger" onPress={() => {
@@ -409,27 +445,52 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                 }
                 }
             )}
-            {isLoading ?  <Spinner className="max-w-fit" /> :
-                <Button className="max-w-fit" color="primary" onPress={async () => {
-                    if (!scheduleInfo.filter((schedule) => !schedule.is_lobby).every((schedule) => schedule.team1 && schedule.team2 && schedule.match_time) || !scheduleInfo.filter((schedule) => schedule.is_lobby).every((schedule) => schedule.name && schedule.match_time)) {
-                        // 显示错误消息或采取其他适当的操作
-                        setErrMsg('请填写所有必填字段')
+            <div className="flex flex-row gap-5">
+                <Button color="primary" className="max-w-fit" onPress={()=>{
+                    if (Array.from(round)[0] === undefined) {
+                        alert("请先选择比赛轮次")
                         return
                     }
-                    setIsLoading(true)
-                    const res = await fetch('http://localhost:8421/api/update-schedule', {'method': 'POST', 'body': JSON.stringify(scheduleInfo), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
-                    setIsLoading(false)
-                    if (res.status != 200) {
-                        // 失败
-                        setErrMsg(await res.text());
-                    } else {
-                        // 关闭模态框
-                        alert('修改成功');
-                    }
+                    let newScheduleInfo = [...scheduleInfo];
+                    newScheduleInfo.push({
+                        tournament_name: params.tournament,
+                        stage_name: Array.from(round)[0],
+                        match_id: "",
+                        match_url: [""],
+                        is_lobby: roundInfo.find((round1) => round1.stage_name === Array.from(round)[0])?.is_lobby || false,
+                        is_winner_bracket: true,
+                        team1: "",
+                        team2: "",
+                        participants: [],
+                        referee: [],
+                        streamer: [],
+                    });
+                    setScheduleInfo(newScheduleInfo);
                 }}>
-                    保存赛程
+                    添加新赛程
                 </Button>
-            }
+                {isLoading ?  <Spinner className="max-w-fit" /> :
+                    <Button className="max-w-fit" color="success" onPress={async () => {
+                        if (!scheduleInfo.filter((schedule) => !schedule.is_lobby).every((schedule) => schedule.team1 && schedule.team2 && schedule.match_time) || !scheduleInfo.filter((schedule) => schedule.is_lobby).every((schedule) => schedule.name && schedule.match_time)) {
+                            // 显示错误消息或采取其他适当的操作
+                            setErrMsg('请填写所有必填字段')
+                            return
+                        }
+                        setIsLoading(true)
+                        const res = await fetch('http://localhost:8421/api/update-schedule', {'method': 'POST', 'body': JSON.stringify(scheduleInfo), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                        setIsLoading(false)
+                        if (res.status != 200) {
+                            // 失败
+                            setErrMsg(await res.text());
+                        } else {
+                            // 关闭模态框
+                            alert('修改成功');
+                        }
+                    }}>
+                        保存赛程
+                    </Button>
+                }
+            </div>
             <div className="text-red-500">
                 {errMsg}
             </div>
@@ -620,7 +681,7 @@ interface Schedule {
     is_winner_bracket: boolean;
     name?: string;
     match_time?: string;
-    match_url?: string;
+    match_url: string[];
     referee?: string[];
     streamer?: string[];
     commentators?: string[];

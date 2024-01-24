@@ -1,5 +1,5 @@
 "use client"
-import {Card, CardBody} from "@nextui-org/card";
+
 import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
 import {Spinner} from "@nextui-org/spinner";
 import React from "react";

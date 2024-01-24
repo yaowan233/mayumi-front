@@ -70,15 +70,6 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
             </Select>
             {round.size > 0 ? (
                 <div className="flex flex-col gap-5">
-                    <Button className="max-w-fit" color="primary" onPress={() => {setTournamentMaps([...tournamentMaps, {
-                        tournament_name: params.tournament,
-                        stage_name: Array.from(round)[0],
-                        mod: '',
-                        map_id: undefined,
-                        number: undefined
-                    }])}}>
-                        添加地图
-                    </Button>
                     <div className="flex flex-col gap-5">
                         {tournamentMaps.map((tournamentMap, index) => {
                             if (tournamentMap.stage_name !== Array.from(round)[0]) {
@@ -131,14 +122,25 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
                                     </Button>
                                 </div>)})}
                     </div>
+                    <div className="flex flex-row gap-5">
+                        <Button className="max-w-fit" color="primary" onPress={() => {setTournamentMaps([...tournamentMaps, {
+                            tournament_name: params.tournament,
+                            stage_name: Array.from(round)[0],
+                            mod: '',
+                            map_id: undefined,
+                            number: undefined
+                        }])}}>
+                            添加地图
+                        </Button>
+                        <Button color="success" className="max-w-fit" onPress={handleUpdateTournament}>
+                            保存图池
+                        </Button>
+                    </div>
                 </div>
             ) : (
                 <p>请选择比赛轮次</p>
             )
             }
-            <Button color="primary" className="max-w-fit" onPress={handleUpdateTournament}>
-                保存图池
-            </Button>
             <div className="text-red-500">
                 {errMsg}
             </div>

@@ -134,10 +134,10 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
     return (
         <div className={"flex gap-6 grow"}>
             <div className={"text-start font-bold text-2xl w-[72px]"}>
-                {match_info.date}
+                {(new Date(match_info.datetime)).getUTCMonth() + 1}/{(new Date(match_info.datetime)).getUTCDate()}
             </div>
             <div className={"text-center"}>
-                {match_info.time}
+                {formatTime(((new Date(match_info.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(match_info.datetime)).getUTCMinutes()).toString())}
             </div>
             <div className={"flex flex-row justify-center gap-8 grow items-center"}>
                 <div className={""}>
@@ -213,10 +213,10 @@ const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
                 <Card key={stage_schedule.lobby_name} className={"p-3 gap-3"}>
                     <div className={"flex flex-row items-center gap-3"}>
                         <div className={"text-center font-bold text-2xl"}>
-                            {stage_schedule.date}
+                            {(new Date(stage_schedule.datetime)).getUTCMonth() + 1}/{(new Date(stage_schedule.datetime)).getUTCDate()}
                         </div>
                         <div className={"text-center"}>
-                            {stage_schedule.time}
+                            {formatTime(((new Date(stage_schedule.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(stage_schedule.datetime)).getUTCMinutes()).toString())}
                         </div>
                         <div className={"font-bold text-3xl"}>
                             {stage_schedule.lobby_name}
@@ -271,6 +271,13 @@ const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     )
 }
 
+function formatTime(s: string) {
+    if (s.length == 1) {
+        return '0' + s
+    }
+    return s
+}
+
 
 export interface ScheduleStage{
     stage_name: string;
@@ -281,18 +288,16 @@ export interface ScheduleStage{
 
 type LobbyInfo = {
     lobby_name: string;
-    time: string;
-    date: string;
-    match_url?: string;
+    datetime: string;
+    match_url?: string[];
     referee?: SimpleInfo[];
     participants?: SimpleInfo[];
 }
 
 export type MatchInfo = {
-    time: string;
-    date: string;
+    datetime: string;
     is_winner_bracket: boolean;
-    match_url?: string;
+    match_url?: string[];
     referee?: SimpleInfo[];
     streamer?: SimpleInfo[];
     commentators?: SimpleInfo[];
