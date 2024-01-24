@@ -5,17 +5,47 @@ export const siteConfig = {
 	description: "Make beautiful websites regardless of your design experience.",
 	navItems: [
 		{
-			label: "Home",
+			label: "主页",
 			href: "/",
 		},
     {
-      label: "Docs",
-      href: "/docs",
+      label: "比赛管理",
+      href: "/tournament-management",
     },
     {
       label: "About",
       href: "/about",
     }
+	],
+	tournamentNavItems: [
+		{
+			label: "比赛主页",
+			href: "/home",
+		},
+		{
+			label: "规则",
+			href: "/rules",
+		},
+		{
+			label: "时间安排",
+			href: "/schedule",
+		},
+		{
+			label: "图池",
+			href: "/mappools",
+		},
+		{
+			label: "参赛成员",
+			href: "/participants",
+		},
+		{
+			label: "数据统计",
+			href: "/stats",
+		},
+		{
+			label: "工作人员",
+			href: "/staff",
+		}
 	],
 	navMenuItems: [
 		{
