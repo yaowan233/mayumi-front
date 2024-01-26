@@ -74,34 +74,44 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
             <Divider/>
             <div className={"grid grid-cols-3 gap-4"}>
                 <div className={"flex flex-col"}>
-                    <div className={"text-center text-xl"}>
-                        裁判
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                        {match_info.referee?.map((referee, n) => (
-                            <AnotherPersonInfo key={n} info={referee}/>
-                        ))}
-                    </div>
+                    {match_info.referee ? (
+                        <>
+                            <div className={"text-center text-xl"}>
+                                裁判
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                {match_info.referee?.map((referee, n) => (
+                                    <AnotherPersonInfo key={n} info={referee}/>
+                                ))}
+                            </div>
+                        </>
+                        ) : ''}
                 </div>
                 <div className={"flex flex-col"}>
-                    <div className={"text-center text-xl"}>
-                        直播
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                        {match_info.streamer?.map((streamer, n) => (
-                            <AnotherPersonInfo key={n} info={streamer}/>
-                        ))}
-                    </div>
+                    {match_info.streamer ? (
+                        <>
+                            <div className={"text-center text-xl"}>
+                                直播
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                {match_info.streamer?.map((streamer, n) => (
+                                    <AnotherPersonInfo key={n} info={streamer}/>
+                                ))}
+                            </div>
+                        </>) : ''}
                 </div>
                 <div className={"flex flex-col"}>
-                    <div className={"text-center text-xl"}>
-                        解说
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                        {match_info.commentators?.map((commentator, n) => (
-                            <AnotherPersonInfo key={n} info={commentator}/>
-                        ))}
-                    </div>
+                    {match_info.commentators ? (
+                        <>
+                            <div className={"text-center text-xl"}>
+                                解说
+                            </div>
+                            <div className="grid grid-cols-3 gap-4">
+                                {match_info.commentators?.map((commentator, n) => (
+                                    <AnotherPersonInfo key={n} info={commentator}/>
+                                ))}
+                            </div>
+                        </>) : ''}
                 </div>
             </div>
             <Divider/>
@@ -139,16 +149,16 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
             <div className={"text-center"}>
                 {formatTime(((new Date(match_info.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(match_info.datetime)).getUTCMinutes()).toString())}
             </div>
-            <div className={"flex flex-row justify-center gap-8 grow items-center"}>
-                <div className={""}>
+            <div className={"flex flex-row justify-center grow items-center gap-8"}>
+                <div className={"w-[150px] min-w-[150px] text-right"}>
                     {match_info.team1.name}
                 </div>
                 <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px]"} src={match_info.team1.avatar_url} />
-                <div>
-                    {`${match_info.team1_score} : ${match_info.team2_score}`}
+                <div className={"w-[60px] min-w-[60px] text-center"}>
+                    {`${match_info.team1_score?match_info.team1_score:0} : ${match_info.team2_score?match_info.team2_score:0}`}
                 </div>
                 <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px]"} src={match_info.team2.avatar_url} />
-                <div className={""}>
+                <div className={"w-[150px] min-w-[150px]"}>
                     {match_info.team2.name}
                 </div>
             </div>

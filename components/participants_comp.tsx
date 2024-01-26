@@ -11,7 +11,7 @@ export const ParticipantsComp = ({players}: { players: Player[] }) => {
                 <Card>
                     <CardBody>
                         <div className={"grid md:grid-cols-4 sm:grid-cols-3 gap-3"}>
-                            {players.map((user, num) => (
+                            {players.sort((player1, player2) => parseFloat(player2.pp) - parseFloat(player1.pp)).map((user, num) => (
                                 <UserInfo key={num} user={user}/>
                             ))}
                         </div>

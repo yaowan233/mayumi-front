@@ -247,10 +247,16 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                            value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[0]:""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
-                                                            let datetime = new Date();
-                                                            datetime.setFullYear(parseInt(e.target.value.split('-')[0]));
-                                                            datetime.setMonth(parseInt(e.target.value.split('-')[1])-1);
-                                                            datetime.setDate(parseInt(e.target.value.split('-')[2]));
+                                                            let datetime;
+                                                            if (schedule.match_time !== undefined) {
+                                                                datetime = new Date(schedule.match_time);
+                                                            }
+                                                            else {
+                                                                datetime = new Date();
+                                                            }
+                                                            datetime.setUTCFullYear(parseInt(e.target.value.split('-')[0]));
+                                                            datetime.setUTCMonth(parseInt(e.target.value.split('-')[1])-1);
+                                                            datetime.setUTCDate(parseInt(e.target.value.split('-')[2]));
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                        }}
@@ -258,9 +264,15 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                     <Input type="time" label="时间" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toTimeString().split(' ')[0].substring(0, 5):""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
-                                                            let datetime = new Date();
-                                                            datetime.setHours(parseInt(e.target.value.split(':')[0]));
-                                                            datetime.setMinutes(parseInt(e.target.value.split(':')[1]));
+                                                            let datetime;
+                                                            if (schedule.match_time !== undefined) {
+                                                                datetime = new Date(schedule.match_time);
+                                                            }
+                                                            else {
+                                                                datetime = new Date();
+                                                            }
+                                                            datetime.setUTCHours(parseInt(e.target.value.split(':')[0]));
+                                                            datetime.setUTCMinutes(parseInt(e.target.value.split(':')[1]));
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                         }
