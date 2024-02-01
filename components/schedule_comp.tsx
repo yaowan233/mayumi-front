@@ -246,7 +246,7 @@ const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
                     <div className={"text-center text-xl"}>
                         裁判
                     </div>
-                    <div className={"grid grid-cols-2 gap-2"}>
+                    <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.referee?.map((referee) => (
                             <PersonInfo key={referee.name} info={referee}/>
                         ))}
@@ -255,7 +255,7 @@ const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
                     <div className={"text-center text-xl"}>
                         选手
                     </div>
-                    <div className={"grid grid-cols-2 gap-2"}>
+                    <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.participants?.map((participants) => (
                             <PersonInfo key={participants.name} info={participants}/>
                         ))}

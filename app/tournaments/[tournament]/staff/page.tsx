@@ -5,7 +5,7 @@ import {Image} from "@nextui-org/image";
 export default async function StaffPage({params}: { params: { tournament: string } }) {
     let staff = await GetStaff(params.tournament)
     return (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/*遍历 staff*/}
             {Object.keys(staff).filter((member) => staff[member].length > 0).map((role) => (
                 <Card key={role}>
