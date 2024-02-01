@@ -18,12 +18,12 @@ export const ParticipantsComp = ({players}: { players: Player[] }) => {
                     </CardBody>
                 </Card>
             </Tab>
-            <Tab key="teams" title="队伍">
-                <Card>
-                    <CardBody>
-                    </CardBody>
-                </Card>
-            </Tab>
+            {/*<Tab key="teams" title="队伍">*/}
+            {/*    <Card>*/}
+            {/*        <CardBody>*/}
+            {/*        </CardBody>*/}
+            {/*    </Card>*/}
+            {/*</Tab>*/}
         </Tabs>
     )
 }

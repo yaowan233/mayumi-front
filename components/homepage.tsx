@@ -289,7 +289,7 @@ type Link = {
 }
 
 
-type RegistrationInfo = {
+export type RegistrationInfo = {
     tournament: string;
     uid?: number;
     qqNumber: string;

@@ -20,9 +20,7 @@ import clsx from "clsx";
 
 import { ThemeSwitch } from "@/components/theme-switch";
 import {
-	TwitterIcon,
 	GithubIcon,
-	DiscordIcon,
 	HeartFilledIcon,
 } from "@/components/icons";
 
@@ -30,19 +28,21 @@ import { Logo } from "@/components/icons";
 import {useContext, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Avatar} from "@nextui-org/avatar";
+import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@nextui-org/dropdown";
 
 export const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	return (
 		<NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen} className="">
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-				<NavbarBrand as="li" className="gap-3 max-w-fit">
+				<NavbarMenuToggle className="flex sm:hidden"/>
+				<NavbarBrand as="li" className="hidden sm:flex gap-3 max-w-fit">
 					<NextLink className="flex justify-start items-center gap-1" href="/">
 						<Logo />
 						<p className="font-bold text-inherit">OSU WEB</p>
 					</NextLink>
 				</NavbarBrand>
-				<ul className="hidden lg:flex gap-4 justify-start ml-2">
+				<ul className="hidden sm:flex gap-4 justify-start ml-2">
 					{siteConfig.navItems.map((item) => (
 						<NavbarItem key={item.href}>
 							<NextLink
@@ -65,12 +65,12 @@ export const Navbar = () => {
 				justify="end"
 			>
 				<NavbarItem className="hidden sm:flex gap-2">
-					<Link isExternal href={siteConfig.links.twitter} aria-label="Twitter">
-						<TwitterIcon className="text-default-500" />
-					</Link>
-					<Link isExternal href={siteConfig.links.discord} aria-label="Discord">
-						<DiscordIcon className="text-default-500" />
-					</Link>
+					{/*<Link isExternal href={siteConfig.links.twitter} aria-label="Twitter">*/}
+					{/*	<TwitterIcon className="text-default-500" />*/}
+					{/*</Link>*/}
+					{/*<Link isExternal href={siteConfig.links.discord} aria-label="Discord">*/}
+					{/*	<DiscordIcon className="text-default-500" />*/}
+					{/*</Link>*/}
 					<Link isExternal href={siteConfig.links.github} aria-label="Github">
 						<GithubIcon className="text-default-500" />
 					</Link>
@@ -79,7 +79,7 @@ export const Navbar = () => {
 				{/*<NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>*/}
 				<NavbarItem className="hidden md:flex">
 					<Button
-            isExternal
+            			isExternal
 						as={Link}
 						className="text-sm font-normal text-default-600 bg-default-100"
 						href={siteConfig.links.sponsor}
@@ -89,7 +89,6 @@ export const Navbar = () => {
 						Sponsor
 					</Button>
 				</NavbarItem>
-				<UserStatus/>
 			</NavbarContent>
 
 			<NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -97,27 +96,27 @@ export const Navbar = () => {
 					<GithubIcon className="text-default-500" />
 				</Link>
 				<ThemeSwitch />
-				<NavbarMenuToggle />
 			</NavbarContent>
+			<UserStatus/>
 
 			<NavbarMenu>
 				{/*{searchInput}*/}
 				<div className="mx-4 mt-2 flex flex-col gap-2">
-					{siteConfig.navMenuItems.map((item, index) => (
-						<NavbarMenuItem key={`${item}-${index}`}>
-							<Link
-								color={
-									index === siteConfig.navMenuItems.length - 1
-										? "danger"
-										: "foreground"
-								}
-								href="#"
-								size="lg"
-							>
-								{item.label}
-							</Link>
-						</NavbarMenuItem>
-					))}
+					<NavbarMenuItem>
+						<Link href="/" size="lg" color="foreground">
+							主页
+						</Link>
+					</NavbarMenuItem>
+					<NavbarMenuItem>
+						<Link href={"/tournament-management"} size="lg" color="foreground">
+							赛事管理
+						</Link>
+					</NavbarMenuItem>
+					<NavbarMenuItem>
+						<Link href={"/abort"} size="lg" color="foreground">
+							关于
+						</Link>
+					</NavbarMenuItem>
 				</div>
 			</NavbarMenu>
 		</NextUINavbar>
@@ -131,13 +130,14 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 	return (
 		<NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
+				<NavbarMenuToggle className="md:hidden" />
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
-					<NextLink className="flex justify-start items-center gap-1" href="/">
+					<NextLink className="hidden sm:flex justify-start items-center gap-1" href="/">
 						<Logo />
 						<p className="font-bold text-inherit">OSU WEB</p>
 					</NextLink>
 				</NavbarBrand>
-				<ul className="hidden lg:flex gap-4 justify-start ml-2">
+				<ul className="hidden md:flex gap-4 justify-start ml-2">
 					{siteConfig.tournamentNavItems.map((item) => (
 						<NavbarItem key={`${tournament_href_start}${item.href}`}>
 							<NextLink
@@ -160,18 +160,18 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 				justify="end"
 			>
 				<NavbarItem className="hidden sm:flex gap-2">
-					<Link isExternal href={siteConfig.links.twitter} aria-label="Twitter">
-						<TwitterIcon className="text-default-500" />
-					</Link>
-					<Link isExternal href={siteConfig.links.discord} aria-label="Discord">
-						<DiscordIcon className="text-default-500" />
-					</Link>
+					{/*<Link isExternal href={siteConfig.links.twitter} aria-label="Twitter">*/}
+					{/*	<TwitterIcon className="text-default-500" />*/}
+					{/*</Link>*/}
+					{/*<Link isExternal href={siteConfig.links.discord} aria-label="Discord">*/}
+					{/*	<DiscordIcon className="text-default-500" />*/}
+					{/*</Link>*/}
 					<Link isExternal href={siteConfig.links.github} aria-label="Github">
 						<GithubIcon className="text-default-500" />
 					</Link>
 					<ThemeSwitch />
 				</NavbarItem>
-				<NavbarItem className="hidden md:flex">
+				<NavbarItem className="hidden lg:flex">
 					<Button
 						isExternal
 						as={Link}
@@ -183,7 +183,6 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 						Sponsor
 					</Button>
 				</NavbarItem>
-				<UserStatus/>
 			</NavbarContent>
 
 			<NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -191,21 +190,20 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 					<GithubIcon className="text-default-500" />
 				</Link>
 				<ThemeSwitch />
-				<NavbarMenuToggle />
 			</NavbarContent>
+			<UserStatus/>
 
 			<NavbarMenu>
-				{/*{searchInput}*/}
 				<div className="mx-4 mt-2 flex flex-col gap-2">
 					{siteConfig.navMenuItems.map((item, index) => (
 						<NavbarMenuItem key={`${item}-${index}`}>
 							<Link
-								color={
-									index === siteConfig.navMenuItems.length - 1
-										? "danger"
-										: "foreground"
+								color="foreground"
+								href={
+									index === 0
+										? "/"
+										: `${tournament_href_start}${item.href}`
 								}
-								href="#"
 								size="lg"
 							>
 								{item.label}
@@ -221,7 +219,22 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 export const UserStatus = () => {
 	const currentUser  = useContext(CurrentUserContext);
 	return (
-		currentUser?.currentUser != null ? <Avatar src={`https://a.ppy.sh/${currentUser.currentUser?.uid}`} />: LoginButton()
+		currentUser?.currentUser != null ?
+			<Dropdown>
+				<DropdownTrigger>
+					<Avatar as="button" src={`https://a.ppy.sh/${currentUser.currentUser?.uid}`} />
+				</DropdownTrigger>
+				<DropdownMenu aria-label="Static Actions">
+					{/*<DropdownItem key="new">New file</DropdownItem>*/}
+					<DropdownItem key="logout" className="text-danger" color="danger" onPress={async () => {
+						await fetch(`http://localhost:8421/api/logout`, {credentials: 'include'})
+						currentUser?.setCurrentUser(null)
+					}}>
+						登出
+					</DropdownItem>
+				</DropdownMenu>
+			</Dropdown>
+			: LoginButton()
 	)
 }
 

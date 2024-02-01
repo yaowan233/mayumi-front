@@ -13,7 +13,7 @@ export const siteConfig = {
       href: "/tournament-management",
     },
     {
-      label: "About",
+      label: "关于",
       href: "/about",
     }
 	],
@@ -49,36 +49,36 @@ export const siteConfig = {
 	],
 	navMenuItems: [
 		{
-			label: "Profile",
+			label: "主页",
 			href: "/profile",
 		},
 		{
-			label: "Dashboard",
-			href: "/dashboard",
+			label: "比赛主页",
+			href: "/home",
 		},
 		{
-			label: "Projects",
-			href: "/projects",
+			label: "规则",
+			href: "/rules",
 		},
 		{
-			label: "Team",
-			href: "/team",
+			label: "时间安排",
+			href: "/schedule",
 		},
 		{
-			label: "Calendar",
-			href: "/calendar",
+			label: "图池",
+			href: "/mappools",
 		},
 		{
-			label: "Settings",
-			href: "/settings",
+			label: "参赛成员",
+			href: "/participants",
 		},
 		{
-			label: "Help & Feedback",
-			href: "/help-feedback",
+			label: "数据统计",
+			href: "/stats",
 		},
 		{
-			label: "Logout",
-			href: "/logout",
+			label: "工作人员",
+			href: "/staff",
 		},
 	],
 	links: {

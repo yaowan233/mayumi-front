@@ -72,14 +72,14 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
     return (
         <div className={"flex flex-col gap-4"}>
             <Divider/>
-            <div className={"grid grid-cols-3 gap-4"}>
+            <div className={"grid grid-cols-1 sm:grid-cols-3 gap-4"}>
                 <div className={"flex flex-col"}>
                     {match_info.referee ? (
                         <>
                             <div className={"text-center text-xl"}>
                                 裁判
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {match_info.referee?.map((referee, n) => (
                                     <AnotherPersonInfo key={n} info={referee}/>
                                 ))}
@@ -93,7 +93,7 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                             <div className={"text-center text-xl"}>
                                 直播
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {match_info.streamer?.map((streamer, n) => (
                                     <AnotherPersonInfo key={n} info={streamer}/>
                                 ))}
@@ -106,7 +106,7 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                             <div className={"text-center text-xl"}>
                                 解说
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {match_info.commentators?.map((commentator, n) => (
                                     <AnotherPersonInfo key={n} info={commentator}/>
                                 ))}
@@ -115,14 +115,14 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                 </div>
             </div>
             <Divider/>
-            <div className={"grid grid-cols-2 gap-3"}>
+            <div className={"grid grid-cols-1 sm:grid-cols-2 gap-3"}>
                 <div className={"flex flex-col items-center gap-3"}>
                     <div className={"text-center text-xl"}>
                         {match_info.team1.name} 热手
                     </div>
                     {match_info.team1_warmup?
                         <MapComp map={match_info.team1_warmup}/>
-                        : ''
+                        : '暂无热手'
                     }
                 </div>
                 <div className={"flex flex-col items-center gap-3"}>
@@ -131,7 +131,7 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     </div>
                     {match_info.team2_warmup?
                         <MapComp map={match_info.team2_warmup}/>
-                        : ''
+                        : '暂无热手'
                     }
                 </div>
             </div>
@@ -141,25 +141,35 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
 
 
 const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
+    const score1 = match_info.team1_score ? match_info.team1_score : 0
+    const score2 = match_info.team2_score ? match_info.team2_score : 0
+    const text_color1 = score1 > score2 ? "" : "text-neutral-500"
+    const text_color2 = score1 < score2 ? "" : "text-neutral-500"
+    const pic_color1 = score1 > score2 ? "" : "brightness-50"
+    const pic_color2 = score1 < score2 ? "" : "brightness-50"
     return (
-        <div className={"flex gap-6 grow"}>
-            <div className={"text-start font-bold text-2xl w-[72px]"}>
+        <div className={"grid grid-cols-1 sm:flex sm:flex-wrap gap-3 grow items-center justify-center justify-items-center"}>
+            <div className={"text-center sm:text-start font-bold text-2xl w-[72px]"}>
                 {(new Date(match_info.datetime)).getUTCMonth() + 1}/{(new Date(match_info.datetime)).getUTCDate()}
             </div>
             <div className={"text-center"}>
                 {formatTime(((new Date(match_info.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(match_info.datetime)).getUTCMinutes()).toString())}
             </div>
-            <div className={"flex flex-row justify-center grow items-center gap-8"}>
-                <div className={"w-[150px] min-w-[150px] text-right"}>
-                    {match_info.team1.name}
+            <div className={"grid grid-cols-1 sm:flex sm:flex-row sm:flex-wrap justify-center grow items-center justify-items-center gap-3"}>
+                <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-end justify-center">
+                    <div className={"text-right " + text_color1}>
+                        {match_info.team1.name}
+                    </div>
+                    <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px] " + pic_color1} src={match_info.team1.avatar_url} />
                 </div>
-                <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px]"} src={match_info.team1.avatar_url} />
                 <div className={"w-[60px] min-w-[60px] text-center"}>
-                    {`${match_info.team1_score?match_info.team1_score:0} : ${match_info.team2_score?match_info.team2_score:0}`}
-                </div>
-                <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px]"} src={match_info.team2.avatar_url} />
-                <div className={"w-[150px] min-w-[150px]"}>
-                    {match_info.team2.name}
+                        {`${score1} : ${score2}`}
+                    </div>
+                <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-start justify-center">
+                    <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px] " + pic_color2} src={match_info.team2.avatar_url} />
+                    <div className={" " + text_color2}>
+                        {match_info.team2.name}
+                    </div>
                 </div>
             </div>
         </div>
@@ -218,7 +228,7 @@ const MapComp = ({map}: { map: map }) => {
 
 const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
     return (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ">
             {schedule_stage.lobby_info?.map((stage_schedule) => (
                 <Card key={stage_schedule.lobby_name} className={"p-3 gap-3"}>
                     <div className={"flex flex-row items-center gap-3"}>

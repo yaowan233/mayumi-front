@@ -48,7 +48,16 @@ export default function EditStatisticsPage({params}: { params: { tournament: str
                         </p>
                         <Button className="max-w-fit" color="primary" onClick={async () => {
                             const res = await fetch(`http://localhost:8421/api/get-stage-plays?tournament_name=${params.tournament}&stage_name=${Array.from(round)[0]}`,
-                                { next: { revalidate: 10 }})}}>
+                                { next: { revalidate: 0 }})
+                            if (res.status != 200) {
+                                // 失败
+                                alert(await res.text());
+                                return;
+                            }
+                            else {
+                                alert('更新成功');
+                            }
+                        }}>
                                 更新比赛数据
                         </Button>
                     </div>

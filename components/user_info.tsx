@@ -4,11 +4,11 @@ import {Link} from "@nextui-org/link";
 
 export const UserInfo = ({user}: { user: Player }) => {
     return(
-        <Link color={"foreground"} isExternal className={"flex gap-3 justify-start border-2"} href={`https://osu.ppy.sh/u/${user.uid}`}>
+        <Link color={"foreground"} isExternal className={"flex gap-3 justify-start border-2 p-2"} href={`https://osu.ppy.sh/u/${user.uid}`}>
             <div className={"grid content-center px-2"}>
                 <Image height={60} width={60} src={`https://a.ppy.sh/${user.uid}`}/>
             </div>
-            <div className={"flex-col"}>
+            <div className={"flex flex-col gap-3"}>
                 <div>
                     <p className={"text-foreground"}>{user.name}</p>
                 </div>
@@ -22,17 +22,17 @@ export const UserInfo = ({user}: { user: Player }) => {
                         <p className={"text-foreground"}>{user.pp}</p>
                     </div>
                 </div>
-                <div className={"border-t-3"}>
-                    <p className={"text-foreground"}>时区</p>
-                    <p className={"text-foreground"}>UTC{user.timezone}</p>
-                </div>
+                {/*<div className={"border-t-3"}>*/}
+                {/*    <p className={"text-foreground"}>时区</p>*/}
+                {/*    <p className={"text-foreground"}>UTC{user.timezone}</p>*/}
+                {/*</div>*/}
             </div>
         </Link>
     )
 }
 
 export interface Player {
-    uid: string;
+    uid: number;
     name: string;
     country: string;
     pp: string;

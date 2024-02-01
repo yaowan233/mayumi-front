@@ -9,23 +9,86 @@ import {Autocomplete, AutocompleteItem} from "@nextui-org/autocomplete";
 import {Button} from "@nextui-org/button";
 import {useFilter} from "@react-aria/i18n";
 import {Spinner} from "@nextui-org/spinner";
+import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure} from "@nextui-org/modal";
+import {RegistrationInfo} from "@/components/homepage";
+import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
+
+const columns = [
+    {name: "uid", key: "uid"},
+    {name: "qq号", key: "qqNumber"},
+    {name: "是否第一次当staff", key: "isFirstTimeStaff"},
+    {name: "赛事经验", key: "tournamentExperience"},
+    {name: "选择的职位", key: "selectedPositions"},
+    {name: "其他职位", key: "otherDetails"},
+    {name: "其他想说的", key: "additionalComments"},
+];
 
 export default function EditMemberPage({params}: { params: { tournament: string } }) {
     const currentUser = useContext(CurrentUserContext);
     const [members, setMembers] = useState<TournamentMember[]>([]);
+    const [registrationInfo, setRegistrationInfo] = useState<RegistrationInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const {isOpen, onOpen, onOpenChange} = useDisclosure();
+
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 const data = await getTournamentMembers(params.tournament);
+                const registrationInfo = await getRegistrationInfo(params.tournament);
                 setMembers(data);
+                setRegistrationInfo(registrationInfo);
             }
         };
         fetchData();
     }, [currentUser]);
     return (
         <div className="flex flex-col gap-5">
-            <h1 className="text-3xl font-bold">成员管理</h1>
+            <div className="flex flex-row justify-between">
+                <h1 className="text-3xl font-bold">成员管理</h1>
+                <Button color="success" className="" onPress={onOpen}>查看staff申请</Button>
+                <Modal size="5xl" isOpen={isOpen} onOpenChange={onOpenChange}>
+                    <ModalContent>
+                        {(onClose) => (
+                            <>
+                                <ModalHeader className="flex flex-col gap-1">目前的staff申请</ModalHeader>
+                                <ModalBody>
+                                    <Table>
+                                        <TableHeader columns={columns}>
+                                            {
+                                                (column) => (
+                                                    <TableColumn key={column.key}>
+                                                        {column.name}
+                                                    </TableColumn>
+                                                )
+                                            }
+                                        </TableHeader>
+                                        <TableBody
+                                            items={registrationInfo}
+                                        >
+                                            {(item) => (
+                                                <TableRow key={item.uid}>
+                                                    {(columnKey) => {
+                                                        if (columnKey === 'acc_max' || columnKey === 'acc_min' || columnKey === 'acc_avg') {
+                                                            return <TableCell>{getKeyValue(item, columnKey) ? (getKeyValue(item, columnKey) * 100).toFixed(2) + "%" : null}</TableCell>
+                                                        }
+                                                        return (<TableCell>{getKeyValue(item, columnKey)}</TableCell>)
+                                                    }}
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </ModalBody>
+                                <ModalFooter>
+                                    <Button color="danger" variant="light" onPress={onClose}>
+                                        关闭
+                                    </Button>
+                                </ModalFooter>
+                            </>
+                        )}
+                    </ModalContent>
+                </Modal>
+
+            </div>
             <Divider/>
             <h1 className="text-3xl font-bold">主办</h1>
             <div className="grid grid-cols-2">
@@ -531,6 +594,12 @@ const AddMember = ({
     )
 }
 
+
+async function getRegistrationInfo(tournament_name: string): Promise<RegistrationInfo[]> {
+    const res = await fetch(`http://localhost:8421/api/get-registration-info?tournament_name=${tournament_name}`,
+        { next: { revalidate: 10 }});
+    return await res.json();
+}
 
 export interface TournamentMember {
     uid: string;

@@ -40,14 +40,14 @@ export default function TournamentManagementPage() {
 						</Card>)}
 				</div>
 			) : (
-				<p>你还没有创建任何比赛</p>
+				<p>你还无法管理任何比赛</p>
 			)}
 		</div>
 	);
 }
 
 export async function getTournamentManagementInfo(uid: number): Promise<TournamentManagementInfo[]> {
-	const data = await fetch(`http://localhost:8421/api/tournament-management-info?uid=${uid}`,
+	const data = await fetch(`http://10.253.2.72:8421/api/tournament-management-info?uid=${uid}`,
 		{ next: { revalidate: 10 }});
 	return await data.json();
 }
