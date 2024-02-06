@@ -4,6 +4,7 @@ import {Input} from "@nextui-org/input";
 import {Switch} from "@nextui-org/switch";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
+import {siteConfig} from "@/config/site";
 
 
 export default function EditRoundPage({ params }: { params: { tournament: string } }) {
@@ -33,7 +34,7 @@ export default function EditRoundPage({ params }: { params: { tournament: string
         }
         else {
             // 执行报名操作或其他相关逻辑
-            const res = await fetch('http://localhost:8421/api/update-tournament-round-info', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+            const res = await fetch(siteConfig.backend_url + '/api/update-tournament-round-info', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
             if (res.status != 200) {
                 // 失败
                 setErrMsg(await res.text());
@@ -136,7 +137,7 @@ export interface TournamentRoundInfo {
 }
 
 export async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(`http://localhost:8421/api/tournament-round-info?tournament_name=${tournament_name}`,
+    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
         { next: { revalidate: 10 }});
     return await data.json();
 }

@@ -1,5 +1,6 @@
 "use server"
 import {cookies} from "next/headers";
+import {siteConfig} from "@/config/site";
 
 export async function getMe(): Promise<Me | null> {
     const cookieStore = cookies()
@@ -8,7 +9,7 @@ export async function getMe(): Promise<Me | null> {
         return null
     }
     cookieStore.set('uuid', uuid, { path: '/' , expires: new Date(Date.now() + 30 * 60 * 60 * 24 * 1000)})
-    const res = await fetch('http://localhost:8421/api/me', {  headers: {
+    const res = await fetch(siteConfig.backend_url + '/api/me', {  headers: {
             Cookie: `uuid=${cookieStore.get('uuid')?.value}`,
         },
     })

@@ -6,6 +6,7 @@ import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {getTournamentInfo} from "@/app/tournaments/[tournament]/home/page";
 import {Button} from "@nextui-org/button";
 import {useRouter} from "next/navigation";
+import {siteConfig} from "@/config/site";
 
 export default function EditTournamentMetaPage({params}: { params: { tournament: string } }) {
 	const currentUser = useContext(CurrentUserContext);
@@ -56,7 +57,7 @@ export default function EditTournamentMetaPage({params}: { params: { tournament:
 		}
 		else {
 			// 执行报名操作或其他相关逻辑
-			const res = await fetch('http://localhost:8421/api/update-tournament', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+			const res = await fetch(siteConfig.backend_url + '/api/update-tournament', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
 			if (res.status != 200) {
 				// 失败
 				setErrMsg(await res.text());

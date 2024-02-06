@@ -15,6 +15,7 @@ import {Switch} from "@nextui-org/switch";
 import {MenuTriggerAction} from "@react-types/combobox";
 import {Chip} from "@nextui-org/chip";
 import {Spinner} from "@nextui-org/spinner";
+import {siteConfig} from "@/config/site";
 
 export default function SchedulerPage({params}: { params: { tournament: string } }) {
     const currentUser = useContext(CurrentUserContext);
@@ -235,7 +236,8 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                 </div>
                                                 <div className="flex flex-row gap-5 items-baseline">
                                                     <Input className="max-w-[80px]" label="比赛序号" value={schedule.match_id}
-                                                           description="不能重复" onChange={(e) => {
+                                                           description="不能重复" isRequired
+                                                           onChange={(e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
                                                             newScheduleInfo[index].match_id = e.target.value;
                                                             setScheduleInfo(newScheduleInfo);
@@ -483,13 +485,13 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                 </Button>
                 {isLoading ?  <Spinner className="max-w-fit" /> :
                     <Button className="max-w-fit" color="success" onPress={async () => {
-                        if (!scheduleInfo.filter((schedule) => !schedule.is_lobby).every((schedule) => schedule.team1 && schedule.team2 && schedule.match_time) || !scheduleInfo.filter((schedule) => schedule.is_lobby).every((schedule) => schedule.name && schedule.match_time)) {
+                        if (!scheduleInfo.filter((schedule) => !schedule.is_lobby).every((schedule) => schedule.team1 && schedule.team2 && schedule.match_time && schedule.match_id) || !scheduleInfo.filter((schedule) => schedule.is_lobby).every((schedule) => schedule.name && schedule.match_time)) {
                             // 显示错误消息或采取其他适当的操作
                             setErrMsg('请填写所有必填字段')
                             return
                         }
                         setIsLoading(true)
-                        const res = await fetch('http://localhost:8421/api/update-schedule', {'method': 'POST', 'body': JSON.stringify(scheduleInfo), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                        const res = await fetch(siteConfig.backend_url + '/api/update-schedule', {'method': 'POST', 'body': JSON.stringify(scheduleInfo), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
                         setIsLoading(false)
                         if (res.status != 200) {
                             // 失败
@@ -677,7 +679,7 @@ const GroupMemberSelect = ({members, scheduleInfo, setScheduleInfo, role, index}
 }
 
 async function getSchedule(tournament_name: string): Promise<Schedule[]> {
-    const res = await fetch(`http://localhost:8421/api/get-schedule?tournament_name=${tournament_name}`);
+    const res = await fetch(siteConfig.backend_url + `/api/get-schedule?tournament_name=${tournament_name}`);
     if (!res.ok) {
         throw new Error(res.statusText);
     }

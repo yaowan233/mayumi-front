@@ -46,7 +46,7 @@ export default async function Home() {
 
 
 async function GetTournamentInfo() : Promise<Tournament[]> {
-	const res = await fetch('http://127.0.0.1:8421/api/tournaments',
+	const res = await fetch(siteConfig.backend_url + '/api/tournaments',
 		{ next: { revalidate: 30 }})
 	if (!res.ok) {
 		throw new Error('Failed to fetch data')

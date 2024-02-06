@@ -5,6 +5,7 @@ import {Card, CardFooter, CardHeader} from "@nextui-org/card";
 import {Chip} from "@nextui-org/chip";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
+import {siteConfig} from "@/config/site";
 
 export default function TournamentManagementPage() {
 	const currentUser = useContext(CurrentUserContext);
@@ -47,7 +48,7 @@ export default function TournamentManagementPage() {
 }
 
 export async function getTournamentManagementInfo(uid: number): Promise<TournamentManagementInfo[]> {
-	const data = await fetch(`http://10.253.2.72:8421/api/tournament-management-info?uid=${uid}`,
+	const data = await fetch(siteConfig.backend_url + `/api/tournament-management-info?uid=${uid}`,
 		{ next: { revalidate: 10 }});
 	return await data.json();
 }

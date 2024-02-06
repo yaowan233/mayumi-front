@@ -4,6 +4,7 @@ import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {Button} from "@nextui-org/button";
 import {useRouter} from "next/navigation";
+import {siteConfig} from "@/config/site";
 
 export default function CreateTournamentPage() {
 	const router = useRouter();
@@ -43,7 +44,7 @@ export default function CreateTournamentPage() {
 		}
 		else {
 			// 执行报名操作或其他相关逻辑
-			const res = await fetch('http://localhost:8421/api/create-tournament', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+			const res = await fetch(siteConfig.backend_url + '/api/create-tournament', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
 			if (res.status != 200) {
 				// 失败
 				const msg = await res.json();

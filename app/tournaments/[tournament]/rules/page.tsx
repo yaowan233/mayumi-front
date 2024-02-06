@@ -1,4 +1,5 @@
 import {Card, CardBody} from "@nextui-org/card";
+import {siteConfig} from "@/config/site";
 
 export default async function TournamentRulesPage({params}: { params: { tournament: string } }) {
     const info = await getTournamentRule(params.tournament)
@@ -12,7 +13,7 @@ export default async function TournamentRulesPage({params}: { params: { tourname
 }
 
 export async function getTournamentRule(tournament_name: string): Promise<{ data: string }> {
-    const res = await fetch('http://localhost:8421/api/tournament_rule?tournament_name=' + tournament_name,
+    const res = await fetch(siteConfig.backend_url + '/tournament_rule?tournament_name=' + tournament_name,
         { next: { revalidate: 0 }})
     return await res.json()
 }

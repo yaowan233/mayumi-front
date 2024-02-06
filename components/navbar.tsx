@@ -113,7 +113,7 @@ export const Navbar = () => {
 						</Link>
 					</NavbarMenuItem>
 					<NavbarMenuItem>
-						<Link href={"/abort"} size="lg" color="foreground">
+						<Link href={"/about"} size="lg" color="foreground">
 							关于
 						</Link>
 					</NavbarMenuItem>
@@ -227,7 +227,7 @@ export const UserStatus = () => {
 				<DropdownMenu aria-label="Static Actions">
 					{/*<DropdownItem key="new">New file</DropdownItem>*/}
 					<DropdownItem key="logout" className="text-danger" color="danger" onPress={async () => {
-						await fetch(`http://localhost:8421/api/logout`, {credentials: 'include'})
+						await fetch(siteConfig.backend_url + `/api/logout`, {credentials: 'include'})
 						currentUser?.setCurrentUser(null)
 					}}>
 						登出
@@ -241,11 +241,11 @@ export const UserStatus = () => {
 
 const LoginButton = () => {
 	return (
-		<NavbarItem className="hidden md:flex">
+		<NavbarItem>
 			<Button
 				as={Link}
 				className="text-sm font-normal text-default-600 bg-default-100"
-				href={"https://osu.ppy.sh/oauth/authorize?client_id=28516&redirect_uri=http://localhost:3000/api/oauth&response_type=code&scope=public"}
+				href={`https://osu.ppy.sh/oauth/authorize?client_id=28516&redirect_uri=${siteConfig.web_url}/api/oauth&response_type=code&scope=public`}
 				variant="flat"
 			>
 				登录

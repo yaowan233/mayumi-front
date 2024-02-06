@@ -6,6 +6,7 @@ import {getRoundInfo, TournamentRoundInfo} from "@/app/(home)/tournament-managem
 import CurrentUserContext from "@/app/user_context";
 import {Select, SelectItem} from "@nextui-org/select";
 import {Button} from "@nextui-org/button";
+import {siteConfig} from "@/config/site";
 
 export default function EditStatisticsPage({params}: { params: { tournament: string } }) {
     const [round, setRound] = useState<Set<string>>(new Set([]));
@@ -47,7 +48,7 @@ export default function EditStatisticsPage({params}: { params: { tournament: str
                             当该轮次所有比赛网页信息都正确填写之后，点击下方按钮更新比赛数据，数据会自动生成，如有错误请联系管理员
                         </p>
                         <Button className="max-w-fit" color="primary" onClick={async () => {
-                            const res = await fetch(`http://localhost:8421/api/get-stage-plays?tournament_name=${params.tournament}&stage_name=${Array.from(round)[0]}`,
+                            const res = await fetch(siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${params.tournament}&stage_name=${Array.from(round)[0]}`,
                                 { next: { revalidate: 0 }})
                             if (res.status != 200) {
                                 // 失败

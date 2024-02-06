@@ -6,6 +6,7 @@ import CurrentUserContext from "@/app/user_context";
 import {getRoundInfo, TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Image} from "@nextui-org/image";
 import {Input} from "@nextui-org/input";
+import {siteConfig} from "@/config/site";
 
 
 export default function EditTournamentMapPoolPage({params}: { params: { tournament: string } }) {
@@ -24,7 +25,7 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
         }
         else {
             // 执行报名操作或其他相关逻辑
-            const res = await fetch('http://localhost:8421/api/update-tournament-maps', {'method': 'POST', 'body': JSON.stringify(tournamentMaps), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+            const res = await fetch(siteConfig.backend_url + '/api/update-tournament-maps', {'method': 'POST', 'body': JSON.stringify(tournamentMaps), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
             if (res.status != 200) {
                 // 失败
                 setErrMsg(await res.text());
@@ -149,7 +150,7 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
 }
 
 async function getTournamentMaps(tournament_name: string): Promise<TournamentMap[]>{
-    const data = await fetch(`http://localhost:8421/api/get_tournament_maps?tournament_name=${tournament_name}`,
+    const data = await fetch(siteConfig.backend_url + `/api/get_tournament_maps?tournament_name=${tournament_name}`,
         { next: { revalidate: 10 }});
     return await data.json();
 }

@@ -12,6 +12,7 @@ import {Spinner} from "@nextui-org/spinner";
 import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure} from "@nextui-org/modal";
 import {RegistrationInfo} from "@/components/homepage";
 import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
+import {siteConfig} from "@/config/site";
 
 const columns = [
     {name: "uid", key: "uid"},
@@ -447,7 +448,7 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                 isLoading ?  <Spinner className="max-w-fit" /> :
                     <Button className="max-w-fit" color="primary" onPress={async () => {
                         setIsLoading(true)
-                        const res = await fetch('http://localhost:8421/api/update-members', {'method': 'POST', 'body': JSON.stringify(members), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                        const res = await fetch(siteConfig.backend_url + '/api/update-members', {'method': 'POST', 'body': JSON.stringify(members), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
                         setIsLoading(false)
                         if (res.status != 200) {
                             // 失败
@@ -466,7 +467,7 @@ export default function EditMemberPage({params}: { params: { tournament: string 
 }
 
 export async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
-    const res = await fetch(`http://localhost:8421/api/members?tournament_name=${tournament_name}`,
+    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
         { next: { revalidate: 10 }});
     return await res.json();
 }
@@ -533,7 +534,7 @@ const AddMember = ({
             alert('请输入uid');
             return;
         }
-        const res = await fetch('http://localhost:8421/api/user?uid=' + fieldState.inputValue);
+        const res = await fetch(siteConfig.backend_url + '/api/user?uid=' + fieldState.inputValue);
         if (res.status !== 200) {
             alert('用户不存在');
             return;
@@ -596,7 +597,7 @@ const AddMember = ({
 
 
 async function getRegistrationInfo(tournament_name: string): Promise<RegistrationInfo[]> {
-    const res = await fetch(`http://localhost:8421/api/get-registration-info?tournament_name=${tournament_name}`,
+    const res = await fetch(siteConfig.backend_url + `/api/get-registration-info?tournament_name=${tournament_name}`,
         { next: { revalidate: 10 }});
     return await res.json();
 }

@@ -13,6 +13,7 @@ import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Tooltip} from "@nextui-org/tooltip";
 import {getTournamentMembers, TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
+import {siteConfig} from "@/config/site";
 
 export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) => {
     const currentUser  = useContext(CurrentUserContext);
@@ -48,7 +49,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
         }
         else {
             // 执行报名操作或其他相关逻辑
-            const res = await fetch('http://localhost:8421/api/tournament-info', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}})
+            const res = await fetch(siteConfig.backend_url + '/api/tournament-info', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}})
             if (res.status != 200) {
                 // 失败
                 setErrMsg(await res.text());
@@ -208,7 +209,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                                 return member.player && member.uid === currentUser?.currentUser?.uid.toString()
                             })}
                                     onPress={async () => {
-                                        const res = await fetch(`http://localhost:8421/api/reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                                        const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
                                         if (res.status != 200) {
                                             // 失败
                                             alert(await res.text());
@@ -229,7 +230,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                             })
                         }
                             onPress={async () => {
-                                const res = await fetch(`http://localhost:8421/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                                const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
                                 if (res.status != 200) {
                                     // 失败
                                     alert(await res.text());

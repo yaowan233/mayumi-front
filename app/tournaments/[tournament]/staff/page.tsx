@@ -1,6 +1,7 @@
 import {Card, CardBody, CardHeader} from "@nextui-org/card";
 import {Link} from "@nextui-org/link";
 import {Image} from "@nextui-org/image";
+import {siteConfig} from "@/config/site";
 
 export default async function StaffPage({params}: { params: { tournament: string } }) {
     let staff = await GetStaff(params.tournament)
@@ -33,7 +34,7 @@ export default async function StaffPage({params}: { params: { tournament: string
 }
 
 async function GetStaff(tournament: string) : Promise<Staff> {
-    const res = await fetch('http://127.0.0.1:8421/api/staff' +
+    const res = await fetch(siteConfig.backend_url + '/api/staff' +
         '?tournament_name=' + tournament,
         { next: { revalidate: 0 }})
     if (!res.ok) {

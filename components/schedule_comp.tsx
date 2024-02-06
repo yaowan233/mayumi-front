@@ -6,10 +6,14 @@ import {Image} from "@nextui-org/image";
 import {Link} from "@nextui-org/link";
 import {Divider} from "@nextui-org/divider";
 import {Accordion, AccordionItem} from "@nextui-org/accordion";
-import React from "react";
+import React, {useContext} from "react";
+import CurrentUserContext from "@/app/user_context";
+import {Input} from "@nextui-org/input";
+import {Button} from "@nextui-org/button";
+import {siteConfig} from "@/config/site";
 
 
-export const ScheduleComp = ({tabs} : { tabs: ScheduleStage[] }) => {
+export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], tournament_name: string }) => {
     return (
         <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"} classNames={{
             tabList: "gap-6 flex",
@@ -19,34 +23,30 @@ export const ScheduleComp = ({tabs} : { tabs: ScheduleStage[] }) => {
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>
                     {
-                        item.is_lobby ? <GroupComp schedule_stage={item}/> : <TeamComp schedule_stage={item}/>
+                        item.is_lobby ? <GroupComp schedule_stage={item}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
                     }
                 </Tab>
                         )}
         </Tabs>
     )
 }
-const TeamComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
+const TeamComp = ({schedule_stage, tournament_name}: { schedule_stage: ScheduleStage, tournament_name: string }) => {
     if (schedule_stage.match_info == undefined) {
-        return (
-        <div>
-        </div>
-        )
-
+        return null
     }
     return (
 
         <div className={"flex flex-col gap-3"}>
-            <div className={"flex flex-row gap-3"}>
+            <div className={"flex flex-row gap-3 max-w-full"}>
                 <p className={"text-2xl min-w-fit"}>
                     胜者组
                 </p>
-                <Divider className={"mt-4"} />
+                <Divider className={"mt-4 shrink"} />
             </div>
             <Accordion variant="bordered">
                 {schedule_stage.match_info.filter((match) => match.is_winner_bracket).map((match_info, index) => (
                         <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />}>
-                            <MatchInfoComp match_info={match_info} />
+                            <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
                         </AccordionItem>
                 ))}
             </Accordion>
@@ -54,12 +54,12 @@ const TeamComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
                 <p className={"text-2xl min-w-fit"}>
                     败者组
                 </p>
-                <Divider className={"mt-4"} />
+                <Divider className={"mt-4 shrink"} />
             </div>
             <Accordion variant="bordered">
                 {schedule_stage.match_info.filter((match) => !match.is_winner_bracket).map((match_info, index) => (
                     <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />}>
-                        <MatchInfoComp match_info={match_info} />
+                        <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
                     </AccordionItem>
                 ))}
             </Accordion>
@@ -68,7 +68,7 @@ const TeamComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
 }
 
 
-const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
+const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: MatchInfo, stage_name: string, tournament_name: string}) => {
     return (
         <div className={"flex flex-col gap-4"}>
             <Divider/>
@@ -122,8 +122,9 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     </div>
                     {match_info.team1_warmup?
                         <MapComp map={match_info.team1_warmup}/>
-                        : '暂无热手'
+                        : "暂无热手图"
                     }
+                    <WarmupSelect uid={match_info.team1.uid} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} />
                 </div>
                 <div className={"flex flex-col items-center gap-3"}>
                     <div className={"text-center text-xl"}>
@@ -131,8 +132,9 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     </div>
                     {match_info.team2_warmup?
                         <MapComp map={match_info.team2_warmup}/>
-                        : '暂无热手'
+                        : "暂无热手图"
                     }
+                    <WarmupSelect uid={match_info.team2.uid} team={2} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} />
                 </div>
             </div>
         </div>
@@ -140,13 +142,39 @@ const MatchInfoComp = ({match_info}: { match_info: MatchInfo }) => {
 }
 
 
+const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id}: {uid: number, team: number, tournament_name: string, stage_name: string, match_id: string}) => {
+    const currentUser = useContext(CurrentUserContext);
+    if (currentUser?.currentUser?.uid != uid) {
+        return null
+    }
+    const [map_id, setMapId] = React.useState("");
+    return (
+        <div className="flex flex-row gap-3 items-baseline grow">
+            <Input className="" label="map id" onChange={(e) => {setMapId(e.target.value)}} description="你可以在比赛开始前在这里添加或修改你的热手图" />
+            <Button color="primary" onPress={async () => {
+                if (map_id == "" || isNaN(parseInt(map_id))) {
+                    alert("请输入正确的map id")
+                }
+                const res = await fetch(siteConfig.backend_url + `/api/update-warmup?map_id=${map_id}&team=${team}&tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${match_id}`, {credentials: 'include'})
+                if (res.status != 200) {
+                    alert(await res.text());
+                    return;
+                }
+                alert('更新成功 请刷新页面查看');
+            }}> 提交 </Button>
+        </div>
+    )
+
+}
+
+
 const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
     const score1 = match_info.team1_score ? match_info.team1_score : 0
     const score2 = match_info.team2_score ? match_info.team2_score : 0
-    const text_color1 = score1 > score2 ? "" : "text-neutral-500"
-    const text_color2 = score1 < score2 ? "" : "text-neutral-500"
-    const pic_color1 = score1 > score2 ? "" : "brightness-50"
-    const pic_color2 = score1 < score2 ? "" : "brightness-50"
+    const text_color1 = score1 >= score2 ? "" : "text-neutral-500"
+    const text_color2 = score1 <= score2 ? "" : "text-neutral-500"
+    const pic_color1 = score1 >= score2 ? "" : "brightness-50"
+    const pic_color2 = score1 <= score2 ? "" : "brightness-50"
     return (
         <div className={"grid grid-cols-1 sm:flex sm:flex-wrap gap-3 grow items-center justify-center justify-items-center"}>
             <div className={"text-center sm:text-start font-bold text-2xl w-[72px]"}>
@@ -282,7 +310,7 @@ const AnotherPersonInfo = ({ info }: { info: SimpleInfo }) => {
 
 const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     return (
-        <Link color={"foreground"} isExternal href={info.uid? `https://osu.ppy.sh/users/${info.uid}` : info.avatar_url} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
+        <Link color={"foreground"} isExternal href={info.avatar_url} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
             <Image loading={"lazy"} radius={"none"} className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url}/>
             <div  className={"truncate"}>
                 {info.name}
@@ -317,6 +345,7 @@ type LobbyInfo = {
 export type MatchInfo = {
     datetime: string;
     is_winner_bracket: boolean;
+    match_id: string;
     match_url?: string[];
     referee?: SimpleInfo[];
     streamer?: SimpleInfo[];
@@ -332,7 +361,7 @@ export type MatchInfo = {
 type SimpleInfo = {
     name: string;
     avatar_url: string;
-    uid?: number;
+    uid: number;
 }
 
 interface map {
