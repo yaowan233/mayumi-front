@@ -26,7 +26,7 @@ export default function EditRoundPage({ params }: { params: { tournament: string
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser]);
     const handleUpdateTournament = async () => {
         if (!formData.every(round => round.stage_name && round.start_time)) {
             // 显示错误消息或采取其他适当的操作
@@ -136,7 +136,7 @@ export interface TournamentRoundInfo {
     is_lobby: boolean;
 }
 
-export async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
+async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
         { next: { revalidate: 10 }});
     return await data.json();

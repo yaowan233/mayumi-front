@@ -3,7 +3,6 @@ import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
-import {getTournamentInfo} from "@/app/tournaments/[tournament]/home/page";
 import {Button} from "@nextui-org/button";
 import {useRouter} from "next/navigation";
 import {siteConfig} from "@/config/site";
@@ -48,7 +47,7 @@ export default function EditTournamentMetaPage({params}: { params: { tournament:
 		};
 
 		fetchData();
-	}, [currentUser, params.tournament]);
+	}, [currentUser]);
 	const [errMsg, setErrMsg] = useState('');
 	const handleUpdateTournament = async () => {
 		if (!formData.name || !formData.abbreviation || !formData.mode || !formData.description || !formData.rules_info) {
@@ -83,4 +82,10 @@ export default function EditTournamentMetaPage({params}: { params: { tournament:
 			</div>
 		</div>
 	);
+}
+
+async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
+	const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
+		{ next: { revalidate: 0 }})
+	return await res.json()
 }

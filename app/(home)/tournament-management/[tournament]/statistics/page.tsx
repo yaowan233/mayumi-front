@@ -2,7 +2,7 @@
 
 
 import React, {useContext, useEffect, useState} from "react";
-import {getRoundInfo, TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
+import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
 import {Select, SelectItem} from "@nextui-org/select";
 import {Button} from "@nextui-org/button";
@@ -20,7 +20,7 @@ export default function EditStatisticsPage({params}: { params: { tournament: str
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser]);
 
     return (
         <div className="flex flex-col gap-5">
@@ -68,4 +68,10 @@ export default function EditStatisticsPage({params}: { params: { tournament: str
             }
         </div>
     )
+}
+
+async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
+    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
+        { next: { revalidate: 10 }});
+    return await data.json();
 }

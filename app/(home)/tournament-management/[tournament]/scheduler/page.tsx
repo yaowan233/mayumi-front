@@ -2,13 +2,13 @@
 
 import {Select, SelectItem} from "@nextui-org/select";
 import React, {useContext, useEffect, useState} from "react";
-import {getRoundInfo, TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
+import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
 import {Button} from "@nextui-org/button";
 import {Input} from "@nextui-org/input";
 import {Autocomplete, AutocompleteItem} from "@nextui-org/autocomplete";
 import {Avatar} from "@nextui-org/avatar";
-import {getTournamentMembers, TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
+import {TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
 import {Divider} from "@nextui-org/divider";
 import {useFilter} from "@react-aria/i18n";
 import {Switch} from "@nextui-org/switch";
@@ -37,7 +37,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser]);
     return (
         <div className="flex flex-col gap-5">
             <h1 className="text-3xl font-bold">
@@ -706,4 +706,14 @@ interface Schedule {
     team2_score?: number;
     team1_warmup?: number;
     team2_warmup?: number;
+}
+async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
+    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
+        { next: { revalidate: 10 }});
+    return await res.json();
+}
+async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
+    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
+        { next: { revalidate: 10 }});
+    return await data.json();
 }

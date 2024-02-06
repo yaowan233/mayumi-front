@@ -1,10 +1,10 @@
 "use client";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {getTournamentManagementInfo, TournamentManagementInfo} from "@/app/(home)/tournament-management/page";
+import {TournamentManagementInfo} from "@/app/(home)/tournament-management/page";
 import {Button} from "@nextui-org/button";
 import {Link} from "@nextui-org/link";
-import {getSchedule} from "@/app/tournaments/[tournament]/schedule/page";
+import {siteConfig} from "@/config/site";
 
 export default function ManagementHomePage({params}: { params: { tournament: string } }) {
     const currentUser = useContext(CurrentUserContext);
@@ -30,4 +30,10 @@ export default function ManagementHomePage({params}: { params: { tournament: str
             <Button className="text-xl" as={Link} href={`${link_prefix}/statistics`}>数据管理</Button>
         </div>
     )
+}
+
+async function getTournamentManagementInfo(uid: number): Promise<TournamentManagementInfo[]> {
+    const data = await fetch(siteConfig.backend_url + `/api/tournament-management-info?uid=${uid}`,
+        { next: { revalidate: 10 }});
+    return await data.json();
 }

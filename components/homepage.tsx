@@ -12,7 +12,7 @@ import {Checkbox, CheckboxGroup} from "@nextui-org/checkbox";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Tooltip} from "@nextui-org/tooltip";
-import {getTournamentMembers, TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
+import {TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
 import {siteConfig} from "@/config/site";
 
 export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) => {
@@ -299,4 +299,9 @@ export type RegistrationInfo = {
     selectedPositions: string[];
     otherDetails: string;
     additionalComments: string;
+}
+async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
+    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
+        { next: { revalidate: 10 }});
+    return await res.json();
 }

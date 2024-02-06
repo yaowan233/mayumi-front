@@ -8,7 +8,7 @@ export default async function SchedulePage({ params }: { params: { tournament: s
     )
 }
 
-export async function getSchedule(tournament_name: string): Promise<ScheduleStage[]> {
+async function getSchedule(tournament_name: string): Promise<ScheduleStage[]> {
     const res = await fetch(siteConfig.backend_url + '/api/schedule?tournament_name=' + tournament_name,
         { next: { revalidate: 10 }})
     return await res.json()

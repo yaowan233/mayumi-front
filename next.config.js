@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {  images: {
+const nextConfig = {
+    images: {
         remotePatterns: [
             {
                 protocol: 'https',
@@ -7,7 +8,14 @@ const nextConfig = {  images: {
                 port: '',
                 pathname: '/moe',
             },
+            {
+                protocol: 'https',
+                hostname: 'assets.ppy.sh',
+                port: '',
+                pathname: '/',
+            },
         ],
-    },}
+    },
+}
 
 module.exports = nextConfig

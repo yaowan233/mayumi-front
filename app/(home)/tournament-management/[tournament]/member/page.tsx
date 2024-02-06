@@ -41,7 +41,7 @@ export default function EditMemberPage({params}: { params: { tournament: string 
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser]);
     return (
         <div className="flex flex-col gap-5">
             <div className="flex flex-row justify-between">
@@ -466,12 +466,6 @@ export default function EditMemberPage({params}: { params: { tournament: string 
     )
 }
 
-export async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
-    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
-    return await res.json();
-}
-
 
 const AddMember = ({
                        members,
@@ -598,6 +592,12 @@ const AddMember = ({
 
 async function getRegistrationInfo(tournament_name: string): Promise<RegistrationInfo[]> {
     const res = await fetch(siteConfig.backend_url + `/api/get-registration-info?tournament_name=${tournament_name}`,
+        { next: { revalidate: 10 }});
+    return await res.json();
+}
+
+async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
+    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
         { next: { revalidate: 10 }});
     return await res.json();
 }

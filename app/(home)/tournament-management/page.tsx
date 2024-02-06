@@ -47,7 +47,7 @@ export default function TournamentManagementPage() {
 	);
 }
 
-export async function getTournamentManagementInfo(uid: number): Promise<TournamentManagementInfo[]> {
+async function getTournamentManagementInfo(uid: number): Promise<TournamentManagementInfo[]> {
 	const data = await fetch(siteConfig.backend_url + `/api/tournament-management-info?uid=${uid}`,
 		{ next: { revalidate: 10 }});
 	return await data.json();

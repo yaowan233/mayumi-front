@@ -9,7 +9,7 @@ export default async function ParticipantsPage({params}: { params: { tournament:
     )
 }
 
-export async function getPlayers(tournament_name: string): Promise<Player[]> {
+async function getPlayers(tournament_name: string): Promise<Player[]> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
         { next: { revalidate: 0 }})
     return await res.json()

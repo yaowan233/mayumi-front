@@ -3,7 +3,7 @@ import {Button} from "@nextui-org/button";
 import {Select, SelectItem} from "@nextui-org/select";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {getRoundInfo, TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
+import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Image} from "@nextui-org/image";
 import {Input} from "@nextui-org/input";
 import {siteConfig} from "@/config/site";
@@ -48,7 +48,7 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
         }
         fetchData();
         fetchTournamentMapsData()
-    }, [currentUser, params.tournament]);
+    }, [currentUser]);
 
     return (
         <div className="flex flex-col gap-5">
@@ -182,4 +182,9 @@ interface TournamentMap {
     mod?: string;
     map_id?: number;
     number?: number;
+}
+async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
+    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
+        { next: { revalidate: 10 }});
+    return await data.json();
 }
