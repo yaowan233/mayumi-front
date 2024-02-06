@@ -6,7 +6,7 @@ import {Image} from "@nextui-org/image";
 import {Link} from "@nextui-org/link";
 import {Divider} from "@nextui-org/divider";
 import {Accordion, AccordionItem} from "@nextui-org/accordion";
-import React, {useContext} from "react";
+import {useContext, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Input} from "@nextui-org/input";
 import {Button} from "@nextui-org/button";
@@ -147,7 +147,7 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id}: {uid: 
     if (currentUser?.currentUser?.uid != uid) {
         return null
     }
-    const [map_id, setMapId] = React.useState("");
+    const [map_id, setMapId] = useState("");
     return (
         <div className="flex flex-row gap-3 items-baseline grow">
             <Input className="" label="map id" onChange={(e) => {setMapId(e.target.value)}} description="你可以在比赛开始前在这里添加或修改你的热手图" />
