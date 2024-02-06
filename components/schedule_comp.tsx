@@ -26,7 +26,7 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
                         item.is_lobby ? <GroupComp schedule_stage={item}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
                     }
                 </Tab>
-                        )}
+            )}
         </Tabs>
     )
 }
@@ -45,9 +45,9 @@ const TeamComp = ({schedule_stage, tournament_name}: { schedule_stage: ScheduleS
             </div>
             <Accordion variant="bordered">
                 {schedule_stage.match_info.filter((match) => match.is_winner_bracket).map((match_info, index) => (
-                        <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />}>
-                            <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
-                        </AccordionItem>
+                    <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />}>
+                        <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
+                    </AccordionItem>
                 ))}
             </Accordion>
             <div className={"flex flex-row gap-3"}>
@@ -85,7 +85,7 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: 
                                 ))}
                             </div>
                         </>
-                        ) : ''}
+                    ) : ''}
                 </div>
                 <div className={"flex flex-col"}>
                     {match_info.streamer ? (
@@ -143,11 +143,11 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: 
 
 
 const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id}: {uid: number, team: number, tournament_name: string, stage_name: string, match_id: string}) => {
+    const [map_id, setMapId] = useState("");
     const currentUser = useContext(CurrentUserContext);
     if (currentUser?.currentUser?.uid != uid) {
         return null
     }
-    const [map_id, setMapId] = useState("");
     return (
         <div className="flex flex-row gap-3 items-baseline grow">
             <Input className="" label="map id" onChange={(e) => {setMapId(e.target.value)}} description="你可以在比赛开始前在这里添加或修改你的热手图" />
@@ -191,8 +191,8 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px] " + pic_color1} src={match_info.team1.avatar_url} />
                 </div>
                 <div className={"w-[60px] min-w-[60px] text-center"}>
-                        {`${score1} : ${score2}`}
-                    </div>
+                    {`${score1} : ${score2}`}
+                </div>
                 <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-start justify-center">
                     <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px] " + pic_color2} src={match_info.team2.avatar_url} />
                     <div className={" " + text_color2}>

@@ -48,7 +48,7 @@ export default function EditTournamentMetaPage({params}: { params: { tournament:
 		};
 
 		fetchData();
-	}, [currentUser]);
+	}, [currentUser, params.tournament]);
 	const [errMsg, setErrMsg] = useState('');
 	const handleUpdateTournament = async () => {
 		if (!formData.name || !formData.abbreviation || !formData.mode || !formData.description || !formData.rules_info) {

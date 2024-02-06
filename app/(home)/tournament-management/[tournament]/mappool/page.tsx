@@ -48,7 +48,7 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
         }
         fetchData();
         fetchTournamentMapsData()
-    }, [currentUser]);
+    }, [currentUser, params.tournament]);
 
     return (
         <div className="flex flex-col gap-5">

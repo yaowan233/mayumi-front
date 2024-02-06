@@ -37,7 +37,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
             }
         };
         fetchData();
-    }, [currentUser]);
+    }, [currentUser, params.tournament]);
     return (
         <div className="flex flex-col gap-5">
             <h1 className="text-3xl font-bold">
