@@ -227,7 +227,6 @@ export const UserStatus = () => {
 				<DropdownMenu aria-label="Static Actions">
 					{/*<DropdownItem key="new">New file</DropdownItem>*/}
 					<DropdownItem key="logout" className="text-danger" color="danger" onPress={async () => {
-						await fetch(siteConfig.backend_url + `/api/logout`, {credentials: 'include'})
 						currentUser?.setCurrentUser(null)
 					}}>
 						登出
