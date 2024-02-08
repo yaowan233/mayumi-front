@@ -2,8 +2,8 @@ export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
 	name: "Next.js + NextUI",
-	backend_url: "http://43.128.13.242:8421",
-	web_url: "http://43.128.13.242:3000",
+	backend_url: "http://mayumi.xyz:8421",
+	web_url: "http://mayumi.xyz:3000",
 	description: "Make beautiful websites regardless of your design experience.",
 	navItems: [
 		{
