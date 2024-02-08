@@ -39,7 +39,7 @@ export const Navbar = () => {
 				<NavbarBrand as="li" className="hidden sm:flex gap-3 max-w-fit">
 					<NextLink className="flex justify-start items-center gap-1" href="/">
 						<Logo />
-						<p className="font-bold text-inherit">OSU WEB</p>
+						<p className="font-bold text-inherit">Mayumi</p>
 					</NextLink>
 				</NavbarBrand>
 				<ul className="hidden sm:flex gap-4 justify-start ml-2">
@@ -134,7 +134,7 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
 					<NextLink className="hidden sm:flex justify-start items-center gap-1" href="/">
 						<Logo />
-						<p className="font-bold text-inherit">OSU WEB</p>
+						<p className="font-bold text-inherit">Mayumi</p>
 					</NextLink>
 				</NavbarBrand>
 				<ul className="hidden md:flex gap-4 justify-start ml-2">

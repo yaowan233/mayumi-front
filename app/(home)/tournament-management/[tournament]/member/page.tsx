@@ -41,7 +41,7 @@ export default function EditMemberPage({params}: { params: { tournament: string 
             }
         };
         fetchData();
-    }, [currentUser]);
+    }, [currentUser, params.tournament]);
     return (
         <div className="flex flex-col gap-5">
             <div className="flex flex-row justify-between">

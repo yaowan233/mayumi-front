@@ -18,16 +18,37 @@ export default function ManagementHomePage({params}: { params: { tournament: str
         };
 
         fetchData();
-    }, [currentUser]);
+    }, [currentUser, params.tournament]);
     const link_prefix = `/tournament-management/${params.tournament}`;
     return (
         <div className={'flex flex-wrap gap-3'}>
-            <Button className="text-xl" as={Link} href={`${link_prefix}/meta`}>赛事信息管理</Button>
-            <Button className="text-xl" as={Link} href={`${link_prefix}/round`}>轮次管理</Button>
-            <Button className="text-xl" as={Link} href={`${link_prefix}/mappool`}>图池管理</Button>
-            <Button className="text-xl" as={Link} href={`${link_prefix}/member`}>成员管理</Button>
-            <Button className="text-xl" as={Link} href={`${link_prefix}/scheduler`}>赛程管理</Button>
-            <Button className="text-xl" as={Link} href={`${link_prefix}/statistics`}>数据管理</Button>
+            {tournamentManagementInfo?.filter((info) =>
+                info.tournament_name === params.tournament).map((info)=>
+                info.roles.includes('主办')?
+                    <>
+                        <Button className="text-xl" as={Link} href={`${link_prefix}/meta`}>赛事信息管理</Button>
+                        <Button className="text-xl" as={Link} href={`${link_prefix}/round`}>轮次管理</Button>
+                        <Button className="text-xl" as={Link} href={`${link_prefix}/member`}>成员管理</Button>
+                        <Button className="text-xl" as={Link} href={`${link_prefix}/statistics`}>数据管理</Button>
+                    </>
+                : null)
+            }
+            {tournamentManagementInfo?.filter((info) =>
+                info.tournament_name === params.tournament).map((info)=>
+                info.roles.includes('主办') || info.roles.includes('选图')?
+                    <>
+                        <Button className="text-xl" as={Link} href={`${link_prefix}/mappool`}>图池管理</Button>
+                    </>
+                    : null)
+            }
+            {tournamentManagementInfo?.filter((info) =>
+                info.tournament_name === params.tournament).map((info)=>
+                info.roles.includes('主办') || info.roles.includes('时间安排')?
+                    <>
+                        <Button className="text-xl" as={Link} href={`${link_prefix}/scheduler`}>赛程管理</Button>
+                    </>
+                    : null)
+            }
         </div>
     )
 }

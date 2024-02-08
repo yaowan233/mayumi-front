@@ -6,7 +6,7 @@ export const UserInfo = ({user}: { user: Player }) => {
     return(
         <Link color={"foreground"} isExternal className={"flex gap-3 justify-start border-2 p-2"} href={`https://osu.ppy.sh/u/${user.uid}`}>
             <div className={"grid content-center px-2"}>
-                <Image height={60} width={60} src={`https://a.ppy.sh/${user.uid}`}/>
+                <Image alt="icon" height={60} width={60} src={`https://a.ppy.sh/${user.uid}`}/>
             </div>
             <div className={"flex flex-col gap-3"}>
                 <div>

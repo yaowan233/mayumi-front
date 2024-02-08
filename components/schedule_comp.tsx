@@ -188,13 +188,13 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     <div className={"text-right " + text_color1}>
                         {match_info.team1.name}
                     </div>
-                    <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px] " + pic_color1} src={match_info.team1.avatar_url} />
+                    <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color1} src={match_info.team1.avatar_url} />
                 </div>
                 <div className={"w-[60px] min-w-[60px] text-center"}>
                         {`${score1} : ${score2}`}
                     </div>
                 <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-start justify-center">
-                    <Image loading={"lazy"} radius={"sm"} className={"h-[40px] w-[40px] min-w-[40px] " + pic_color2} src={match_info.team2.avatar_url} />
+                    <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color2} src={match_info.team2.avatar_url} />
                     <div className={" " + text_color2}>
                         {match_info.team2.name}
                     </div>
@@ -298,7 +298,7 @@ const AnotherPersonInfo = ({ info }: { info: SimpleInfo }) => {
     return (
         <Link isExternal color={"foreground"} className={"grid grid-cols-1 border-2 p-2 min-w-[130px]"} key={info.name} href={`https://osu.ppy.sh/users/${info.uid}`}>
             <div className="flex justify-center">
-                <Image loading={"lazy"} className={""} width={60} height={60} src={info.avatar_url}/>
+                <Image loading={"lazy"} alt="icon" width={60} height={60} src={info.avatar_url}/>
             </div>
             <div className="flex justify-center text-medium">
                 {info.name}
@@ -311,7 +311,7 @@ const AnotherPersonInfo = ({ info }: { info: SimpleInfo }) => {
 const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     return (
         <Link color={"foreground"} isExternal href={info.avatar_url} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
-            <Image loading={"lazy"} radius={"none"} className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url}/>
+            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url}/>
             <div  className={"truncate"}>
                 {info.name}
             </div>

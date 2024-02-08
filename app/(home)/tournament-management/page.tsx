@@ -41,7 +41,7 @@ export default function TournamentManagementPage() {
 						</Card>)}
 				</div>
 			) : (
-				<p>你还无法管理任何比赛</p>
+				<p>你还没有能够管理的比赛</p>
 			)}
 		</div>
 	);

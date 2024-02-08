@@ -38,7 +38,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
             }
         };
         fetchData();
-    }, [currentUser]);
+    }, [currentUser, tournament_info.abbreviation]);
     const handleRegistration = async (onClose: () => void) => {
         if (!formData.qqNumber || !formData.isFirstTimeStaff || formData.selectedPositions.length === 0) {
             // 显示错误消息或采取其他适当的操作
@@ -75,7 +75,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                 additionalComments: ''
             })
         }
-    }, [isOpen]);
+    }, [isOpen, currentUser?.currentUser?.uid, tournament_info.abbreviation]);
     // 更新表单字段的事件处理程序
     return (
         <div className="grid grid-cols-1 gap-y-5">

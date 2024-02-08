@@ -48,7 +48,7 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
         }
         fetchData();
         fetchTournamentMapsData()
-    }, [currentUser]);
+    }, [currentUser, params.tournament]);
 
     return (
         <div className="flex flex-col gap-5">
@@ -78,7 +78,7 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
                             }
                             return (
                                 <div key={index} className="flex flex-row gap-5 items-center">
-                                    <Image className="h-[60px] min-w-[100px]" width="100%" src={tournamentMap.map_id ? `https://api.osu.direct/media/background/${tournamentMap.map_id}`: undefined} />
+                                    <Image alt="bg" className="h-[60px] min-w-[100px]" width="100%" src={tournamentMap.map_id ? `https://api.osu.direct/media/background/${tournamentMap.map_id}`: undefined} />
                                     <Input
                                         label="图号"
                                         isRequired

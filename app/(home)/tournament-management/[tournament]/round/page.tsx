@@ -26,7 +26,7 @@ export default function EditRoundPage({ params }: { params: { tournament: string
             }
         };
         fetchData();
-    }, [currentUser]);
+    }, [currentUser, params.tournament]);
     const handleUpdateTournament = async () => {
         if (!formData.every(round => round.stage_name && round.start_time)) {
             // 显示错误消息或采取其他适当的操作

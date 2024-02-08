@@ -20,7 +20,7 @@ export default function EditStatisticsPage({params}: { params: { tournament: str
             }
         };
         fetchData();
-    }, [currentUser]);
+    }, [currentUser, params.tournament]);
 
     return (
         <div className="flex flex-col gap-5">

@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="zh" suppressHydrationWarning>
-			<head><title>OSU web</title></head>
+			<head><title>Mayumi</title></head>
 			<body
 				className={clsx(
 					"min-h-screen bg-background font-sans antialiased",

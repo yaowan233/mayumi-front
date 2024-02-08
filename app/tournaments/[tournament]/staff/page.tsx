@@ -18,7 +18,7 @@ export default async function StaffPage({params}: { params: { tournament: string
                             {staff[role].map((staff) => (
                                 <Link isExternal color={"foreground"} className={"grid grid-cols-1 border-2 p-2 min-w-[130px]"} key={staff.uid} href={`https://osu.ppy.sh/users/${staff.uid}`}>
                                     <div className="flex justify-center">
-                                        <Image loading={"lazy"} className={""} width={60} height={60} src={`https://a.ppy.sh/${staff.uid}`}/>
+                                        <Image loading={"lazy"}  alt="icon" width={60} height={60} src={`https://a.ppy.sh/${staff.uid}`}/>
                                     </div>
                                     <div className="flex justify-center">
                                         {staff.name}
