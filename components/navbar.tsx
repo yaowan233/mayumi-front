@@ -245,7 +245,7 @@ const LoginButton = () => {
 			<Button
 				as={Link}
 				className="text-sm font-normal text-default-600 bg-default-100"
-				href={`https://osu.ppy.sh/oauth/authorize?client_id=28516&redirect_uri=${siteConfig.web_url}/api/oauth&response_type=code&scope=public`}
+				href={`https://osu.ppy.sh/oauth/authorize?client_id=${siteConfig.client_id}&redirect_uri=${siteConfig.web_url}/oauth&response_type=code&scope=public`}
 				variant="flat"
 			>
 				登录
