@@ -34,7 +34,8 @@ export default function CreateTournamentPage() {
 		donator: true,
 		scheduler: true,
 		map_tester: true,
-		links: []
+		links: [],
+		is_verified: false,
 	});
 	const [errMsg, setErrMsg] = useState('');
 	const handleCreateTournament = async () => {
@@ -58,7 +59,7 @@ export default function CreateTournamentPage() {
 		}
 	}
 	return (
-		<>
+		<div className="flex flex-col gap-5">
 			<TournamentInfoForm formData={formData} setFormData={setFormData} errMsg={errMsg} />
 			<h1 className={"text-3xl font-bold"}>
 				创建比赛
@@ -70,6 +71,6 @@ export default function CreateTournamentPage() {
 					{errMsg}
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
