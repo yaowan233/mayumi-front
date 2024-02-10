@@ -2,8 +2,8 @@ export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
 	name: "Mayumi",
-	backend_url: "http://mayumi.xyz:8421",
-	web_url: "http://mayumi.xyz",
+	backend_url: "https://mayumi.xyz:8421",
+	web_url: "https://mayumi.xyz",
 	description: "Make beautiful websites regardless of your design experience.",
 	navItems: [
 		{
