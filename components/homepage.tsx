@@ -282,7 +282,7 @@ export interface TournamentInfo {
     mode: string;
     challonge_api_key?: string;
     challonge_tournament_url?: string;
-    is_verified: boolean;
+    is_verified?: boolean;
 }
 
 type Link = {

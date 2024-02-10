@@ -35,7 +35,6 @@ export default function CreateTournamentPage() {
 		scheduler: true,
 		map_tester: true,
 		links: [],
-		is_verified: false,
 	});
 	const [errMsg, setErrMsg] = useState('');
 	const handleCreateTournament = async () => {

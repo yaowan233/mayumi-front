@@ -36,7 +36,7 @@ export default function EditTournamentMetaPage({params}: { params: { tournament:
 		donator: true,
 		scheduler: true,
 		map_tester: true,
-		links: []
+		links: [],
 	});
 	useEffect(() => {
 		const fetchData = async () => {
