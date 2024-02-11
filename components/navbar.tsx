@@ -33,7 +33,7 @@ import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@nextui-org
 export const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	return (
-		<NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen} className="">
+		<NextUINavbar maxWidth="full" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen} className="">
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarMenuToggle className="flex sm:hidden"/>
 				<NavbarBrand as="li" className="hidden sm:flex gap-3 max-w-fit">
@@ -128,7 +128,7 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	let tournament_href_start = "/tournaments/" + tournament_name
 	return (
-		<NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+		<NextUINavbar maxWidth="full" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarMenuToggle className="md:hidden" />
 				<NavbarBrand as="li" className="gap-3 max-w-fit">

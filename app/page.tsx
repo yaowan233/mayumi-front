@@ -16,11 +16,11 @@ export default async function Home() {
 		<>
 			<Navbar/>
 			{/*展示TournamentInfo图片*/}
-			<div className="container flex mx-auto justify-center">
+			<div className="w-full flex mx-auto justify-center">
 			<h1 className={title()}> 正在进行中的比赛 </h1>
 			</div>
-			<div className="container mx-auto max-w-7xl pt-4 px-6 flex-grow">
-				<div className="flex flex-wrap items-center justify-center gap-2">
+			<div className="w-full mx-auto pt-4 px-6 flex-grow">
+				<div className="w-full flex flex-wrap items-center justify-center gap-2">
 					{tournaments_data.filter((tournament) => (
 						new Date(tournament.end_date) >= new Date()
 					)).map((tournament) => (
@@ -28,10 +28,10 @@ export default async function Home() {
 					))}
 				</div>
 			</div>
-			<div className="container flex mx-auto justify-center">
+			<div className="w-full flex mx-auto justify-center">
 				<h1 className={title()}> 已结束的比赛 </h1>
 			</div>
-			<div className="container mx-auto max-w-7xl pt-4 px-6 flex-grow">
+			<div className="w-full mx-auto pt-4 px-6 flex-grow">
 				<div className="flex flex-wrap items-center justify-center gap-2">
 					{tournaments_data.filter((tournament) => (
 						new Date(tournament.end_date) < new Date()

@@ -260,14 +260,19 @@ const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
             {schedule_stage.lobby_info?.map((stage_schedule) => (
                 <Card key={stage_schedule.lobby_name} className={"p-3 gap-3"}>
                     <div className={"flex flex-row items-center gap-3"}>
-                        <div className={"text-center font-bold text-2xl"}>
-                            {(new Date(stage_schedule.datetime)).getUTCMonth() + 1}/{(new Date(stage_schedule.datetime)).getUTCDate()}
+                        <div className="w-[80px]">
+                            <div className={"text-center font-bold text-2xl"}>
+                                {(new Date(stage_schedule.datetime)).getUTCMonth() + 1}/{(new Date(stage_schedule.datetime)).getUTCDate()}
+                            </div>
+                            <div className={"text-center"}>
+                                {formatTime(((new Date(stage_schedule.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(stage_schedule.datetime)).getUTCMinutes()).toString())}
+                            </div>
                         </div>
-                        <div className={"text-center"}>
-                            {formatTime(((new Date(stage_schedule.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(stage_schedule.datetime)).getUTCMinutes()).toString())}
-                        </div>
-                        <div className={"font-bold text-3xl"}>
+                        <div className={"grow font-bold text-3xl text-center"}>
                             {stage_schedule.lobby_name}
+                        </div>
+                        <div className="w-[80px]">
+
                         </div>
                     </div>
                     <Divider/>
