@@ -177,12 +177,12 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
     const pic_color2 = score1 <= score2 ? "" : "brightness-50"
     return (
         <div className={"grid grid-cols-1 sm:flex sm:flex-wrap gap-3 grow items-center justify-center justify-items-center"}>
-            <div className={"text-center sm:text-start font-bold text-2xl w-[72px]"}>
-                {(new Date(match_info.datetime)).toLocaleDateString().toString().substring(5)}
-            </div>
-            <div className={"text-center"}>
-                {(new Date(match_info.datetime)).toLocaleTimeString().toString().substring(0, 5)}
-            </div>
+                       <div className={"text-center font-bold text-2xl"}>
+                                {(new Date(match_info.datetime)).getUTCMonth() + 1}/{(new Date(match_info.datetime)).getUTCDate()}
+                            </div>
+                            <div className={"text-center"}>
+                                {formatTime(((new Date(match_info.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(match_info.datetime)).getUTCMinutes()).toString())}
+                            </div>
             <div className={"grid grid-cols-1 sm:flex sm:flex-row sm:flex-wrap justify-center grow items-center justify-items-center gap-3"}>
                 <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-end justify-center">
                     <div className={"text-right " + text_color1}>
@@ -200,6 +200,8 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     </div>
                 </div>
             </div>
+            <div className={"lg:w-[75px]"}></div>
+
         </div>
     )
 }
@@ -316,7 +318,7 @@ const AnotherPersonInfo = ({ info }: { info: SimpleInfo }) => {
 const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     return (
         <Link color={"foreground"} isExternal href={info.avatar_url} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
-            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url}/>
+            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={`https://osu.ppy.sh/users/${info.uid}`}/>
             <div  className={"truncate"}>
                 {info.name}
             </div>

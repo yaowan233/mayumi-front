@@ -245,8 +245,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                     />
                                                     <MemberSelect members={members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} team="team1" index={index} errMsg={errMsg} />
                                                     <MemberSelect members={members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} team="team2" index={index} errMsg={errMsg} />
-                                                    <Input type="date" label="日期" isRequired isInvalid={!!errMsg && !schedule.match_time}
-                                                           value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[0]:""} onChange={
+                                                    <Input type="date" label="日期" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[0]:""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
                                                             let datetime;
@@ -263,7 +262,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                             setScheduleInfo(newScheduleInfo);
                                                        }}
                                                            placeholder="Enter your email" />
-                                                    <Input type="time" label="时间" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toTimeString().split(' ')[0].substring(0, 5):""} onChange={
+                                                    <Input type="time" label="时间" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[1].substring(0, 5):""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
                                                             let datetime;
