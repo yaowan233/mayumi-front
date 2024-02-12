@@ -17,7 +17,7 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
     return (
         <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"} classNames={{
             tabList: "gap-6 flex",
-            tab: "min-w-[100px] min-h-[50px]",
+            tab: "min-h-[50px]",
             tabContent: "text-3xl",
         }}>
             {(item) => (
