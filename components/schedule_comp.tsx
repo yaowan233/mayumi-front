@@ -317,8 +317,8 @@ const AnotherPersonInfo = ({ info }: { info: SimpleInfo }) => {
 
 const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     return (
-        <Link color={"foreground"} isExternal href={info.avatar_url} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
-            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={`https://osu.ppy.sh/users/${info.uid}`}/>
+        <Link color={"foreground"} isExternal href={`https://osu.ppy.sh/users/${info.uid}`} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
+            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url}/>
             <div  className={"truncate"}>
                 {info.name}
             </div>
