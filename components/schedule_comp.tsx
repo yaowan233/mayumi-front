@@ -11,6 +11,7 @@ import CurrentUserContext from "@/app/user_context";
 import {Input} from "@nextui-org/input";
 import {Button} from "@nextui-org/button";
 import {siteConfig} from "@/config/site";
+import {LinkIcon} from "@/components/icons";
 
 
 export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], tournament_name: string }) => {
@@ -175,6 +176,7 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
     const text_color2 = score1 <= score2 ? "" : "text-neutral-500"
     const pic_color1 = score1 >= score2 ? "" : "brightness-50"
     const pic_color2 = score1 <= score2 ? "" : "brightness-50"
+    console.log(match_info.match_url)
     return (
         <div className={"grid grid-cols-1 sm:flex sm:flex-wrap gap-3 grow items-center justify-center justify-items-center"}>
                        <div className={"text-center font-bold text-2xl"}>
@@ -200,7 +202,17 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     </div>
                 </div>
             </div>
-            <div className={"lg:w-[75px]"}></div>
+            <div className={"lg:w-[75px]"}>
+                {
+                    match_info.match_url && match_info.match_url.length > 0 ?
+                        match_info.match_url.map((url) => (
+                            url !== "" ?
+                            <Button key={url} isExternal isIconOnly className="bg-sky-500" aria-label="Match-Link" as={Link} href={url}>
+                                <LinkIcon/>
+                            </Button> : null
+                        )) : null
+                }
+            </div>
 
         </div>
     )
