@@ -4,6 +4,5 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: frontend-image
     network_mode: host
     restart: always
