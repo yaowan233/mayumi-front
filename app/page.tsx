@@ -1,11 +1,6 @@
-import NextLink from "next/link";
-import { Link } from "@nextui-org/link";
-import { button as buttonStyles } from "@nextui-org/theme";
 import { siteConfig } from "@/config/site";
-import {title, subtitle, description_container} from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
+import {title} from "@/components/primitives";
 import {Navbar} from "@/components/navbar";
-import Image from "next/image";
 import {TournamentComponent} from "@/components/tournament_pic";
 import {Tournament} from "@/components/tournament_pic";
 
@@ -47,7 +42,7 @@ export default async function Home() {
 
 async function GetTournamentInfo() : Promise<Tournament[]> {
 	const res = await fetch(siteConfig.backend_url + '/api/tournaments',
-		{ next: { revalidate: 30 }})
+		{ next: { revalidate: 60 }})
 	if (!res.ok) {
 		throw new Error('Failed to fetch data')
 	}

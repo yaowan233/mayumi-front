@@ -36,7 +36,7 @@ export default async function StaffPage({params}: { params: { tournament: string
 async function GetStaff(tournament: string) : Promise<Staff> {
     const res = await fetch(siteConfig.backend_url + '/api/staff' +
         '?tournament_name=' + tournament,
-        { next: { revalidate: 0 }})
+        { next: { revalidate: 60 }})
     if (!res.ok) {
         throw new Error('Failed to fetch data')
     }

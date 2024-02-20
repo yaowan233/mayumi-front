@@ -11,6 +11,6 @@ export default async function ParticipantsPage({params}: { params: { tournament:
 
 async function getPlayers(tournament_name: string): Promise<Player[]> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        { next: { revalidate: 0 }})
+        { next: { revalidate: 60 }})
     return await res.json()
 }

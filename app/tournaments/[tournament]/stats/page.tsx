@@ -18,14 +18,14 @@ export default async function StatsPage({params}: { params: { tournament: string
 
 async function getStats(tournament_name: string): Promise<Stats[]> {
     const res = await fetch( siteConfig.backend_url + '/api/stats?tournament_name=' + tournament_name,
-        {next: {revalidate: 10}});
+        {next: {revalidate: 60}});
     return await res.json();
 }
 
 
 async function getScores(tournament_name: string): Promise<Score[]> {
     const res = await fetch(siteConfig.backend_url + '/api/scores?tournament_name=' + tournament_name,
-        {next: {revalidate: 10}});
+        {next: {revalidate: 60}});
     return await res.json();
 }
 
@@ -54,7 +54,7 @@ interface Score {
 }
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
+        { next: { revalidate: 60 }});
     return await data.json();
 }
 
@@ -68,12 +68,12 @@ interface TournamentRoundInfo {
 
 async function getStages(tournament_name: string): Promise<Stage[]> {
     const res = await fetch(siteConfig.backend_url + '/api/map_pools?tournament_name=' + tournament_name,
-        { next: { revalidate: 0 }})
+        { next: { revalidate: 60 }})
     return await res.json()
 }
 
 async function getPlayers(tournament_name: string): Promise<Player[]> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        { next: { revalidate: 0 }})
+        { next: { revalidate: 60 }})
     return await res.json()
 }
