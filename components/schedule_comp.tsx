@@ -177,7 +177,7 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
     const text_color2 = score1 <= score2 ? "" : "text-neutral-500"
     const pic_color1 = score1 >= score2 ? "" : "brightness-50"
     const pic_color2 = score1 <= score2 ? "" : "brightness-50"
-    console.log(match_info.match_url)
+
     return (
         <div className={"grid grid-cols-1 sm:flex sm:flex-wrap gap-3 grow items-center justify-center justify-items-center"}>
                        <div className={"text-center font-bold text-2xl"}>
@@ -223,9 +223,10 @@ const MapComp = ({map}: { map: map }) => {
         <Card key={map.map_id} className={"max-w-lg"}>
             <CardHeader className="absolute z-10 top-0 flex-col items-center">
                 <Link isExternal size={"lg"} color={"foreground"}
-                      className="font-bold leading-5 text-center"
+                      className="line-clamp-1 font-bold leading-5 text-center"
                       href={`https://osu.ppy.sh/b/${map.map_id}`}>
-                    {map.map_name} [{map.diff_name}]
+                    <p className="line-clamp-2"> {map.map_name} [{map.diff_name}]
+                    </p>
                 </Link>
                 <Link isExternal color={"foreground"} className=""
                       href={`https://osu.ppy.sh/users/${map.mapper}`}>
@@ -240,27 +241,27 @@ const MapComp = ({map}: { map: map }) => {
                 src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}/>
             <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
                 <div className="grid grid-cols-3 place-items-center">
-                    <div>
+                    <div className="line-clamp-1">
                         ★{map.star_rating}
                     </div>
-                    <div>
+                    <div className="line-clamp-1">
                         bpm {map.bpm}
                     </div>
-                    <div>
+                    <div className="line-clamp-1">
                         {map.length}
                     </div>
                 </div>
                 <div className="grid grid-cols-4 place-items-center">
-                    <div>
+                    <div className="line-clamp-1">
                         CS {map.cs}
                     </div>
-                    <div>
+                    <div className="line-clamp-1">
                         HP {map.hp}
                     </div>
-                    <div>
+                    <div className="line-clamp-1">
                         OD {map.od}
                     </div>
-                    <div>
+                    <div className="line-clamp-1">
                         AR {map.ar}
                     </div>
                 </div>
