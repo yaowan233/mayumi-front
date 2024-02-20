@@ -3,7 +3,6 @@
 
 import {Tab, Tabs} from "@nextui-org/tabs";
 import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
-import {Spinner} from "@nextui-org/spinner";
 import {Card, CardFooter, CardHeader} from "@nextui-org/card";
 import {Link} from "@nextui-org/link";
 import {Image} from "@nextui-org/image";
@@ -28,10 +27,11 @@ const columns = [
 
 export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo: TournamentRoundInfo[], stats: Stats[], stage: Stage[], scores: Score[], players: Player[]}) => {
     return (
-        <Tabs aria-label="Dynamic tabs" className={"flex flex-row justify-center"} size={"lg"} classNames={{
-            tabList: "gap-3 flex flex-row flex-auto",
-            tab: "min-h-[45px] flex-auto",
-            tabContent: "text-2xl",
+        <Tabs aria-label="Dynamic tabs" className={"flex flex-row justify-center"} size={"lg"} defaultSelectedKey={roundInfo.at(-1)?.stage_name}
+              classNames={{
+                tabList: "gap-3 flex flex-row flex-auto",
+                tab: "min-h-[45px] flex-auto",
+                tabContent: "text-2xl",
         }}>
             {roundInfo.map((round) => {
                 return (

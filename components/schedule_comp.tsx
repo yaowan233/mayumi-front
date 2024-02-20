@@ -16,10 +16,11 @@ import {LinkIcon} from "@/components/icons";
 
 export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], tournament_name: string }) => {
     return (
-        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"} classNames={{
-            tabList: "gap-6 flex",
-            tab: "min-h-[50px]",
-            tabContent: "text-3xl",
+        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"}  defaultSelectedKey={tabs.at(-1)?.stage_name}
+              classNames={{
+                tabList: "gap-6 flex",
+                tab: "min-h-[50px]",
+                tabContent: "text-3xl",
         }}>
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>

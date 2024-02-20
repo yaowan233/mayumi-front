@@ -74,6 +74,6 @@ async function getStages(tournament_name: string): Promise<Stage[]> {
 
 async function getPlayers(tournament_name: string): Promise<Player[]> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        { next: { revalidate: 60 }})
+        { next: { revalidate: 300 }})
     return await res.json()
 }
