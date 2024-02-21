@@ -71,17 +71,17 @@ const MapComponent = ({map}: {map: Map}) => {
             {
                 isHovered &&
                 <div className='absolute z-20 flex flex-col gap-1'>
-                    <Tooltip content="复制地图id">
-                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {await navigator.clipboard.writeText(map.map_set_id)}}>
+                    <Tooltip content="复制地图id" placement="left">
+                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {await navigator.clipboard.writeText(map.map_id)}}>
                             <CopyIcon/>
                         </Button>
                     </Tooltip>
-                    <Tooltip content="复制mp指令">
-                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {await navigator.clipboard.writeText(`!mp map ${map.map_set_id}`)}}>
+                    <Tooltip content="复制mp指令" placement="left">
+                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {await navigator.clipboard.writeText(`!mp map ${map.map_id}`)}}>
                             <CopyIcon/>
                         </Button>
                     </Tooltip>
-                    <Tooltip content="使用镜像站下载">
+                    <Tooltip content="使用镜像站下载" placement="left">
                         <Button size="sm" isIconOnly className="bg-amber-50" as={Link} href={`https://dl.sayobot.cn/beatmaps/download/novideo/${map.map_set_id}`}>
                             <DownloadIcon/>
                         </Button>
