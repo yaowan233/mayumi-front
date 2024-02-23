@@ -6,7 +6,7 @@ export const siteConfig = {
 	web_url: "https://mayumi.xyz",
 	client_id: "28516",
 	client_secret: "wCbkMYjnW0GCjdc6Dw7e11M7KpIOHBi9b8xOyAKx",
-	description: "Make beautiful websites regardless of your design experience.",
+	description: "一站式OSU比赛管理网站",
 	navItems: [
 		{
 			label: "主页",
