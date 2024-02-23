@@ -12,11 +12,15 @@ import {Input} from "@nextui-org/input";
 import {Button} from "@nextui-org/button";
 import {siteConfig} from "@/config/site";
 import {LinkIcon} from "@/components/icons";
+import {useRouter, useSearchParams} from "next/navigation";
 
 
 export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], tournament_name: string }) => {
+    const searchParams = useSearchParams()
+    const router = useRouter()
     return (
-        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"}  defaultSelectedKey={tabs.at(-1)?.stage_name}
+        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"}  defaultSelectedKey={searchParams.get('stage') || tabs.at(-1)?.stage_name}
+              onSelectionChange={(key) => {router.replace(`?stage=${key}`)}}
               classNames={{
                 tabList: "gap-6 flex",
                 tab: "min-h-[50px]",

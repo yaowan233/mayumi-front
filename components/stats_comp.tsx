@@ -10,6 +10,7 @@ import React from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
 import {Player} from "@/components/user_info";
+import {useRouter, useSearchParams} from "next/navigation";
 
 
 const columns = [
@@ -26,8 +27,11 @@ const columns = [
 ];
 
 export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo: TournamentRoundInfo[], stats: Stats[], stage: Stage[], scores: Score[], players: Player[]}) => {
+    const searchParams = useSearchParams()
+    const router = useRouter()
     return (
-        <Tabs aria-label="Dynamic tabs" className={"flex flex-row justify-center"} size={"lg"} defaultSelectedKey={roundInfo.at(-1)?.stage_name}
+        <Tabs aria-label="Dynamic tabs" className={"flex flex-row justify-center"} size={"lg"} defaultSelectedKey={searchParams.get('stage') || roundInfo.at(-1)?.stage_name}
+              onSelectionChange={(key) => {router.replace(`?stage=${key}`)}}
               classNames={{
                 tabList: "gap-3 flex flex-row flex-auto",
                 tab: "min-h-[45px] flex-auto",

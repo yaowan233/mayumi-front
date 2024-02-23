@@ -7,18 +7,22 @@ import React, {useState} from 'react';
 import {Button} from "@nextui-org/button";
 import {CopyIcon, DownloadIcon} from "@/components/icons";
 import {Tooltip} from "@nextui-org/tooltip";
+import {useSearchParams, useRouter} from "next/navigation";
 
 
 export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
+    const searchParams = useSearchParams()
+    const router = useRouter()
     return (
-        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"} defaultSelectedKey={tabs.at(-1)?.stage_name}
+        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"} defaultSelectedKey={searchParams.get('stage') || tabs.at(-1)?.stage_name}
+              onSelectionChange={(key) => {router.replace(`?stage=${key}`)}}
               classNames={{
                 tabList: "gap-6 flex",
                 tab: "min-h-[50px]",
                 tabContent: "text-3xl",
         }}>
             {(item) => (
-                <Tab key={item.stage_name} title={item.stage_name}>
+                <Tab key={item.stage_name} title={item.stage_name} id={item.stage_name}>
                     <div className="grid grid-cols-1 gap-6">
                         {item.mod_bracket.map((mod_bracket) => (
                             <Card key={mod_bracket.mod}>

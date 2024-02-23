@@ -71,7 +71,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                     基本信息
                                                 </div>
                                                 <div className={"flex flex-row gap-5 items-baseline"}>
-                                                    <Input className="max-w-[80px]" label="比赛序号" value={schedule.match_id}
+                                                    <Input label="比赛序号" value={schedule.match_id}
                                                            description="不能重复" onChange={(e) => {
                                                         let newScheduleInfo = [...scheduleInfo];
                                                         newScheduleInfo[index].match_id = e.target.value;
@@ -235,7 +235,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                     基本信息
                                                 </div>
                                                 <div className="flex flex-row gap-5 items-baseline">
-                                                    <Input className="max-w-[80px]" label="比赛序号" value={schedule.match_id}
+                                                    <Input label="比赛序号" value={schedule.match_id}
                                                            description="不能重复" isRequired
                                                            onChange={(e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
@@ -399,13 +399,13 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                     </div>
                                                 </div>
                                                 <div className="flex flex-row gap-5 items-baseline">
-                                                    <Input label="队伍1分数" value={schedule.team1_score?.toString() || ""}
+                                                    <Input label="队伍1分数" type="number" value={schedule.team1_score?.toString() || ""}
                                                            onChange={(e) => {
                                                                let newScheduleInfo = [...scheduleInfo];
                                                                newScheduleInfo[index].team1_score = parseInt(e.target.value);
                                                                setScheduleInfo(newScheduleInfo);
                                                            }}/>
-                                                    <Input label="队伍2分数" value={schedule.team2_score?.toString() || ""}
+                                                    <Input label="队伍2分数" type="number" value={schedule.team2_score?.toString() || ""}
                                                             onChange={(e) => {
                                                                 let newScheduleInfo = [...scheduleInfo];
                                                                 newScheduleInfo[index].team2_score = parseInt(e.target.value);

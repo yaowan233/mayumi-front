@@ -60,7 +60,10 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
             }
         }
     };
-    const regNotAvailable = currentUser?.currentUser ? (tournament_info.rank_min? currentUser?.currentUser.statistics_rulesets.fruits.global_rank < tournament_info.rank_min: false) || (tournament_info.rank_max? currentUser?.currentUser.statistics_rulesets.fruits.global_rank > tournament_info.rank_max: false) : false;
+    const regNotAvailable = currentUser?.currentUser ? (tournament_info.rank_min? currentUser?.currentUser.statistics_rulesets.fruits.global_rank < tournament_info.rank_min: false)
+        || (tournament_info.rank_max? currentUser?.currentUser.statistics_rulesets.fruits.global_rank > tournament_info.rank_max: false)
+        || (new Date(tournament_info.start_date) < new Date())
+        : false;
     useEffect(() => {
         if (!isOpen) {
             setErrMsg('');
@@ -185,7 +188,9 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                     {tournament_info.prize_info}
                 </CardBody>
             </Card>
-            {currentUser?.currentUser?
+            {(new Date(tournament_info.start_date) < new Date())?
+                '该比赛已结束报名'
+                :currentUser?.currentUser?
             <Card>
                 <CardBody>
                     <p>报名</p>
@@ -227,7 +232,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                         <Button color="danger" isDisabled={
                             !members.some((member) => {
                                 return member.player && member.uid === currentUser?.currentUser?.uid.toString()
-                            })
+                            }) || (new Date(tournament_info.start_date) < new Date())
                         }
                             onPress={async () => {
                                 const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
@@ -303,6 +308,6 @@ export type RegistrationInfo = {
 }
 async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
     const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
+        { next: { revalidate: 60 }});
     return await res.json();
 }
