@@ -51,7 +51,7 @@ const TeamComp = ({schedule_stage, tournament_name}: { schedule_stage: ScheduleS
             </div>
             <Accordion variant="bordered">
                 {schedule_stage.match_info.filter((match) => match.is_winner_bracket).map((match_info, index) => (
-                        <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />}>
+                        <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />} textValue={`${match_info.team1} vs ${match_info.team2}`}>
                             <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
                         </AccordionItem>
                 ))}
@@ -64,7 +64,7 @@ const TeamComp = ({schedule_stage, tournament_name}: { schedule_stage: ScheduleS
             </div>
             <Accordion variant="bordered">
                 {schedule_stage.match_info.filter((match) => !match.is_winner_bracket).map((match_info, index) => (
-                    <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />}>
+                    <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />} textValue={`${match_info.team1} vs ${match_info.team2}`}>
                         <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
                     </AccordionItem>
                 ))}
@@ -166,7 +166,7 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id}: {uid: 
                     alert(await res.text());
                     return;
                 }
-                alert('更新成功 请刷新页面查看');
+                alert('更新成功 请等待服务器更新后 刷新页面查看');
             }}> 提交 </Button>
         </div>
     )
@@ -224,27 +224,20 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
 }
 const MapComp = ({map}: { map: map }) => {
     return (
-        <Card key={map.map_id} className={"max-w-lg"}>
+        <Card key={map.map_id} className={"min-w-full"}>
             <CardHeader className="absolute z-10 top-0 flex-col items-center">
                 <Link isExternal size={"lg"} color={"foreground"}
                       className="line-clamp-1 font-bold leading-5 text-center"
                       href={`https://osu.ppy.sh/b/${map.map_id}`}>
-                    <p className="line-clamp-2"> {map.map_name} [{map.diff_name}]
+                    <p className="line-clamp-1">
+                        {map.map_name} [{map.diff_name}]
                     </p>
                 </Link>
                 <Link isExternal color={"foreground"} className=""
                       href={`https://osu.ppy.sh/users/${map.mapper}`}>
                     {map.mapper}
                 </Link>
-            </CardHeader>
-            <Image
-                removeWrapper
-                className="z-0 w-full h-[130px] object-cover dark:brightness-50"
-                alt="Card background"
-                width="100%"
-                src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}/>
-            <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
-                <div className="grid grid-cols-3 place-items-center">
+                <div className="grid grid-cols-3 place-items-center w-full mt-4">
                     <div className="line-clamp-1">
                         ★{map.star_rating}
                     </div>
@@ -255,7 +248,7 @@ const MapComp = ({map}: { map: map }) => {
                         {map.length}
                     </div>
                 </div>
-                <div className="grid grid-cols-4 place-items-center">
+                <div className="grid grid-cols-4 place-items-center w-full">
                     <div className="line-clamp-1">
                         CS {map.cs}
                     </div>
@@ -269,6 +262,14 @@ const MapComp = ({map}: { map: map }) => {
                         AR {map.ar}
                     </div>
                 </div>
+            </CardHeader>
+            <Image
+                removeWrapper
+                className="z-0 w-full h-[130px] object-cover dark:brightness-50"
+                alt="Card background"
+                width="100%"
+                src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}/>
+            <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
             </CardFooter>
         </Card>
     )

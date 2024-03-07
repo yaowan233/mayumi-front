@@ -3,7 +3,7 @@
 
 import {Tab, Tabs} from "@nextui-org/tabs";
 import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
-import {Card, CardFooter, CardHeader} from "@nextui-org/card";
+import {Card, CardHeader} from "@nextui-org/card";
 import {Link} from "@nextui-org/link";
 import {Image} from "@nextui-org/image";
 import React from "react";
@@ -11,6 +11,7 @@ import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournamen
 import {Stage} from "@/components/mappools";
 import {Player} from "@/components/user_info";
 import {useRouter, useSearchParams} from "next/navigation";
+import {Chip} from "@nextui-org/chip";
 
 
 const columns = [
@@ -77,54 +78,57 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                                     {
                                         stage.filter((stage) => stage.stage_name === round.stage_name).length > 0?
                                             stage.filter((stage) => stage.stage_name === round.stage_name)[0].mod_bracket.map((maps) => (
-                                                maps.maps.map((map) => (
+                                                maps.maps.map((map, index) => (
                                                     <div key={map.map_id} className="max-w-lg scroll-ms-6 shrink-0 relative flex flex-col gap-3 py-3 rotate-180">
                                                         <Card key={map.map_id} className={""}>
                                                             <CardHeader className="absolute z-10 top-0 flex-col items-center">
                                                                 <Link isExternal size={"lg"} color={"foreground"}
                                                                       className="font-bold leading-5 text-center"
                                                                       href={`https://osu.ppy.sh/b/${map.map_id}`}>
-                                                                    {map.map_name} [{map.diff_name}]
+                                                                    <p className="line-clamp-1">
+                                                                        {map.map_name} [{map.diff_name}]
+                                                                    </p>
                                                                 </Link>
                                                                 <Link isExternal color={"foreground"} className=""
                                                                       href={`https://osu.ppy.sh/users/${map.mapper}`}>
                                                                     {map.mapper}
                                                                 </Link>
+                                                                <Chip size="lg" className="mt-3 text-xl" color={maps.mod === "HD"? "warning": maps.mod === "HR"? "danger": maps.mod === "DT"? "secondary": maps.mod === "TB"? "success" : "default"}>
+                                                                    {maps.mod} {index + 1}
+                                                                </Chip>
+                                                                <div className="grid grid-cols-3 place-items-center w-full mt-3">
+                                                                    <div className="line-clamp-1">
+                                                                        ★{map.star_rating}
+                                                                    </div>
+                                                                    <div className="line-clamp-1">
+                                                                        bpm {map.bpm}
+                                                                    </div>
+                                                                    <div className="line-clamp-1">
+                                                                        {map.length}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="grid grid-cols-4 place-items-center w-full">
+                                                                    <div className="line-clamp-1">
+                                                                        CS {map.cs}
+                                                                    </div>
+                                                                    <div className="line-clamp-1">
+                                                                        HP {map.hp}
+                                                                    </div>
+                                                                    <div className="line-clamp-1">
+                                                                        OD {map.od}
+                                                                    </div>
+                                                                    <div className="line-clamp-1">
+                                                                        AR {map.ar}
+                                                                    </div>
+                                                                </div>
                                                             </CardHeader>
                                                             <Image
                                                                 removeWrapper
-                                                                className="z-0 w-full h-[180px] object-cover dark:brightness-50"
+                                                                className="z-0 w-full h-[160px] object-cover dark:brightness-50"
                                                                 alt="Card background"
                                                                 width="100%"
                                                                 loading={"lazy"}
                                                                 src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}/>
-                                                            <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
-                                                                <div className="grid grid-cols-3 place-items-center">
-                                                                    <div>
-                                                                        ★{map.star_rating}
-                                                                    </div>
-                                                                    <div>
-                                                                        bpm {map.bpm}
-                                                                    </div>
-                                                                    <div>
-                                                                        {map.length}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="grid grid-cols-4 place-items-center">
-                                                                    <div>
-                                                                        CS {map.cs}
-                                                                    </div>
-                                                                    <div>
-                                                                        HP {map.hp}
-                                                                    </div>
-                                                                    <div>
-                                                                        OD {map.od}
-                                                                    </div>
-                                                                    <div>
-                                                                        AR {map.ar}
-                                                                    </div>
-                                                                </div>
-                                                            </CardFooter>
                                                         </Card>
                                                         <Card>
                                                             {

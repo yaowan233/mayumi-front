@@ -86,7 +86,7 @@ export const Navbar = () => {
 						startContent={<HeartFilledIcon className="text-danger" />}
 						variant="flat"
 					>
-						Sponsor
+						爱发电
 					</Button>
 				</NavbarItem>
 			</NavbarContent>
@@ -180,7 +180,7 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 						startContent={<HeartFilledIcon className="text-danger" />}
 						variant="flat"
 					>
-						Sponsor
+						爱发电
 					</Button>
 				</NavbarItem>
 			</NavbarContent>

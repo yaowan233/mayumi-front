@@ -1,6 +1,6 @@
 "use client"
 import {Tab, Tabs} from "@nextui-org/tabs";
-import {Card, CardBody, CardFooter, CardHeader} from "@nextui-org/card";
+import {Card, CardBody, CardHeader} from "@nextui-org/card";
 import {Link} from "@nextui-org/link";
 import {Image} from "@nextui-org/image";
 import React, {useState} from 'react';
@@ -8,6 +8,7 @@ import {Button} from "@nextui-org/button";
 import {CopyIcon, DownloadIcon} from "@/components/icons";
 import {Tooltip} from "@nextui-org/tooltip";
 import {useSearchParams, useRouter} from "next/navigation";
+import {Chip} from "@nextui-org/chip";
 
 
 export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
@@ -33,8 +34,8 @@ export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
                                 </CardHeader>
                                 <CardBody className={"flex flex-wrap flex-row justify-center gap-4"}>
                                     {
-                                        mod_bracket.maps.map((map) => (
-                                            <MapComponent map={map} key={map.map_id}/>
+                                        mod_bracket.maps.map((map, index) => (
+                                            <MapComponent map={map} key={map.map_id} index={index} mod={mod_bracket.mod}/>
                                         ))
                                     }
                                 </CardBody>
@@ -47,7 +48,7 @@ export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
     );
 }
 
-const MapComponent = ({map}: {map: Map}) => {
+const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string}) => {
     const [isHovered, setIsHovered] = useState(false);
 
     return(
@@ -56,7 +57,7 @@ const MapComponent = ({map}: {map: Map}) => {
                 <Link isExternal size={"lg"} color={"foreground"}
                       className="font-bold leading-5 text-center"
                       href={`https://osu.ppy.sh/b/${map.map_id}`}>
-                    <p className="line-clamp-2">
+                    <p className="line-clamp-1">
                         {map.map_name} [{map.diff_name}]
                     </p>
                 </Link>
@@ -64,10 +65,38 @@ const MapComponent = ({map}: {map: Map}) => {
                       href={`https://osu.ppy.sh/users/${map.mapper}`}>
                     {map.mapper}
                 </Link>
+                <Chip size="lg" className="mt-3 text-xl" color={mod === "HD"? "warning": mod === "HR"? "danger": mod === "DT"? "secondary": mod === "TB"? "success" : "default"}>
+                    {mod} {index + 1}
+                </Chip>
+                <div className="grid grid-cols-3 place-items-center w-full mt-3">
+                    <div className="line-clamp-1">
+                        ★{map.star_rating}
+                    </div>
+                    <div className="line-clamp-1">
+                        bpm {map.bpm}
+                    </div>
+                    <div className="line-clamp-1">
+                        {map.length}
+                    </div>
+                </div>
+                <div className="grid grid-cols-4 place-items-center w-full">
+                    <div className="line-clamp-1">
+                        CS {map.cs}
+                    </div>
+                    <div className="line-clamp-1">
+                        HP {map.hp}
+                    </div>
+                    <div className="line-clamp-1">
+                        OD {map.od}
+                    </div>
+                    <div className="line-clamp-1">
+                        AR {map.ar}
+                    </div>
+                </div>
             </CardHeader>
             <Image
                 removeWrapper
-                className="z-0 w-full h-[180px] object-cover dark:brightness-50"
+                className="z-0 w-full h-[160px] object-cover dark:brightness-50"
                 alt="Card background"
                 width="100%"
                 loading={"lazy"}
@@ -92,33 +121,6 @@ const MapComponent = ({map}: {map: Map}) => {
                     </Tooltip>
                 </div>
             }
-            <CardFooter className="absolute z-10 bottom-0 grid grid-rows-2">
-                <div className="grid grid-cols-3 place-items-center">
-                    <div className="line-clamp-1">
-                        ★{map.star_rating}
-                    </div>
-                    <div className="line-clamp-1">
-                        bpm {map.bpm}
-                    </div>
-                    <div className="line-clamp-1">
-                        {map.length}
-                    </div>
-                </div>
-                <div className="grid grid-cols-4 place-items-center">
-                    <div className="line-clamp-1">
-                        CS {map.cs}
-                    </div>
-                    <div className="line-clamp-1">
-                        HP {map.hp}
-                    </div>
-                    <div className="line-clamp-1">
-                        OD {map.od}
-                    </div>
-                    <div className="line-clamp-1">
-                        AR {map.ar}
-                    </div>
-                </div>
-            </CardFooter>
         </Card>
     )
 }
