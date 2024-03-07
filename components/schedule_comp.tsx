@@ -184,12 +184,12 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
 
     return (
         <div className={"grid grid-cols-1 sm:flex sm:flex-wrap gap-3 grow items-center justify-center justify-items-center"}>
-                       <div className={"text-center font-bold text-2xl"}>
-                                {(new Date(match_info.datetime)).getUTCMonth() + 1}/{(new Date(match_info.datetime)).getUTCDate()}
-                            </div>
-                            <div className={"text-center"}>
-                                {formatTime(((new Date(match_info.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(match_info.datetime)).getUTCMinutes()).toString())}
-                            </div>
+            <div className={"w-[56px] text-start font-bold text-2xl"}>
+                {(new Date(match_info.datetime)).getUTCMonth() + 1}/{(new Date(match_info.datetime)).getUTCDate()}
+            </div>
+            <div className={"text-center"}>
+                {formatTime(((new Date(match_info.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(match_info.datetime)).getUTCMinutes()).toString())}
+            </div>
             <div className={"grid grid-cols-1 sm:flex sm:flex-row sm:flex-wrap justify-center grow items-center justify-items-center gap-3"}>
                 <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-end justify-center">
                     <div className={"text-right " + text_color1}>
