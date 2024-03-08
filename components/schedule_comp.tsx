@@ -130,7 +130,7 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: 
                         <MapComp map={match_info.team1_warmup}/>
                         : "暂无热手图"
                     }
-                    <WarmupSelect uid={match_info.team1.uid} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} />
+                    <WarmupSelect uid={match_info.team1.uid} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime} />
                 </div>
                 <div className={"flex flex-col items-center gap-3"}>
                     <div className={"text-center text-xl"}>
@@ -140,7 +140,7 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: 
                         <MapComp map={match_info.team2_warmup}/>
                         : "暂无热手图"
                     }
-                    <WarmupSelect uid={match_info.team2.uid} team={2} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} />
+                    <WarmupSelect uid={match_info.team2.uid} team={2} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime} />
                 </div>
             </div>
         </div>
@@ -148,10 +148,10 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: 
 }
 
 
-const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id}: {uid: number, team: number, tournament_name: string, stage_name: string, match_id: string}) => {
+const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_time}: {uid: number, team: number, tournament_name: string, stage_name: string, match_id: string, start_time: string}) => {
     const [map_id, setMapId] = useState("");
     const currentUser = useContext(CurrentUserContext);
-    if (currentUser?.currentUser?.uid != uid) {
+    if (currentUser?.currentUser?.uid != uid || new Date(start_time) < new Date()) {
         return null
     }
     return (
