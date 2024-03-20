@@ -40,11 +40,20 @@ export default function RootLayout({
 					fontSans.variable
 				)}
 			>
-				<Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+				<Providers themeProps={{ attribute: "class", defaultTheme: "dark", children }}>
 					<UserProvider>
 						<div className="w-full relative flex flex-col min-h-screen">
 							{children}
-							<footer className="w-full flex items-center justify-center py-3">
+							<footer className="w-full flex flex-col items-center justify-center py-3">
+								<Link
+									isExternal
+									className="flex items-center gap-1 text-current"
+									href="https://osu.ppy.sh/users/3162675"
+									title="yaowan233 OSU主页"
+								>
+									<span className="text-default-600">Coded by</span>
+									<p className="text-primary">yaowan233</p>
+								</Link>
 								<Link
 									isExternal
 									className="flex items-center gap-1 text-current"

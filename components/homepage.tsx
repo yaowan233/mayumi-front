@@ -12,8 +12,8 @@ import {Checkbox, CheckboxGroup} from "@nextui-org/checkbox";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Tooltip} from "@nextui-org/tooltip";
-import {TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
 import {siteConfig} from "@/config/site";
+import {getPlayers, Player} from "@/app/tournaments/[tournament]/participants/page";
 
 export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) => {
     const currentUser  = useContext(CurrentUserContext);
@@ -29,12 +29,12 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
         otherDetails: '',
         additionalComments: ''
     });
-    const [members, setMembers] = useState<TournamentMember[]>([]);
+    const [members, setMembers] = useState<Player[]>([]);
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getTournamentMembers(tournament_info.abbreviation);
-                setMembers(data);
+                const data = await getPlayers(tournament_info.abbreviation);
+                setMembers(data.players);
             }
         };
         fetchData();
@@ -211,7 +211,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                         <Tooltip content="排名需符合赛事要求才能报名">
                             <Button color="primary"
                                     isDisabled={regNotAvailable || members.some((member) => {
-                                return member.player && member.uid === currentUser?.currentUser?.uid.toString()
+                                return member.player && member.uid === currentUser?.currentUser?.uid
                             })}
                                     onPress={async () => {
                                         const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
@@ -231,7 +231,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                         </Tooltip>
                         <Button color="danger" isDisabled={
                             !members.some((member) => {
-                                return member.player && member.uid === currentUser?.currentUser?.uid.toString()
+                                return member.player && member.uid === currentUser?.currentUser?.uid
                             }) || (new Date(tournament_info.start_date) < new Date())
                         }
                             onPress={async () => {
@@ -305,9 +305,4 @@ export type RegistrationInfo = {
     selectedPositions: string[];
     otherDetails: string;
     additionalComments: string;
-}
-async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
-    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
-        { next: { revalidate: 60 }});
-    return await res.json();
 }

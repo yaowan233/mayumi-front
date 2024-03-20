@@ -9,9 +9,9 @@ import {Image} from "@nextui-org/image";
 import React from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
-import {Player} from "@/components/user_info";
 import {useRouter, useSearchParams} from "next/navigation";
 import {Chip} from "@nextui-org/chip";
+import {Player} from "@/app/tournaments/[tournament]/participants/page";
 
 
 const columns = [
@@ -27,7 +27,7 @@ const columns = [
     {name: "平均miss数", key: "miss_avg"},
 ];
 
-export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo: TournamentRoundInfo[], stats: Stats[], stage: Stage[], scores: Score[], players: Player[]}) => {
+export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo: TournamentRoundInfo[], stats: Stats[], stage: Stage[], scores: Score[], players?: Player[]}) => {
     const searchParams = useSearchParams()
     const router = useRouter()
     return (
@@ -140,7 +140,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                                                                                     {index + 1}
                                                                                 </div>
                                                                                 <Link isExternal color="foreground" href={`https://osu.ppy.sh/users/${score.player}`}>
-                                                                                    {players.filter((player) => player.uid.toString() === score.player)[0].name}
+                                                                                    {players?.filter((player) => player.uid.toString() === score.player)[0].name}
                                                                                 </Link>
                                                                             </div>
                                                                             <div className="text-center">

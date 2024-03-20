@@ -1,5 +1,6 @@
 import {Image} from "@nextui-org/image";
 import {Link} from "@nextui-org/link";
+import {Player} from "@/app/tournaments/[tournament]/participants/page";
 
 
 export const UserInfo = ({user}: { user: Player }) => {
@@ -29,13 +30,4 @@ export const UserInfo = ({user}: { user: Player }) => {
             </div>
         </Link>
     )
-}
-
-export interface Player {
-    uid: number;
-    name: string;
-    country: string;
-    pp: string;
-    rank: string;
-    timezone: string;
 }

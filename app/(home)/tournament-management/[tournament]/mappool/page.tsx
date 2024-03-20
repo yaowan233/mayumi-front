@@ -7,6 +7,7 @@ import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournamen
 import {Image} from "@nextui-org/image";
 import {Input} from "@nextui-org/input";
 import {siteConfig} from "@/config/site";
+import {InfoSection} from "@/components/hints";
 
 
 export default function EditTournamentMapPoolPage({params}: { params: { tournament: string } }) {
@@ -55,10 +56,12 @@ export default function EditTournamentMapPoolPage({params}: { params: { tourname
             <h1 className={"text-3xl font-bold"}>
                 图池管理
             </h1>
+            <InfoSection>
+                <p className='text-black'>若没有所需比赛轮次，请主办先在轮次管理中添加比赛轮次</p>
+            </InfoSection>
             <Select
                 label="选择比赛轮次"
                 className="max-w-xs"
-                description="若没有所需比赛轮次，请主办先在轮次管理中添加比赛轮次"
                 selectedKeys={round}
                 // @ts-ignore
                 onSelectionChange={setRound}

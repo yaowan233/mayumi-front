@@ -148,10 +148,10 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: 
 }
 
 
-const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_time}: {uid: number, team: number, tournament_name: string, stage_name: string, match_id: string, start_time: string}) => {
+const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_time}: {uid: number[], team: number, tournament_name: string, stage_name: string, match_id: string, start_time: string}) => {
     const [map_id, setMapId] = useState("");
     const currentUser = useContext(CurrentUserContext);
-    if (currentUser?.currentUser?.uid != uid || new Date(start_time) < new Date()) {
+    if (!uid.includes(currentUser?.currentUser?.uid as number) || new Date(start_time) < new Date()) {
         return null
     }
     return (
@@ -195,13 +195,13 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     <div className={"text-right " + text_color1}>
                         {match_info.team1.name}
                     </div>
-                    <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color1} src={match_info.team1.avatar_url} />
+                    <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color1} src={match_info.team1.avatar_url || "https://a.ppy.sh"} />
                 </div>
                 <div className={"w-[60px] min-w-[60px] text-center"}>
                         {`${score1} : ${score2}`}
                     </div>
                 <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-start justify-center">
-                    <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color2} src={match_info.team2.avatar_url} />
+                    <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color2} src={match_info.team2.avatar_url || "https://a.ppy.sh"} />
                     <div className={" " + text_color2}>
                         {match_info.team2.name}
                     </div>
@@ -322,7 +322,7 @@ const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
 
 const AnotherPersonInfo = ({ info }: { info: SimpleInfo }) => {
     return (
-        <Link isExternal color={"foreground"} className={"grid grid-cols-1 border-2 p-2 min-w-[130px]"} key={info.name} href={`https://osu.ppy.sh/users/${info.uid}`}>
+        <Link isExternal color={"foreground"} className={"grid grid-cols-1 border-2 p-2 min-w-[130px]"} key={info.name} href={`https://osu.ppy.sh/users/${info.uid[0]}`}>
             <div className="flex justify-center">
                 <Image loading={"lazy"} alt="icon" width={60} height={60} src={info.avatar_url}/>
             </div>
@@ -336,8 +336,8 @@ const AnotherPersonInfo = ({ info }: { info: SimpleInfo }) => {
 
 const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     return (
-        <Link color={"foreground"} isExternal href={`https://osu.ppy.sh/users/${info.uid}`} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
-            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url}/>
+        <Link color={"foreground"} isExternal href={`https://osu.ppy.sh/users/${info.uid[0]}`} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
+            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url || "https://a.ppy.sh"}/>
             <div  className={"truncate"}>
                 {info.name}
             </div>
@@ -387,7 +387,7 @@ export type MatchInfo = {
 type SimpleInfo = {
     name: string;
     avatar_url: string;
-    uid: number;
+    uid: number[];
 }
 
 interface map {

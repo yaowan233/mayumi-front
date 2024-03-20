@@ -8,7 +8,6 @@ import {Button} from "@nextui-org/button";
 import {Input} from "@nextui-org/input";
 import {Autocomplete, AutocompleteItem} from "@nextui-org/autocomplete";
 import {Avatar} from "@nextui-org/avatar";
-import {TournamentMember} from "@/app/(home)/tournament-management/[tournament]/member/page";
 import {Divider} from "@nextui-org/divider";
 import {useFilter} from "@react-aria/i18n";
 import {Switch} from "@nextui-org/switch";
@@ -16,15 +15,19 @@ import {MenuTriggerAction} from "@react-types/combobox";
 import {Chip} from "@nextui-org/chip";
 import {Spinner} from "@nextui-org/spinner";
 import {siteConfig} from "@/config/site";
+import {getPlayers, Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {InfoSection} from "@/components/hints";
 
 export default function SchedulerPage({params}: { params: { tournament: string } }) {
     const currentUser = useContext(CurrentUserContext);
     const [round, setRound] = useState<Set<string>>(new Set([]));
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
     const [scheduleInfo, setScheduleInfo] = useState<Schedule[]>([]);
-    const [members, setMembers] = useState<TournamentMember[]>([]);
+    const [tournamentPlayers, setMembers] = useState<TournamentPlayers>({players: []});
     const [isLoading, setIsLoading] = useState(false);
     const [errMsg, setErrMsg] = useState('');
+    const members = tournamentPlayers.players;
+    const teams = tournamentPlayers.groups?.filter(group => group.is_verified == true);
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
@@ -32,21 +35,24 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                 setRoundInfo(data);
                 const data1 = await getSchedule(params.tournament);
                 setScheduleInfo(data1);
-                const data2 = await getTournamentMembers(params.tournament);
+                const data2 = await getPlayers(params.tournament);
                 setMembers(data2);
             }
         };
         fetchData();
     }, [currentUser, params.tournament]);
+    console.log(teams)
     return (
         <div className="flex flex-col gap-5">
             <h1 className="text-3xl font-bold">
                 赛程管理
             </h1>
+            <InfoSection>
+                <p className='text-black'>若没有所需比赛轮次，请主办先在轮次管理中添加比赛轮次</p>
+            </InfoSection>
             <Select
                 label="选择比赛轮次"
                 className="max-w-xs"
-                description="若没有所需比赛轮次，请主办先在轮次管理中添加比赛轮次"
                 selectedKeys={round}
                 // @ts-ignore
                 onSelectionChange={setRound}
@@ -103,7 +109,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                         }}
-                                                           placeholder="Enter your email" />
+                                                            />
                                                     <Input type="time" label="时间" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[1].substring(0, 5):""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
@@ -119,7 +125,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                         }
-                                                    } placeholder="Enter your email" />
+                                                    }  />
                                                     {
                                                         schedule.match_url?.map((url, urlIndex) => {
                                                             return (
@@ -188,11 +194,11 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                         <div className="text-xl font-bold">
                                                             选手
                                                         </div>
-                                                        <GroupMemberSelect members={members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} role="participant" index={index} />
+                                                        <GroupMemberSelect members={teams || members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} role="participant" index={index} />
                                                         <div className="flex flex-wrap gap-5">
                                                             {
                                                                 schedule.participants?.map((participant, memberIndex) => {
-                                                                    const member = members.find((member) => member.name === participant);
+                                                                    const member = teams? teams.find((team) => team.name === participant): members.find((member) => member.name === participant);
                                                                     if (!member)
                                                                         return null;
                                                                     return(
@@ -209,7 +215,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                                                 <Avatar
                                                                                     size="lg"
                                                                                     name={member.name}
-                                                                                    src={`https://a.ppy.sh/${member.uid}`}
+                                                                                    src={(member as Team).icon_url || `https://a.ppy.sh/${(member as Player).uid}` as string}
                                                                                 />
                                                                             }
                                                                         >
@@ -243,8 +249,8 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                             setScheduleInfo(newScheduleInfo);
                                                         }}
                                                     />
-                                                    <MemberSelect members={members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} team="team1" index={index} errMsg={errMsg} />
-                                                    <MemberSelect members={members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} team="team2" index={index} errMsg={errMsg} />
+                                                    <MemberSelect members={teams || members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} team="team1" index={index} errMsg={errMsg} />
+                                                    <MemberSelect members={teams || members.filter((member) => member.player)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} team="team2" index={index} errMsg={errMsg} />
                                                     <Input type="date" label="日期" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[0]:""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
@@ -261,7 +267,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                        }}
-                                                           placeholder="Enter your email" />
+                                                            />
                                                     <Input type="time" label="时间" isRequired isInvalid={!!errMsg && !schedule.match_time} value={schedule.match_time?(new Date(schedule.match_time)).toISOString().split('T')[1].substring(0, 5):""} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
@@ -277,7 +283,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                                                             newScheduleInfo[index].match_time = datetime.toISOString();
                                                             setScheduleInfo(newScheduleInfo);
                                                         }
-                                                    } placeholder="Enter your email" />
+                                                    }  />
                                                     <Switch className="min-w-fit" defaultSelected={schedule.is_winner_bracket} onChange={
                                                         (e) => {
                                                             let newScheduleInfo = [...scheduleInfo];
@@ -477,6 +483,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
                         participants: [],
                         referee: [],
                         streamer: [],
+                        commentators: [],
                     });
                     setScheduleInfo(newScheduleInfo);
                 }}>
@@ -514,7 +521,7 @@ export default function SchedulerPage({params}: { params: { tournament: string }
 
 const MemberSelect = ({members, scheduleInfo, setScheduleInfo, team, index, errMsg}:
                           {
-                              members: TournamentMember[],
+                              members: (Player | Team)[],
                               scheduleInfo: Schedule[],
                               setScheduleInfo:  React.Dispatch<React.SetStateAction<Schedule[]>>,
                               team: "team1" | "team2",
@@ -522,7 +529,7 @@ const MemberSelect = ({members, scheduleInfo, setScheduleInfo, team, index, errM
                               errMsg: string
                           }) => {
 
-    const [fieldState, setFieldState] = useState<{selectedKey: string | null, inputValue: string, items: TournamentMember[]}>({
+    const [fieldState, setFieldState] = useState<{selectedKey: string | null, inputValue: string, items: (Player | Team)[]}>({
         selectedKey: members.find((member) => member.name === (team === "team1"? scheduleInfo[index].team1.toString(): scheduleInfo[index].team2.toString()))?.name || null,
         inputValue: members.find((member) => member.name === (team === "team1"? scheduleInfo[index].team1.toString(): scheduleInfo[index].team2.toString()))?.name || "",
         items: members,
@@ -546,15 +553,13 @@ const MemberSelect = ({members, scheduleInfo, setScheduleInfo, team, index, errM
         setFieldState((prevState) => ({
             inputValue: value,
             selectedKey: value === "" ? null : prevState.selectedKey,
-            items: members.filter((item) => contains(item.uid + item.name, value)),
+            items: members.filter((item) => contains(item.name, value)),
         }));
     };
     const onSelectionChange = (key: string | null) => {
-        if (!key)
-            return
         let newScheduleInfo = [...scheduleInfo];
         if (!newScheduleInfo[index].is_lobby) {
-            team === "team1" ? newScheduleInfo[index].team1 = key: newScheduleInfo[index].team2 = key;
+            team === "team1" ? newScheduleInfo[index].team1 = key || "" : newScheduleInfo[index].team2 = key || "";
             setScheduleInfo(newScheduleInfo);
         }
         setFieldState((prevState) => {
@@ -587,22 +592,15 @@ const MemberSelect = ({members, scheduleInfo, setScheduleInfo, team, index, errM
             onKeyDown={(e) => e.continuePropagation()}
             onInputChange={onInputChange}
             onOpenChange={onOpenChange}
-            onClose={()=>{setFieldState((prevState) => ({
-                inputValue: prevState.inputValue,
-                selectedKey: prevState.selectedKey,
-                items: members,
-            }))
-            }}
             // @ts-ignore
             onSelectionChange={onSelectionChange}
         >
             {(member) => (
                 <AutocompleteItem key={member.name} textValue={member.name}>
                     <div className="flex gap-2 items-center">
-                        <Avatar alt={member.name} className="flex-shrink-0" size="sm" src={`https://a.ppy.sh/${member.uid}`} />
+                        <Avatar alt={member.name} className="flex-shrink-0" size="sm" src={(member as Team).icon_url || `https://a.ppy.sh/${(member as Player).uid}` as string} />
                         <div className="flex flex-col">
                             <span className="text-small">{member.name}</span>
-                            <span className="text-tiny text-default-400">{member.uid}</span>
                         </div>
                     </div>
                 </AutocompleteItem>
@@ -612,8 +610,8 @@ const MemberSelect = ({members, scheduleInfo, setScheduleInfo, team, index, errM
 }
 
 
-const GroupMemberSelect = ({members, scheduleInfo, setScheduleInfo, role, index}:{members: TournamentMember[], scheduleInfo: Schedule[], setScheduleInfo:  React.Dispatch<React.SetStateAction<Schedule[]>>, role: "referee" | "participant" | "streamer" | "commentator", index: number}) => {
-    const [fieldState, setFieldState] = useState<{selectedKey: string | null, inputValue: string, items: TournamentMember[]}>({
+const GroupMemberSelect = ({members, scheduleInfo, setScheduleInfo, role, index}:{members: (Player | Team)[], scheduleInfo: Schedule[], setScheduleInfo:  React.Dispatch<React.SetStateAction<Schedule[]>>, role: "referee" | "participant" | "streamer" | "commentator", index: number}) => {
+    const [fieldState, setFieldState] = useState<{selectedKey: string | null, inputValue: string, items: (Player | Team)[]}>({
         selectedKey: null,
         inputValue: "",
         items: members,
@@ -634,7 +632,7 @@ const GroupMemberSelect = ({members, scheduleInfo, setScheduleInfo, role, index}
                 setFieldState((prevState) => ({
                 inputValue: value,
                 selectedKey: value === "" ? null : prevState.selectedKey,
-                items: members.filter((item) => contains(item.uid + item.name, value)),
+                items: members.filter((item) => contains(item.name, value)),
             }));}}
             onOpenChange={(isOpen, menuTrigger) => {
                 if (menuTrigger === "manual" && isOpen) {
@@ -665,10 +663,9 @@ const GroupMemberSelect = ({members, scheduleInfo, setScheduleInfo, role, index}
             {(member) => (
                 <AutocompleteItem key={member.name} textValue={member.name}>
                     <div className="flex gap-2 items-center">
-                        <Avatar alt={member.name} className="flex-shrink-0" size="sm" src={`https://a.ppy.sh/${member.uid}`} />
+                        <Avatar alt={member.name} className="flex-shrink-0" size="sm" src={(member as Team).icon_url || `https://a.ppy.sh/${(member as Player).uid}` as string} />
                         <div className="flex flex-col">
                             <span className="text-small">{member.name}</span>
-                            <span className="text-tiny text-default-400">{member.uid}</span>
                         </div>
                     </div>
                 </AutocompleteItem>
@@ -705,11 +702,6 @@ interface Schedule {
     team2_score?: number;
     team1_warmup?: number;
     team2_warmup?: number;
-}
-async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
-    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
-    return await res.json();
 }
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,

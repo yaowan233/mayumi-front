@@ -13,25 +13,15 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
     const teams = tournament_players.groups
     return (
         <Tabs aria-label="Options">
-            <Tab key="solo" title="报名人员">
-                <Card>
-                    <CardBody>
-                        <div className={"grid md:grid-cols-4 sm:grid-cols-3 gap-3"}>
-                            {players?.sort((player1, player2) => parseFloat(player2.pp) - parseFloat(player1.pp)).map((user, num) => (
-                                <UserInfo key={num} user={user}/>
-                            ))}
-                        </div>
-                    </CardBody>
-                </Card>
-            </Tab>
-            <Tab key="teams" title="队伍">
+            {teams ? <Tab key="teams" title="队伍">
                 <Card>
                     <CardBody>
                         <div className={"grid md:grid-cols-4 sm:grid-cols-3 gap-3"}>
                             {teams?.map((team, num) => (
                                 <div key={num} className={"flex flex-col border-2 p-2"}>
                                     <div className="flex flex-row mb-2">
-                                        <Image alt="icon" height={64} width={64} src={team.icon_url? team.icon_url: "https://a.ppy.sh"}/>
+                                        <Image alt="icon" height={64} width={64}
+                                               src={team.icon_url ? team.icon_url : "https://a.ppy.sh"}/>
                                         <p className={"text-foreground text-center w-full text-2xl self-center line-clamp-1"}>
                                             {team.name}
                                         </p>
@@ -42,7 +32,8 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                                             return (
                                                 <div className="flex flex-row w-full justify-between" key={num}>
                                                     <Tooltip content="队长" placement="right">
-                                                        <Link isExternal color="foreground" className="font-bold" href={`https://osu.ppy.sh/u/${player.uid}`}>
+                                                        <Link isExternal color="foreground" className="font-bold"
+                                                              href={`https://osu.ppy.sh/u/${player.uid}`}>
                                                             {player.name}
                                                         </Link>
                                                     </Tooltip>
@@ -59,7 +50,8 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                                         if (player) {
                                             return (
                                                 <div className="flex flex-row w-full justify-between" key={num}>
-                                                    <Link isExternal color="foreground" href={`https://osu.ppy.sh/u/${player.uid}`}>
+                                                    <Link isExternal color="foreground"
+                                                          href={`https://osu.ppy.sh/u/${player.uid}`}>
                                                         {player.name}
                                                     </Link>
                                                     <div>
@@ -71,6 +63,17 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                                         return null
                                     })}
                                 </div>
+                            ))}
+                        </div>
+                    </CardBody>
+                </Card>
+            </Tab> : null}
+            <Tab key="solo" title="报名人员">
+                <Card>
+                    <CardBody>
+                        <div className={"grid md:grid-cols-4 sm:grid-cols-3 gap-3"}>
+                            {players?.filter((player) => player.player == true).sort((player1, player2) => player2.pp - player1.pp).map((user, num) => (
+                                <UserInfo key={num} user={user}/>
                             ))}
                         </div>
                     </CardBody>

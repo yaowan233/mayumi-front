@@ -13,6 +13,8 @@ import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure}
 import {RegistrationInfo} from "@/components/homepage";
 import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
 import {siteConfig} from "@/config/site";
+import {getPlayers, Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {InfoSection} from "@/components/hints";
 
 const columns = [
     {name: "uid", key: "uid"},
@@ -26,18 +28,21 @@ const columns = [
 
 export default function EditMemberPage({params}: { params: { tournament: string } }) {
     const currentUser = useContext(CurrentUserContext);
-    const [members, setMembers] = useState<TournamentMember[]>([]);
+    const [tournamentPlayers, settournamentPlayers] = useState<TournamentPlayers>({players: []});
     const [registrationInfo, setRegistrationInfo] = useState<RegistrationInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
+    const players = tournamentPlayers.players;
+    const teams = tournamentPlayers.groups;
 
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getTournamentMembers(params.tournament);
+                const data = await getPlayers(params.tournament);
                 const registrationInfo = await getRegistrationInfo(params.tournament);
-                setMembers(data);
+                settournamentPlayers(data);
                 setRegistrationInfo(registrationInfo);
+                console.log(data.players)
             }
         };
         fetchData();
@@ -88,14 +93,21 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         )}
                     </ModalContent>
                 </Modal>
-
             </div>
+            <InfoSection>
+                <h1 className='text-black'>
+                    在新增用户处输入用户的uid来添加新用户
+                </h1>
+                <h1 className='text-black font-bold'>
+                    (不能输入用户名)
+                </h1>
+            </InfoSection>
             <Divider/>
             <h1 className="text-3xl font-bold">主办</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players?.map((member, index) => {
                             if (!member.host) {
                                 return null;
                             }
@@ -105,13 +117,13 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        if (member.uid === currentUser?.currentUser?.uid.toString()) {
+                                        if (member.uid === currentUser?.currentUser?.uid) {
                                             alert('不能删除自己');
                                             return;
                                         }
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].host = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -127,14 +139,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"host"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"host"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">选手</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.player) {
                                 return null;
                             }
@@ -144,9 +156,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].player = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -162,14 +174,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"player"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"player"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">裁判</h1>
             <div className="grid grid-cols-2 justify-evenly">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.referee) {
                                 return null;
                             }
@@ -179,9 +191,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].referee = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -197,14 +209,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"referee"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"referee"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">直播</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.streamer) {
                                 return null;
                             }
@@ -214,9 +226,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                    const updatedMembers = [...members];
+                                    const updatedMembers = [...players];
                                     updatedMembers[index].streamer = false;
-                                    setMembers(updatedMembers);
+                                    settournamentPlayers({players: updatedMembers, groups: teams});
                                 }}
                                     avatar={
                                         <Avatar
@@ -232,14 +244,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"streamer"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"streamer"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">解说</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.commentator) {
                                 return null;
                             }
@@ -249,9 +261,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].commentator = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -267,14 +279,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"commentator"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"commentator"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">选图</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.mappooler) {
                                 return null;
                             }
@@ -284,9 +296,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].mappooler = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -302,14 +314,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"mappooler"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"mappooler"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">赞助</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.donator) {
                                 return null;
                             }
@@ -319,9 +331,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].donator = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -337,14 +349,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"donator"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"donator"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">设计</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.graphic_designer) {
                                 return null;
                             }
@@ -354,9 +366,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].graphic_designer = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -372,14 +384,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"graphic_designer"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"graphic_designer"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">时间安排</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.scheduler) {
                                 return null;
                             }
@@ -389,9 +401,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].scheduler = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -407,14 +419,14 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"scheduler"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} teams={teams} position={"scheduler"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">测图</h1>
             <div className="grid grid-cols-2">
                 <div className="flex flex-wrap gap-5">
                     {
-                        members.map((member, index) => {
+                        players.map((member, index) => {
                             if (!member.map_tester) {
                                 return null;
                             }
@@ -424,9 +436,9 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                        const updatedMembers = [...members];
+                                        const updatedMembers = [...players];
                                         updatedMembers[index].map_tester = false;
-                                        setMembers(updatedMembers);
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
                                     }}
                                     avatar={
                                         <Avatar
@@ -442,13 +454,13 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                         })
                     }
                 </div>
-                <AddMember members={members} setMembers={setMembers} tournamentName={params.tournament} position={"map_tester"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"map_tester"}/>
             </div>
             {
                 isLoading ?  <Spinner className="max-w-fit" /> :
                     <Button className="max-w-fit" color="primary" onPress={async () => {
                         setIsLoading(true)
-                        const res = await fetch(siteConfig.backend_url + '/api/update-members', {'method': 'POST', 'body': JSON.stringify(members), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                        const res = await fetch(siteConfig.backend_url + '/api/update-members', {'method': 'POST', 'body': JSON.stringify(players), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
                         setIsLoading(false)
                         if (res.status != 200) {
                             // 失败
@@ -469,16 +481,18 @@ export default function EditMemberPage({params}: { params: { tournament: string 
 
 const AddMember = ({
                        members,
+                       teams,
                        setMembers,
                        tournamentName,
                        position,
                    }: {
-    members: TournamentMember[];
-    setMembers: React.Dispatch<React.SetStateAction<TournamentMember[]>>;
+    members: Player[];
+    teams?: Team[];
+    setMembers: React.Dispatch<React.SetStateAction<TournamentPlayers>>;
     tournamentName: string;
-    position: keyof TournamentMember;
+    position: keyof Player;
 }) => {
-    const [fieldState, setFieldState] = React.useState<{selectedKey: string | null, inputValue: string, items: TournamentMember[]}>({
+    const [fieldState, setFieldState] = React.useState<{selectedKey: string, inputValue: string, items: Player[]}>({
         selectedKey: "",
         inputValue: "",
         items: members,
@@ -489,17 +503,17 @@ const AddMember = ({
     const onInputChange = (value: string) => {
         setFieldState((prevState) => ({
             inputValue: value,
-            selectedKey: value === "" ? null : prevState.selectedKey,
-            items: members.filter((item) => contains(item.uid + item.name, value)),
+            selectedKey: value === "" ? "" : prevState.selectedKey,
+            items: members.filter((item) => contains(item.uid.toString() + item.name, value)),
         }));
     };
     const onSelectionChange = (key: string) => {
         setFieldState((prevState) => {
-            let selectedItem = prevState.items.find((option) => option.uid === key);
+            let selectedItem = prevState.items.find((option) => option.uid.toString() == key)
             return {
-                inputValue: key === null ? "" : selectedItem?.uid || fieldState.inputValue,
+                inputValue: key === null ? "" : selectedItem?.uid.toString() || fieldState.inputValue,
                 selectedKey: key? key : "",
-                items: members.filter((item) => contains(item.uid + item.name, selectedItem?.uid || "")),
+                items: members.filter((item) => contains(item.uid.toString() + item.name, selectedItem?.uid.toString() || "")),
             };
         });
     };
@@ -512,7 +526,7 @@ const AddMember = ({
     };
     const handleAddMember = async () => {
         for (const member of members) {
-            if (member.uid === fieldState.inputValue) {
+            if (member.uid.toString() == fieldState.inputValue) {
                 if (member[position]) {
                     alert(`该用户已经是${position}`);
                     return;
@@ -520,15 +534,15 @@ const AddMember = ({
                 const updatedMembers = [...members];
                 // @ts-ignore
                 updatedMembers[updatedMembers.indexOf(member)][position] = true;
-                setMembers(updatedMembers);
+                setMembers({players: updatedMembers, groups: teams});
                 return;
             }
         }
-        if (!fieldState.inputValue || fieldState.inputValue === "") {
+        if (!fieldState.inputValue || fieldState.inputValue == "") {
             alert('请输入uid');
             return;
         }
-        const res = await fetch(siteConfig.backend_url + '/api/user?uid=' + fieldState.inputValue);
+        const res = await fetch(siteConfig.backend_url + '/api/user?uid=' + fieldState.inputValue + '&tournament_name=' + tournamentName);
         if (res.status !== 200) {
             alert('用户不存在');
             return;
@@ -536,9 +550,13 @@ const AddMember = ({
         const data: User = await res.json();
         const updatedMembers = [...members,
             {
-                uid: fieldState.inputValue,
+                uid: parseInt(fieldState.inputValue),
                 name: data.username,
                 tournament_name: tournamentName,
+                pp: data.statistics.pp,
+                rank: data.statistics.global_rank,
+                country: data.country_code,
+                group: undefined,
                 player: position === "player",
                 host: position === "host",
                 referee: position === "referee",
@@ -551,7 +569,7 @@ const AddMember = ({
                 scheduler: position === "scheduler",
                 map_tester: position === "map_tester",
             }];
-        setMembers(updatedMembers);
+        setMembers({players: updatedMembers, groups: teams});
     };
     return (
         <div className="flex flex-row justify-end items-baseline gap-5">
@@ -559,9 +577,8 @@ const AddMember = ({
                 label="新增用户"
                 allowsCustomValue
                 className="max-w-xs"
-                description="输入用户的uid来添加新用户 (不能输入用户名)"
                 inputValue={fieldState.inputValue}
-                items={fieldState.items}
+                items={fieldState.items || []}
                 selectedKey={fieldState.selectedKey}
                 // @ts-ignore
                 onKeyDown={(e) => e.continuePropagation()}
@@ -571,7 +588,7 @@ const AddMember = ({
                 onSelectionChange={onSelectionChange}
             >
                 {(member) => (
-                    <AutocompleteItem key={member.uid} textValue={member.uid}>
+                    <AutocompleteItem key={member.uid} textValue={member.uid.toString()}>
                         <div className="flex gap-2 items-center">
                             <Avatar alt={member.name} className="flex-shrink-0" size="sm" src={`https://a.ppy.sh/${member.uid}`} />
                             <div className="flex flex-col">
@@ -596,30 +613,12 @@ async function getRegistrationInfo(tournament_name: string): Promise<Registratio
     return await res.json();
 }
 
-async function getTournamentMembers(tournament_name: string): Promise<TournamentMember[]> {
-    const res = await fetch(siteConfig.backend_url + `/api/members?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
-    return await res.json();
-}
-
-export interface TournamentMember {
-    uid: string;
-    name: string;
-    tournament_name: string;
-    player: boolean;
-    host: boolean;
-    referee: boolean;
-    streamer: boolean;
-    commentator: boolean;
-    mappooler: boolean;
-    custom_mapper: boolean;
-    donator: boolean;
-    graphic_designer: boolean;
-    scheduler: boolean;
-    map_tester: boolean;
-}
-
 interface User {
     id: string;
     username: string;
+    country_code: string;
+    statistics: {
+        pp: number;
+        global_rank: number;
+    }
 }
