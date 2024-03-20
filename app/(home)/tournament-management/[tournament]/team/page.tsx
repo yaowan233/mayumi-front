@@ -2,7 +2,7 @@
 
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {getPlayers, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {Button} from "@nextui-org/button";
 import {Input} from "@nextui-org/input";
 import {Divider} from "@nextui-org/divider";
@@ -191,7 +191,6 @@ export default function EditTeamPage({params}: { params: { tournament: string } 
                 添加队伍
             </Button>
             <Button className="max-w-fit" color="primary" onPress={async () => {
-                console.log(teams, typeof teams)
                 const res = await fetch(siteConfig.backend_url + '/api/update-teams', {
                     method: 'POST',
                     body: JSON.stringify(teams),
@@ -209,4 +208,10 @@ export default function EditTeamPage({params}: { params: { tournament: string } 
             </Button>
         </div>
     )
+}
+
+async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
+    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
+        { next: { revalidate: revalidate_time }})
+    return await res.json()
 }

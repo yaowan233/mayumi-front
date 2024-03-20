@@ -13,8 +13,9 @@ import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure}
 import {RegistrationInfo} from "@/components/homepage";
 import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
 import {siteConfig} from "@/config/site";
-import {getPlayers, Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {InfoSection} from "@/components/hints";
+import {Badge} from "@nextui-org/badge";
 
 const columns = [
     {name: "uid", key: "uid"},
@@ -42,7 +43,6 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                 const registrationInfo = await getRegistrationInfo(params.tournament);
                 settournamentPlayers(data);
                 setRegistrationInfo(registrationInfo);
-                console.log(data.players)
             }
         };
         fetchData();
@@ -51,7 +51,11 @@ export default function EditMemberPage({params}: { params: { tournament: string 
         <div className="flex flex-col gap-5">
             <div className="flex flex-row justify-between">
                 <h1 className="text-3xl font-bold">成员管理</h1>
-                <Button color="success" className="" onPress={onOpen}>查看staff申请</Button>
+                <Badge content={registrationInfo.length} color="primary">
+                    <Button color="success" className="" onPress={onOpen}>
+                        查看staff申请
+                    </Button>
+                </Badge>
                 <Modal size="5xl" isOpen={isOpen} onOpenChange={onOpenChange}>
                     <ModalContent>
                         {(onClose) => (
@@ -74,8 +78,8 @@ export default function EditMemberPage({params}: { params: { tournament: string 
                                             {(item) => (
                                                 <TableRow key={item.uid}>
                                                     {(columnKey) => {
-                                                        if (columnKey === 'acc_max' || columnKey === 'acc_min' || columnKey === 'acc_avg') {
-                                                            return <TableCell>{getKeyValue(item, columnKey) ? (getKeyValue(item, columnKey) * 100).toFixed(2) + "%" : null}</TableCell>
+                                                        if (columnKey === 'selectedPositions') {
+                                                            return <TableCell>{getKeyValue(item, columnKey).join("，")}</TableCell>
                                                         }
                                                         return (<TableCell>{getKeyValue(item, columnKey)}</TableCell>)
                                                     }}
@@ -621,4 +625,10 @@ interface User {
         pp: number;
         global_rank: number;
     }
+}
+
+async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
+    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
+        { next: { revalidate: revalidate_time }})
+    return await res.json()
 }

@@ -13,7 +13,7 @@ import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Tooltip} from "@nextui-org/tooltip";
 import {siteConfig} from "@/config/site";
-import {getPlayers, Player} from "@/app/tournaments/[tournament]/participants/page";
+import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 
 export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) => {
     const currentUser  = useContext(CurrentUserContext);
@@ -137,7 +137,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                                         {tournament_info.streamer? <Checkbox value="直播">直播</Checkbox>: null}
                                         {tournament_info.referee? <Checkbox value="裁判">裁判</Checkbox>: null}
                                         {tournament_info.custom_mapper? <Checkbox value="作图">作图</Checkbox>: null}
-                                        {tournament_info.commentator? <Checkbox value="直播解说">直播解说</Checkbox>: null}
+                                        {tournament_info.commentator? <Checkbox value="解说">解说</Checkbox>: null}
                                         {tournament_info.mappooler? <Checkbox value="选图">选图</Checkbox>: null}
                                         {tournament_info.donator? <Checkbox value="赞助">赞助</Checkbox>: null}
                                         {tournament_info.designer? <Checkbox value="设计">设计</Checkbox>: null}
@@ -305,4 +305,10 @@ export type RegistrationInfo = {
     selectedPositions: string[];
     otherDetails: string;
     additionalComments: string;
+}
+
+async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
+    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
+        { next: { revalidate: revalidate_time }})
+    return await res.json()
 }

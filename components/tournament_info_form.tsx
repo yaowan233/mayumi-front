@@ -112,31 +112,31 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {formData: T
                 你可以调节你想招募的staff的职位
             </div>
             <div className="grid grid-cols-4 gap-5">
-                <Switch defaultSelected={formData.referee} onChange={(e) => setFormData({...formData, referee: e.target.checked})}>
+                <Switch isSelected={formData.referee} onChange={(e) => setFormData({...formData, referee: e.target.checked})}>
                     裁判
                 </Switch>
-                <Switch defaultSelected={formData.streamer} onChange={(e) => setFormData({...formData, streamer: e.target.checked})}>
+                <Switch isSelected={formData.streamer} onChange={(e) => setFormData({...formData, streamer: e.target.checked})}>
                     直播
                 </Switch>
-                <Switch defaultSelected={formData.commentator} onChange={(e) => setFormData({...formData, commentator: e.target.checked})}>
+                <Switch isSelected={formData.commentator} onChange={(e) => setFormData({...formData, commentator: e.target.checked})}>
                     解说
                 </Switch>
-                <Switch defaultSelected={formData.mappooler} onChange={(e) => setFormData({...formData, mappooler: e.target.checked})}>
+                <Switch isSelected={formData.mappooler} onChange={(e) => setFormData({...formData, mappooler: e.target.checked})}>
                     选图
                 </Switch>
-                <Switch defaultSelected={formData.custom_mapper} onChange={(e) => setFormData({...formData, custom_mapper: e.target.checked})}>
+                <Switch isSelected={formData.custom_mapper} onChange={(e) => setFormData({...formData, custom_mapper: e.target.checked})}>
                     作图
                 </Switch>
-                <Switch defaultSelected={formData.donator} onChange={(e) => setFormData({...formData, donator: e.target.checked})}>
+                <Switch isSelected={formData.donator} onChange={(e) => setFormData({...formData, donator: e.target.checked})}>
                     赞助
                 </Switch>
-                <Switch defaultSelected={formData.designer} onChange={(e) => setFormData({...formData, designer: e.target.checked})}>
+                <Switch isSelected={formData.designer} onChange={(e) => setFormData({...formData, designer: e.target.checked})}>
                     美术
                 </Switch>
-                <Switch defaultSelected={formData.scheduler} onChange={(e) => setFormData({...formData, scheduler: e.target.checked})}>
+                <Switch isSelected={formData.scheduler} onChange={(e) => setFormData({...formData, scheduler: e.target.checked})}>
                     时间安排
                 </Switch>
-                <Switch defaultSelected={formData.map_tester} onChange={(e) => setFormData({...formData, map_tester: e.target.checked})}>
+                <Switch isSelected={formData.map_tester} onChange={(e) => setFormData({...formData, map_tester: e.target.checked})}>
                     测图
                 </Switch>
             </div>

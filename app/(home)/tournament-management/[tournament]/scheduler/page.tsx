@@ -15,7 +15,7 @@ import {MenuTriggerAction} from "@react-types/combobox";
 import {Chip} from "@nextui-org/chip";
 import {Spinner} from "@nextui-org/spinner";
 import {siteConfig} from "@/config/site";
-import {getPlayers, Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {InfoSection} from "@/components/hints";
 
 export default function SchedulerPage({params}: { params: { tournament: string } }) {
@@ -41,7 +41,6 @@ export default function SchedulerPage({params}: { params: { tournament: string }
         };
         fetchData();
     }, [currentUser, params.tournament]);
-    console.log(teams)
     return (
         <div className="flex flex-col gap-5">
             <h1 className="text-3xl font-bold">
@@ -707,4 +706,10 @@ async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInf
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
         { next: { revalidate: 10 }});
     return await data.json();
+}
+
+async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
+    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
+        { next: { revalidate: revalidate_time }})
+    return await res.json()
 }
