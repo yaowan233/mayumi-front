@@ -6,16 +6,43 @@ import {Image} from "@nextui-org/image";
 import {Link} from "@nextui-org/link";
 import {Divider} from "@nextui-org/divider";
 import {Accordion, AccordionItem} from "@nextui-org/accordion";
-import {useContext, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Input} from "@nextui-org/input";
 import {Button} from "@nextui-org/button";
 import {siteConfig} from "@/config/site";
 import {LinkIcon} from "@/components/icons";
 import {useRouter, useSearchParams} from "next/navigation";
+import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+
+
+async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
+    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
+        { next: { revalidate: revalidate_time }})
+    return await res.json()
+}
 
 
 export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], tournament_name: string }) => {
+    const currentUser = useContext(CurrentUserContext);
+    const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({players: []});
+    const players = tournamentPlayers.players.filter(player => player.player == true);
+    const referees = tournamentPlayers.players.filter(player => player.referee == true);
+    const teams = tournamentPlayers.groups;
+    useEffect(() => {
+        const fetchData = async () => {
+            if (currentUser?.currentUser?.uid) {
+                const data = await getPlayers(tournament_name);
+                setTournamentPlayers(data);
+            }
+        };
+        fetchData();
+    }, [currentUser, tournament_name]);
+
+    const playerUID = currentUser?.currentUser?.uid;
+    const isParticipant = players.some((player) => player.uid === playerUID);
+    const isReferee = referees.some((referee) => referee.uid === playerUID);
+
     const searchParams = useSearchParams()
     const router = useRouter()
     return (
@@ -29,7 +56,7 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>
                     {
-                        item.is_lobby ? <GroupComp schedule_stage={item}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
+                        item.is_lobby ? <GroupComp schedule_stage={item} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
                     }
                 </Tab>
                         )}
@@ -275,7 +302,7 @@ const MapComp = ({map}: { map: map }) => {
     )
 }
 
-const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
+const GroupComp = ({schedule_stage, userInfo}: { schedule_stage: ScheduleStage, userInfo: UserInfo }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ">
             {schedule_stage.lobby_info?.map((stage_schedule) => (
@@ -302,8 +329,9 @@ const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.referee?.map((referee) => (
-                            <PersonInfo key={referee.name} info={referee}/>
+                            (userInfo.uid && referee.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={referee.name} info={referee} lobby_name={stage_schedule.lobby_name}/> : <PersonInfo key={referee.name} info={referee}/>
                         ))}
+                        {userInfo.isReferee && !(stage_schedule.referee?.some((referee) => userInfo.uid && referee.uid.includes(userInfo.uid))) && <RefereeJoinHere lobby_name={stage_schedule.lobby_name}/>}
                     </div>
                     <Divider/>
                     <div className={"text-center text-xl"}>
@@ -311,8 +339,9 @@ const GroupComp = ({schedule_stage}: { schedule_stage: ScheduleStage }) => {
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.participants?.map((participants) => (
-                            <PersonInfo key={participants.name} info={participants}/>
+                            (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} info={participants} lobby_name={stage_schedule.lobby_name}/> : <PersonInfo key={participants.name} info={participants}/>
                         ))}
+                        {userInfo.isParticipant && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere lobby_name={stage_schedule.lobby_name}/>}
                     </div>
                 </Card>
             ))}
@@ -344,6 +373,46 @@ const PersonInfo = ({ info }: { info: SimpleInfo }) => {
         </Link>
     )
 }
+
+
+const WithDeletePersonInfo = ({ info, lobby_name }: { info: SimpleInfo, lobby_name: string  }) => {
+    return (
+        // TODO onclick
+        <Link color={"foreground"} style={{cursor: "pointer"}} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
+            <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url || "https://a.ppy.sh"}/>
+            <div  className={"truncate"}>
+                {info.name}
+            </div>
+            <div style={{display: "flex", justifyContent: "center", alignItems: "center", fontSize: "32px", right: "0px", position:"absolute"}} className={"h-[40px] w-[40px] min-w-[40px]"} onClick={() => console.log("移除人员 " + info.uid + " 在 " + lobby_name)}>
+                {"×"}
+            </div>
+        </Link>
+    )
+}
+
+
+const ParticipantJoinHere = ({ lobby_name }: { lobby_name: string }) => {
+    return (
+        // TODO onclick
+        <Link color={"foreground"} style={{border: "2px dashed #e5e7eb", justifyContent: "center", cursor: "pointer"}} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"} onClick={() => console.log("加入选手位：" + lobby_name)}>
+            <div style={{minHeight: "40px", lineHeight: "40px"}} className={"truncate"}>
+                {"+加入此处"}
+            </div>
+        </Link>
+    )
+}
+
+const RefereeJoinHere = ({ lobby_name }: { lobby_name: string }) => {
+    return (
+        // TODO onclick
+        <Link color={"foreground"} style={{border: "2px dashed #e5e7eb", justifyContent: "center", cursor: "pointer"}} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"} onClick={() => console.log("加入裁判位：" + lobby_name)}>
+            <div style={{minHeight: "40px", lineHeight: "40px"}} className={"truncate"}>
+                {"+加入此处"}
+            </div>
+        </Link>
+    )
+}
+
 
 function formatTime(s: string) {
     if (s.length == 1) {
@@ -388,6 +457,12 @@ type SimpleInfo = {
     name: string;
     avatar_url: string;
     uid: number[];
+}
+
+type UserInfo = {
+    uid?: number;
+    isParticipant : boolean;
+    isReferee: boolean;
 }
 
 interface map {
