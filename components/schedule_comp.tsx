@@ -22,6 +22,13 @@ async function getPlayers(tournament_name: string, revalidate_time: number = 0):
     return await res.json()
 }
 
+function isPlayerReserved(playerUID: number|undefined, schedule_stage: ScheduleStage): boolean {
+    if (!playerUID) return false;
+    const result = schedule_stage.lobby_info?.some((stage_schedule) => (stage_schedule.participants?.some((info) => info.uid.includes(playerUID)) || stage_schedule.referee?.some((info) => info.uid.includes(playerUID))));
+    if (!result) return false;
+    return true;
+}
+
 
 export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], tournament_name: string }) => {
     const currentUser = useContext(CurrentUserContext);
@@ -56,7 +63,7 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>
                     {
-                        item.is_lobby ? <GroupComp schedule_stage={item} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
+                        item.is_lobby ? <GroupComp schedule_stage={item} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee, isReserved: isPlayerReserved(playerUID, item)}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
                     }
                 </Tab>
                         )}
@@ -341,7 +348,7 @@ const GroupComp = ({schedule_stage, userInfo}: { schedule_stage: ScheduleStage, 
                         {stage_schedule.participants?.map((participants) => (
                             (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} info={participants} lobby_name={stage_schedule.lobby_name}/> : <PersonInfo key={participants.name} info={participants}/>
                         ))}
-                        {userInfo.isParticipant && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere lobby_name={stage_schedule.lobby_name}/>}
+                        {userInfo.isParticipant && !userInfo.isReserved && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere lobby_name={stage_schedule.lobby_name}/>}
                     </div>
                 </Card>
             ))}
@@ -378,12 +385,12 @@ const PersonInfo = ({ info }: { info: SimpleInfo }) => {
 const WithDeletePersonInfo = ({ info, lobby_name }: { info: SimpleInfo, lobby_name: string  }) => {
     return (
         // TODO onclick
-        <Link color={"foreground"} style={{cursor: "pointer"}} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"}>
+        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer"}>
             <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url || "https://a.ppy.sh"}/>
             <div  className={"truncate"}>
                 {info.name}
             </div>
-            <div style={{display: "flex", justifyContent: "center", alignItems: "center", fontSize: "32px", right: "0px", position:"absolute"}} className={"h-[40px] w-[40px] min-w-[40px]"} onClick={() => console.log("移除人员 " + info.uid + " 在 " + lobby_name)}>
+            <div className={"h-[40px] w-[40px] min-w-[40px] flex items-center justify-center text-3xl absolute right-0"} onClick={() => console.log("移除人员 " + info.uid + " 在 " + lobby_name)}>
                 {"×"}
             </div>
         </Link>
@@ -394,8 +401,8 @@ const WithDeletePersonInfo = ({ info, lobby_name }: { info: SimpleInfo, lobby_na
 const ParticipantJoinHere = ({ lobby_name }: { lobby_name: string }) => {
     return (
         // TODO onclick
-        <Link color={"foreground"} style={{border: "2px dashed #e5e7eb", justifyContent: "center", cursor: "pointer"}} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"} onClick={() => console.log("加入选手位：" + lobby_name)}>
-            <div style={{minHeight: "40px", lineHeight: "40px"}} className={"truncate"}>
+        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed justify-center"} onClick={() => console.log("加入选手位：" + lobby_name)}>
+            <div className={"truncate min-h-[40px] leading-[40px]"}>
                 {"+加入此处"}
             </div>
         </Link>
@@ -405,8 +412,8 @@ const ParticipantJoinHere = ({ lobby_name }: { lobby_name: string }) => {
 const RefereeJoinHere = ({ lobby_name }: { lobby_name: string }) => {
     return (
         // TODO onclick
-        <Link color={"foreground"} style={{border: "2px dashed #e5e7eb", justifyContent: "center", cursor: "pointer"}} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg"} onClick={() => console.log("加入裁判位：" + lobby_name)}>
-            <div style={{minHeight: "40px", lineHeight: "40px"}} className={"truncate"}>
+        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed justify-center"} onClick={() => console.log("加入裁判位：" + lobby_name)}>
+            <div className={"truncate min-h-[40px] leading-[40px]"}>
                 {"+加入此处"}
             </div>
         </Link>
@@ -463,6 +470,7 @@ type UserInfo = {
     uid?: number;
     isParticipant : boolean;
     isReferee: boolean;
+    isReserved: boolean;
 }
 
 interface map {
