@@ -63,7 +63,7 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>
                     {
-                        item.is_lobby ? <GroupComp schedule_stage={item} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee, isReserved: isPlayerReserved(playerUID, item)}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
+                        item.is_lobby ? <GroupComp schedule_stage={item} tournament_name={tournament_name} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee, isReserved: isPlayerReserved(playerUID, item)}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
                     }
                 </Tab>
                         )}
@@ -309,7 +309,7 @@ const MapComp = ({map}: { map: map }) => {
     )
 }
 
-const GroupComp = ({schedule_stage, userInfo}: { schedule_stage: ScheduleStage, userInfo: UserInfo }) => {
+const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage: ScheduleStage, tournament_name:string, userInfo: UserInfo }) => {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ">
             {schedule_stage.lobby_info?.map((stage_schedule) => (
@@ -336,9 +336,9 @@ const GroupComp = ({schedule_stage, userInfo}: { schedule_stage: ScheduleStage, 
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.referee?.map((referee) => (
-                            (userInfo.uid && referee.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={referee.name} info={referee} lobby_name={stage_schedule.lobby_name}/> : <PersonInfo key={referee.name} info={referee}/>
+                            (userInfo.uid && referee.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={referee.name} tournament_name={tournament_name} stage_name={schedule_stage.stage_name} info={referee} lobbyInfo={stage_schedule} role="referee"/> : <PersonInfo key={referee.name} info={referee}/>
                         ))}
-                        {userInfo.isReferee && !(stage_schedule.referee?.some((referee) => userInfo.uid && referee.uid.includes(userInfo.uid))) && <RefereeJoinHere lobby_name={stage_schedule.lobby_name}/>}
+                        {userInfo.isReferee && !(stage_schedule.referee?.some((referee) => userInfo.uid && referee.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule_stage.stage_name} lobbyInfo={stage_schedule} role="referee"/>}
                     </div>
                     <Divider/>
                     <div className={"text-center text-xl"}>
@@ -346,9 +346,9 @@ const GroupComp = ({schedule_stage, userInfo}: { schedule_stage: ScheduleStage, 
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.participants?.map((participants) => (
-                            (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} info={participants} lobby_name={stage_schedule.lobby_name}/> : <PersonInfo key={participants.name} info={participants}/>
+                            (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} tournament_name={tournament_name} stage_name={schedule_stage.stage_name} info={participants} lobbyInfo={stage_schedule} role="player"/> : <PersonInfo key={participants.name} info={participants}/>
                         ))}
-                        {userInfo.isParticipant && !userInfo.isReserved && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere lobby_name={stage_schedule.lobby_name}/>}
+                        {userInfo.isParticipant && !userInfo.isReserved && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule_stage.stage_name} lobbyInfo={stage_schedule} role="player"/>}
                     </div>
                 </Card>
             ))}
@@ -381,38 +381,61 @@ const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     )
 }
 
+async function signOutQualifier(tournament_name: string, stage_name: string, match_id: string, role: string) {
+    const res = await fetch(siteConfig.backend_url + `/api/sign-out-qualifier?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${match_id}&role=${role}`, {credentials: 'include'})
+    if (res.status != 200) {
+        alert(await res.text());
+        return false;
+    }
+    return true;
+}
 
-const WithDeletePersonInfo = ({ info, lobby_name }: { info: SimpleInfo, lobby_name: string  }) => {
+const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, role }: { tournament_name: string, stage_name: string, info: SimpleInfo, lobbyInfo: LobbyInfo, role: string }) => {
     return (
-        // TODO onclick
         <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer"}>
             <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url || "https://a.ppy.sh"}/>
             <div  className={"truncate"}>
                 {info.name}
             </div>
-            <div className={"h-[40px] w-[40px] min-w-[40px] flex items-center justify-center text-3xl absolute right-0"} onClick={() => console.log("移除人员 " + info.uid + " 在 " + lobby_name)}>
+            <div className={"h-[40px] w-[40px] min-w-[40px] flex items-center justify-center text-3xl absolute right-0"} onClick={async () => {
+            try {
+                let result = await signOutQualifier(tournament_name, stage_name, lobbyInfo.match_id, role);
+                if (result) {
+                    window.location.reload();
+                }
+            }
+            catch(ex) {
+                return;
+            }
+            }}>
                 {"×"}
             </div>
         </Link>
     )
 }
 
-
-const ParticipantJoinHere = ({ lobby_name }: { lobby_name: string }) => {
-    return (
-        // TODO onclick
-        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed justify-center"} onClick={() => console.log("加入选手位：" + lobby_name)}>
-            <div className={"truncate min-h-[40px] leading-[40px]"}>
-                {"+加入此处"}
-            </div>
-        </Link>
-    )
+async function signUpQualifier(tournament_name: string, stage_name: string, match_id: string, role: string) {
+    const res = await fetch(siteConfig.backend_url + `/api/signup-qualifier?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${match_id}&role=${role}`, {credentials: 'include'})
+    if (res.status != 200) {
+        alert(await res.text());
+        return false;
+    }
+    return true;
 }
 
-const RefereeJoinHere = ({ lobby_name }: { lobby_name: string }) => {
+const ParticipantJoinHere = ({ tournament_name, stage_name, lobbyInfo, role }: { tournament_name: string, stage_name: string, lobbyInfo: LobbyInfo, role: string }) => {
     return (
-        // TODO onclick
-        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed justify-center"} onClick={() => console.log("加入裁判位：" + lobby_name)}>
+        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed justify-center"} onClick={async () => {
+            try {
+                let result = await signUpQualifier(tournament_name, stage_name, lobbyInfo.match_id, role);
+                if (result) {
+                    window.location.reload();
+                }
+            }
+            catch(ex) {
+                return;
+            }
+        }}>
             <div className={"truncate min-h-[40px] leading-[40px]"}>
                 {"+加入此处"}
             </div>
@@ -438,6 +461,7 @@ export interface ScheduleStage{
 
 type LobbyInfo = {
     lobby_name: string;
+    match_id: string;
     datetime: string;
     match_url?: string[];
     referee?: SimpleInfo[];
