@@ -1,6 +1,6 @@
 "use client"
 
-import { Card, CardHeader, CardFooter } from "@nextui-org/card";
+import {Card, CardFooter, CardHeader} from "@nextui-org/card";
 import {Tab, Tabs} from "@nextui-org/tabs";
 import {Image} from "@nextui-org/image";
 import {Link} from "@nextui-org/link";
@@ -24,9 +24,8 @@ async function getPlayers(tournament_name: string, revalidate_time: number = 0):
 
 function isPlayerReserved(playerUID: number|undefined, schedule_stage: ScheduleStage): boolean {
     if (!playerUID) return false;
-    const result = schedule_stage.lobby_info?.some((stage_schedule) => (stage_schedule.participants?.some((info) => info.uid.includes(playerUID)) || stage_schedule.referee?.some((info) => info.uid.includes(playerUID))));
-    if (!result) return false;
-    return true;
+    if (!schedule_stage.lobby_info) return false;
+    return schedule_stage.lobby_info.some((stage_schedule) => (stage_schedule.participants?.some((info) => info.uid.includes(playerUID)) || stage_schedule.referee?.some((info) => info.uid.includes(playerUID))));
 }
 
 
@@ -35,7 +34,6 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({players: []});
     const players = tournamentPlayers.players.filter(player => player.player == true);
     const referees = tournamentPlayers.players.filter(player => player.referee == true);
-    const teams = tournamentPlayers.groups;
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
@@ -56,17 +54,17 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
         <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"}  defaultSelectedKey={searchParams.get('stage') || tabs.at(-1)?.stage_name}
               onSelectionChange={(key) => {router.replace(`?stage=${key}`)}}
               classNames={{
-                tabList: "gap-6 flex",
-                tab: "min-h-[50px]",
-                tabContent: "text-3xl",
-        }}>
+                  tabList: "gap-6 flex",
+                  tab: "min-h-[50px]",
+                  tabContent: "text-3xl",
+              }}>
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>
                     {
                         item.is_lobby ? <GroupComp schedule_stage={item} tournament_name={tournament_name} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee, isReserved: isPlayerReserved(playerUID, item)}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
                     }
                 </Tab>
-                        )}
+            )}
         </Tabs>
     )
 }
@@ -85,9 +83,9 @@ const TeamComp = ({schedule_stage, tournament_name}: { schedule_stage: ScheduleS
             </div>
             <Accordion variant="bordered">
                 {schedule_stage.match_info.filter((match) => match.is_winner_bracket).map((match_info, index) => (
-                        <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />} textValue={`${match_info.team1} vs ${match_info.team2}`}>
-                            <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
-                        </AccordionItem>
+                    <AccordionItem key={index} title={<VSInfoComp match_info={match_info} />} textValue={`${match_info.team1} vs ${match_info.team2}`}>
+                        <MatchInfoComp match_info={match_info} stage_name={schedule_stage.stage_name} tournament_name={tournament_name} />
+                    </AccordionItem>
                 ))}
             </Accordion>
             <div className={"flex flex-row gap-3"}>
@@ -125,7 +123,7 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name}: { match_info: 
                                 ))}
                             </div>
                         </>
-                        ) : ''}
+                    ) : ''}
                 </div>
                 <div className={"flex flex-col"}>
                     {match_info.streamer ? (
@@ -232,8 +230,8 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color1} src={match_info.team1.avatar_url || "https://a.ppy.sh"} />
                 </div>
                 <div className={"w-[60px] min-w-[60px] text-center"}>
-                        {`${score1} : ${score2}`}
-                    </div>
+                    {`${score1} : ${score2}`}
+                </div>
                 <div className="flex flex-row items-center gap-4 grow max-w-[200px] sm:justify-start justify-center">
                     <Image loading={"lazy"} radius={"sm"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px] " + pic_color2} src={match_info.team2.avatar_url || "https://a.ppy.sh"} />
                     <div className={" " + text_color2}>
@@ -246,9 +244,9 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     match_info.match_url && match_info.match_url.length > 0 ?
                         match_info.match_url.map((url) => (
                             url !== "" ?
-                            <Button key={url} isExternal isIconOnly className="bg-sky-500" aria-label="Match-Link" as={Link} href={url}>
-                                <LinkIcon/>
-                            </Button> : null
+                                <Button key={url} isExternal isIconOnly className="bg-sky-500" aria-label="Match-Link" as={Link} href={url}>
+                                    <LinkIcon/>
+                                </Button> : null
                         )) : null
                 }
             </div>
@@ -381,14 +379,6 @@ const PersonInfo = ({ info }: { info: SimpleInfo }) => {
     )
 }
 
-async function signOutQualifier(tournament_name: string, stage_name: string, match_id: string, role: string) {
-    const res = await fetch(siteConfig.backend_url + `/api/sign-out-qualifier?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${match_id}&role=${role}`, {credentials: 'include'})
-    if (res.status != 200) {
-        alert(await res.text());
-        return false;
-    }
-    return true;
-}
 
 const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, role }: { tournament_name: string, stage_name: string, info: SimpleInfo, lobbyInfo: LobbyInfo, role: string }) => {
     return (
@@ -398,15 +388,13 @@ const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, ro
                 {info.name}
             </div>
             <div className={"h-[40px] w-[40px] min-w-[40px] flex items-center justify-center text-3xl absolute right-0"} onClick={async () => {
-            try {
-                let result = await signOutQualifier(tournament_name, stage_name, lobbyInfo.match_id, role);
-                if (result) {
-                    window.location.reload();
+                const res = await fetch(siteConfig.backend_url + `/api/sign-out-qualifier?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${lobbyInfo.match_id}&role=${role}`, {credentials: 'include'})
+                if (res.status != 200) {
+                    alert(await res.text());
                 }
-            }
-            catch(ex) {
-                return;
-            }
+                else {
+                    alert("取消报名成功")
+                }
             }}>
                 {"×"}
             </div>
@@ -414,26 +402,17 @@ const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, ro
     )
 }
 
-async function signUpQualifier(tournament_name: string, stage_name: string, match_id: string, role: string) {
-    const res = await fetch(siteConfig.backend_url + `/api/signup-qualifier?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${match_id}&role=${role}`, {credentials: 'include'})
-    if (res.status != 200) {
-        alert(await res.text());
-        return false;
-    }
-    return true;
-}
 
 const ParticipantJoinHere = ({ tournament_name, stage_name, lobbyInfo, role }: { tournament_name: string, stage_name: string, lobbyInfo: LobbyInfo, role: string }) => {
     return (
-        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed justify-center"} onClick={async () => {
-            try {
-                let result = await signUpQualifier(tournament_name, stage_name, lobbyInfo.match_id, role);
-                if (result) {
-                    window.location.reload();
-                }
+        <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed"} onPress={async () => {
+            console.log(lobbyInfo)
+            const res = await fetch(siteConfig.backend_url + `/api/signup-qualifier?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${lobbyInfo.match_id}&role=${role}`, {credentials: 'include'})
+            if (res.status != 200) {
+                alert(await res.text());
             }
-            catch(ex) {
-                return;
+            else {
+                alert("报名成功")
             }
         }}>
             <div className={"truncate min-h-[40px] leading-[40px]"}>
@@ -513,4 +492,3 @@ interface map {
     number: string;
     diff_name: string;
 }
-
