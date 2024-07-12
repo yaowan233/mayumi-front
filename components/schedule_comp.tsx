@@ -6,7 +6,7 @@ import {Image} from "@nextui-org/image";
 import {Link} from "@nextui-org/link";
 import {Divider} from "@nextui-org/divider";
 import {Accordion, AccordionItem} from "@nextui-org/accordion";
-import {useContext, useEffect, useState} from "react";
+import {Dispatch, SetStateAction, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Input} from "@nextui-org/input";
 import {Button} from "@nextui-org/button";
@@ -308,9 +308,10 @@ const MapComp = ({map}: { map: map }) => {
 }
 
 const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage: ScheduleStage, tournament_name:string, userInfo: UserInfo }) => {
+    const [schedule, setSchedule] = useState<ScheduleStage>(schedule_stage)
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ">
-            {schedule_stage.lobby_info?.map((stage_schedule) => (
+            {schedule.lobby_info?.map((stage_schedule) => (
                 <Card key={stage_schedule.lobby_name} className={"p-3 gap-3"}>
                     <div className={"flex flex-row items-center gap-3"}>
                         <div className="w-[80px]">
@@ -324,9 +325,7 @@ const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage
                         <div className={"grow font-bold text-3xl text-center"}>
                             {stage_schedule.lobby_name}
                         </div>
-                        <div className="w-[80px]">
-
-                        </div>
+                        <div className="w-[80px]"/>
                     </div>
                     <Divider/>
                     <div className={"text-center text-xl"}>
@@ -334,9 +333,9 @@ const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.referee?.map((referee) => (
-                            (userInfo.uid && referee.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={referee.name} tournament_name={tournament_name} stage_name={schedule_stage.stage_name} info={referee} lobbyInfo={stage_schedule} role="referee"/> : <PersonInfo key={referee.name} info={referee}/>
+                            (userInfo.uid && referee.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={referee.name} tournament_name={tournament_name} stage_name={schedule.stage_name} info={referee} lobbyInfo={stage_schedule} role="referee" setSchedule={setSchedule}/> : <PersonInfo key={referee.name} info={referee}/>
                         ))}
-                        {userInfo.isReferee && !(stage_schedule.referee?.some((referee) => userInfo.uid && referee.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule_stage.stage_name} lobbyInfo={stage_schedule} role="referee"/>}
+                        {userInfo.isReferee && !(stage_schedule.referee?.some((referee) => userInfo.uid && referee.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={stage_schedule} role="referee" setSchedule={setSchedule}/>}
                     </div>
                     <Divider/>
                     <div className={"text-center text-xl"}>
@@ -344,9 +343,9 @@ const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
                         {stage_schedule.participants?.map((participants) => (
-                            (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} tournament_name={tournament_name} stage_name={schedule_stage.stage_name} info={participants} lobbyInfo={stage_schedule} role="player"/> : <PersonInfo key={participants.name} info={participants}/>
+                            (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} tournament_name={tournament_name} stage_name={schedule.stage_name} info={participants} lobbyInfo={stage_schedule} role="player" setSchedule={setSchedule}/> : <PersonInfo key={participants.name} info={participants}/>
                         ))}
-                        {userInfo.isParticipant && !userInfo.isReserved && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule_stage.stage_name} lobbyInfo={stage_schedule} role="player"/>}
+                        {userInfo.isParticipant && !userInfo.isReserved && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={stage_schedule} role="player" setSchedule={setSchedule}/>}
                     </div>
                 </Card>
             ))}
@@ -380,11 +379,11 @@ const PersonInfo = ({ info }: { info: SimpleInfo }) => {
 }
 
 
-const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, role }: { tournament_name: string, stage_name: string, info: SimpleInfo, lobbyInfo: LobbyInfo, role: string }) => {
+const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, role, setSchedule }: { tournament_name: string, stage_name: string, info: SimpleInfo, lobbyInfo: LobbyInfo, role: string , setSchedule: Dispatch<SetStateAction<ScheduleStage>> }) => {
     return (
         <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer"}>
             <Image loading={"lazy"} radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"} src={info.avatar_url || "https://a.ppy.sh"}/>
-            <div  className={"truncate"}>
+            <div className={"truncate"}>
                 {info.name}
             </div>
             <div className={"h-[40px] w-[40px] min-w-[40px] flex items-center justify-center text-3xl absolute right-0"} onClick={async () => {
@@ -393,6 +392,24 @@ const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, ro
                     alert(await res.text());
                 }
                 else {
+                    setSchedule((prev) => {
+                        if (prev.lobby_info) {
+                            return {
+                                ...prev,
+                                lobby_info: prev.lobby_info.map((lobby) => {
+                                    if (lobby.match_id == lobbyInfo.match_id) {
+                                        return {
+                                            ...lobby,
+                                            // todo 这里应该不对，用copilot的
+                                            participants: lobby.participants?.filter((participant) => participant.uid.some((uid) => uid != info.uid[0])) || [],
+                                        }
+                                    }
+                                    return lobby
+                                })
+                            }
+                        }
+                        return prev
+                    })
                     alert("取消报名成功")
                 }
             }}>
@@ -403,15 +420,32 @@ const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, ro
 }
 
 
-const ParticipantJoinHere = ({ tournament_name, stage_name, lobbyInfo, role }: { tournament_name: string, stage_name: string, lobbyInfo: LobbyInfo, role: string }) => {
+const ParticipantJoinHere = ({ tournament_name, stage_name, lobbyInfo, role , setSchedule }: { tournament_name: string, stage_name: string, lobbyInfo: LobbyInfo, role: string , setSchedule: Dispatch<SetStateAction<ScheduleStage>> }) => {
     return (
         <Link color={"foreground"} className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer border-dashed"} onPress={async () => {
-            console.log(lobbyInfo)
             const res = await fetch(siteConfig.backend_url + `/api/signup-qualifier?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${lobbyInfo.match_id}&role=${role}`, {credentials: 'include'})
             if (res.status != 200) {
                 alert(await res.text());
             }
             else {
+                const simpleInfo = await res.json()
+                setSchedule((prev) => {
+                    if (prev.lobby_info) {
+                        return {
+                            ...prev,
+                            lobby_info: prev.lobby_info.map((lobby) => {
+                                if (lobby.match_id == lobbyInfo.match_id) {
+                                    return {
+                                        ...lobby,
+                                        participants: [...lobby.participants as SimpleInfo[], simpleInfo]
+                                    }
+                                }
+                                return lobby
+                            })
+                        }
+                    }
+                    return prev
+                })
                 alert("报名成功")
             }
         }}>
