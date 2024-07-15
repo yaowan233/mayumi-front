@@ -25,7 +25,7 @@ async function getPlayers(tournament_name: string, revalidate_time: number = 0):
 function isPlayerReserved(playerUID: number|undefined, schedule_stage: ScheduleStage): boolean {
     if (!playerUID) return false;
     if (!schedule_stage.lobby_info) return false;
-    return schedule_stage.lobby_info.some((stage_schedule) => (stage_schedule.participants?.some((info) => info.uid.includes(playerUID)) || stage_schedule.referee?.some((info) => info.uid.includes(playerUID))));
+    return schedule_stage.lobby_info.some((stage_schedule) => (stage_schedule.participants?.some((info) => info.uid.includes(playerUID)) ));
 }
 
 
@@ -61,7 +61,7 @@ export const ScheduleComp = ({tabs, tournament_name} : { tabs: ScheduleStage[], 
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name}>
                     {
-                        item.is_lobby ? <GroupComp schedule_stage={item} tournament_name={tournament_name} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee, isReserved: isPlayerReserved(playerUID, item)}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
+                        item.is_lobby ? <GroupComp schedule_stage={item} tournament_name={tournament_name} userInfo={{uid: playerUID, isParticipant: isParticipant, isReferee: isReferee}}/> : <TeamComp schedule_stage={item} tournament_name={tournament_name} />
                     }
                 </Tab>
             )}
@@ -311,19 +311,19 @@ const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage
     const [schedule, setSchedule] = useState<ScheduleStage>(schedule_stage)
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ">
-            {schedule.lobby_info?.map((stage_schedule) => (
-                <Card key={stage_schedule.lobby_name} className={"p-3 gap-3"}>
+            {schedule.lobby_info?.map((lobby, index) => (
+                <Card key={lobby.lobby_name} className={"p-3 gap-3"}>
                     <div className={"flex flex-row items-center gap-3"}>
                         <div className="w-[80px]">
                             <div className={"text-center font-bold text-2xl"}>
-                                {(new Date(stage_schedule.datetime)).getUTCMonth() + 1}/{(new Date(stage_schedule.datetime)).getUTCDate()}
+                                {(new Date(lobby.datetime)).getUTCMonth() + 1}/{(new Date(lobby.datetime)).getUTCDate()}
                             </div>
                             <div className={"text-center"}>
-                                {formatTime(((new Date(stage_schedule.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(stage_schedule.datetime)).getUTCMinutes()).toString())}
+                                {formatTime(((new Date(lobby.datetime)).getUTCHours()).toString())}:{formatTime(((new Date(lobby.datetime)).getUTCMinutes()).toString())}
                             </div>
                         </div>
                         <div className={"grow font-bold text-3xl text-center"}>
-                            {stage_schedule.lobby_name}
+                            {lobby.lobby_name}
                         </div>
                         <div className="w-[80px]"/>
                     </div>
@@ -332,20 +332,20 @@ const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage
                         裁判
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
-                        {stage_schedule.referee?.map((referee) => (
-                            (userInfo.uid && referee.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={referee.name} tournament_name={tournament_name} stage_name={schedule.stage_name} info={referee} lobbyInfo={stage_schedule} role="referee" setSchedule={setSchedule}/> : <PersonInfo key={referee.name} info={referee}/>
+                        {lobby.referee?.map((referee) => (
+                            (userInfo.uid && referee.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={referee.name} tournament_name={tournament_name} stage_name={schedule.stage_name} info={referee} lobbyInfo={lobby} role="referee" setSchedule={setSchedule}/> : <PersonInfo key={referee.name} info={referee}/>
                         ))}
-                        {userInfo.isReferee && !(stage_schedule.referee?.some((referee) => userInfo.uid && referee.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={stage_schedule} role="referee" setSchedule={setSchedule}/>}
+                        {userInfo.isReferee && !(lobby.referee?.some((referee) => userInfo.uid && referee.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={lobby} role="referee" setSchedule={setSchedule}/>}
                     </div>
                     <Divider/>
                     <div className={"text-center text-xl"}>
                         选手
                     </div>
                     <div className={"grid grid-cols-1 sm:grid-cols-2 gap-2"}>
-                        {stage_schedule.participants?.map((participants) => (
-                            (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} tournament_name={tournament_name} stage_name={schedule.stage_name} info={participants} lobbyInfo={stage_schedule} role="player" setSchedule={setSchedule}/> : <PersonInfo key={participants.name} info={participants}/>
+                        {lobby.participants?.map((participants) => (
+                            (userInfo.uid && participants.uid.includes(userInfo.uid)) ? <WithDeletePersonInfo key={participants.name} tournament_name={tournament_name} stage_name={schedule.stage_name} info={participants} lobbyInfo={lobby} role="player" setSchedule={setSchedule}/> : <PersonInfo key={participants.name} info={participants}/>
                         ))}
-                        {userInfo.isParticipant && !userInfo.isReserved && !(stage_schedule.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={stage_schedule} role="player" setSchedule={setSchedule}/>}
+                        {userInfo.isParticipant && !isPlayerReserved(userInfo.uid, schedule) && !(lobby.participants?.some((participants) => userInfo.uid && participants.uid.includes(userInfo.uid))) && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={lobby} role="player" setSchedule={setSchedule}/>}
                     </div>
                 </Card>
             ))}
@@ -398,10 +398,17 @@ const WithDeletePersonInfo = ({ tournament_name, stage_name, info, lobbyInfo, ro
                                 ...prev,
                                 lobby_info: prev.lobby_info.map((lobby) => {
                                     if (lobby.match_id == lobbyInfo.match_id) {
-                                        return {
-                                            ...lobby,
-                                            // todo 这里应该不对，用copilot的
-                                            participants: lobby.participants?.filter((participant) => participant.uid.some((uid) => uid != info.uid[0])) || [],
+                                        if (role === "player") {
+                                            return {
+                                                ...lobby,
+                                                participants: lobby.participants?.filter((participant) => participant.uid.some((uid) => uid != info.uid[0])) || [],
+                                            }
+                                        }
+                                        else {
+                                            return {
+                                                ...lobby,
+                                                referee: lobby.referee?.filter((referee) => referee.uid.some((uid) => uid != info.uid[0])) || [],
+                                            }
                                         }
                                     }
                                     return lobby
@@ -435,9 +442,17 @@ const ParticipantJoinHere = ({ tournament_name, stage_name, lobbyInfo, role , se
                             ...prev,
                             lobby_info: prev.lobby_info.map((lobby) => {
                                 if (lobby.match_id == lobbyInfo.match_id) {
-                                    return {
-                                        ...lobby,
-                                        participants: [...lobby.participants as SimpleInfo[], simpleInfo]
+                                    if (role === "player") {
+                                        return {
+                                            ...lobby,
+                                            participants: [...lobby.participants as SimpleInfo[], simpleInfo]
+                                        }
+                                    }
+                                    else {
+                                        return {
+                                            ...lobby,
+                                            referee: [...lobby.referee as SimpleInfo[], simpleInfo]
+                                        }
                                     }
                                 }
                                 return lobby
@@ -507,7 +522,6 @@ type UserInfo = {
     uid?: number;
     isParticipant : boolean;
     isReferee: boolean;
-    isReserved: boolean;
 }
 
 interface map {
