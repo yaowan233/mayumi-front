@@ -311,7 +311,7 @@ const GroupComp = ({schedule_stage, tournament_name, userInfo}: { schedule_stage
     const [schedule, setSchedule] = useState<ScheduleStage>(schedule_stage)
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ">
-            {schedule.lobby_info?.map((lobby, index) => (
+            {schedule.lobby_info?.map((lobby) => (
                 <Card key={lobby.lobby_name} className={"p-3 gap-3"}>
                     <div className={"flex flex-row items-center gap-3"}>
                         <div className="w-[80px]">
