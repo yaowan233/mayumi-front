@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.text-stroke {
+    text-shadow:
+            -1px -1px 0 black,
+            1px -1px 0 black,
+            -1px  1px 0 black,
+            1px  1px 0 black; /* Outer stroke in light mode */
+}
+
+
+.dark\:no-text-stroke:is(.dark *) {
+    text-shadow: 0 0 0 black; /* Inner stroke in dark mode */
+}

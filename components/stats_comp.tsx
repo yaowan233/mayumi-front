@@ -93,13 +93,15 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                                                                     <Link isExternal size={"lg"} color={"foreground"}
                                                                           className="font-bold leading-5 text-center"
                                                                           href={`https://osu.ppy.sh/b/${map.map_id}`}>
-                                                                        <p className="line-clamp-1">
+                                                                        <p className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             {map.map_name} [{map.diff_name}]
                                                                         </p>
                                                                     </Link>
-                                                                    <Link isExternal color={"foreground"} className=""
+                                                                    <Link isExternal color={"foreground"}
                                                                           href={`https://osu.ppy.sh/users/${map.mapper}`}>
-                                                                        {map.mapper}
+                                                                        <p className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                            {map.mapper}
+                                                                        </p>
                                                                     </Link>
                                                                     <Chip size="lg" className="mt-3 text-xl"
                                                                           color={maps.mod === "HD" ? "warning" : maps.mod === "HR" ? "danger" : maps.mod === "DT" ? "secondary" : maps.mod === "TB" ? "success" : "default"}>
@@ -107,28 +109,28 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                                                                     </Chip>
                                                                     <div
                                                                         className="grid grid-cols-3 place-items-center w-full mt-3">
-                                                                        <div className="line-clamp-1">
+                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             ★{map.star_rating}
                                                                         </div>
-                                                                        <div className="line-clamp-1">
+                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             bpm {map.bpm}
                                                                         </div>
-                                                                        <div className="line-clamp-1">
+                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             {map.length}
                                                                         </div>
                                                                     </div>
                                                                     <div
                                                                         className="grid grid-cols-4 place-items-center w-full">
-                                                                        <div className="line-clamp-1">
+                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             CS {map.cs}
                                                                         </div>
-                                                                        <div className="line-clamp-1">
+                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             HP {map.hp}
                                                                         </div>
-                                                                        <div className="line-clamp-1">
+                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             OD {map.od}
                                                                         </div>
-                                                                        <div className="line-clamp-1">
+                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             AR {map.ar}
                                                                         </div>
                                                                     </div>

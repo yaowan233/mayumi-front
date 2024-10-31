@@ -17,7 +17,7 @@ export default async function StaffPage(props: { params: Promise<{ tournament: s
                     <CardBody className={"pt-0"}>
                         <div className="flex flex-row justify-center gap-2 flex-wrap">
                             {staff[role].map((staff) => (
-                                <Link isExternal color={"foreground"} className={"grid grid-cols-1 border-2 p-2 min-w-[130px]"} key={staff.uid} href={`https://osu.ppy.sh/users/${staff.uid}`}>
+                                <Link isExternal color={"foreground"} className={"grid grid-cols-1 border-2 p-2 min-w-[130px] shadow-large"} key={staff.uid} href={`https://osu.ppy.sh/users/${staff.uid}`}>
                                     <div className="flex justify-center">
                                         <Image alt="icon" width={60} height={60} src={`https://a.ppy.sh/${staff.uid}`}/>
                                     </div>

@@ -57,39 +57,40 @@ const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string})
                 <Link isExternal size={"lg"} color={"foreground"}
                       className="font-bold leading-5 text-center"
                       href={`https://osu.ppy.sh/b/${map.map_id}`}>
-                    <p className="line-clamp-1">
+                    <p className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                         {map.map_name} [{map.diff_name}]
                     </p>
                 </Link>
-                <Link isExternal color={"foreground"} className=""
-                      href={`https://osu.ppy.sh/users/${map.mapper}`}>
-                    {map.mapper}
+                <Link isExternal color={"foreground"} href={`https://osu.ppy.sh/users/${map.mapper}`}>
+                    <p className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                        {map.mapper}
+                    </p>
                 </Link>
                 <Chip size="lg" className="mt-3 text-xl" color={mod === "HD"? "warning": mod === "HR"? "danger": mod === "DT"? "secondary": mod === "TB"? "success" : "default"}>
                     {mod} {index + 1}
                 </Chip>
-                <div className="grid grid-cols-3 place-items-center w-full mt-3">
+                <div className="grid grid-cols-3 place-items-center w-full mt-3 text-gray-50 text-stroke dark:no-text-stroke">
                     <div className="line-clamp-1">
                         ★{map.star_rating}
                     </div>
-                    <div className="line-clamp-1">
+                    <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                         bpm {map.bpm}
                     </div>
-                    <div className="line-clamp-1">
+                    <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                         {map.length}
                     </div>
                 </div>
                 <div className="grid grid-cols-4 place-items-center w-full">
-                    <div className="line-clamp-1">
+                    <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                         CS {map.cs}
                     </div>
-                    <div className="line-clamp-1">
+                    <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                         HP {map.hp}
                     </div>
-                    <div className="line-clamp-1">
+                    <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                         OD {map.od}
                     </div>
-                    <div className="line-clamp-1">
+                    <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                         AR {map.ar}
                     </div>
                 </div>
