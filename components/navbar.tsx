@@ -25,15 +25,38 @@ import {
 } from "@/components/icons";
 
 import { Logo } from "@/components/icons";
-import {useContext, useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Avatar} from "@nextui-org/avatar";
 import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@nextui-org/dropdown";
+import {Progress} from "@nextui-org/progress";
+import {usePathname} from "next/navigation";
+
 
 export const Navbar = () => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isLoading, setIsLoading] = useState(false); // 控制加载状态
+	const pathname = usePathname();  // 路由变化时获取 pathname
+
+	useEffect(() => {
+		// 在路径发生变化时，启动加载进度条
+		setIsLoading(true);
+
+		// 模拟加载结束（在路由切换完成后消失）
+		const timer = setTimeout(() => {
+			setIsLoading(false);
+		}, 100);
+
+		// 清理定时器
+		return () => clearTimeout(timer);
+	}, [pathname]);  // 依赖项为 pathname，当路径名变化时会触发 effect
 	return (
 		<NextUINavbar maxWidth="full" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen} className="">
+			{isLoading && (
+				<div className="fixed top-0 left-0 w-full z-50 bg-white shadow-lg">
+					<Progress size="sm" isIndeterminate aria-label="Loading..." />
+				</div>
+			)}
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarMenuToggle className="flex sm:hidden"/>
 				<NavbarBrand as="li" className="hidden sm:flex gap-3 max-w-fit">
@@ -52,6 +75,10 @@ export const Navbar = () => {
 								)}
 								color="foreground"
 								href={item.href}
+								onClick={() => {
+									setIsMenuOpen(false); // 点击菜单项后关闭菜单
+									setIsLoading(true); // 点击菜单项后开始加载
+								}}
 							>
 								{item.label}
 							</NextLink>
@@ -105,6 +132,7 @@ export const Navbar = () => {
 					<NavbarMenuItem>
 						<Link href="/" size="lg" color="foreground" onClick={() => {
 							setIsMenuOpen(false); // 点击菜单项后关闭菜单
+							setIsLoading(true); // 点击菜单项后开始加载
 						}}>
 							主页
 						</Link>
@@ -112,6 +140,7 @@ export const Navbar = () => {
 					<NavbarMenuItem>
 						<Link href={"/tournament-management"} size="lg" color="foreground" onClick={() => {
 							setIsMenuOpen(false); // 点击菜单项后关闭菜单
+							setIsLoading(true); // 点击菜单项后开始加载
 						}}>
 							赛事管理
 						</Link>
@@ -119,6 +148,7 @@ export const Navbar = () => {
 					<NavbarMenuItem>
 						<Link href={"/about"} size="lg" color="foreground" onClick={() => {
 							setIsMenuOpen(false); // 点击菜单项后关闭菜单
+							setIsLoading(true); // 点击菜单项后开始加载
 						}}>
 							关于
 						</Link>
@@ -133,8 +163,28 @@ export const Navbar = () => {
 export const TournamentNavbar = ({ tournament_name }: { tournament_name: string }) => {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	let tournament_href_start = "/tournaments/" + tournament_name
+	const [isLoading, setIsLoading] = useState(false); // 控制加载状态
+	const pathname = usePathname(); // 获取当前路径名
+
+	useEffect(() => {
+		// 在路径发生变化时，启动加载进度条
+		setIsLoading(true);
+
+		// 模拟加载结束（在路由切换完成后消失）
+		const timer = setTimeout(() => {
+			setIsLoading(false);
+		}, 100);
+
+		// 清理定时器
+		return () => clearTimeout(timer);
+	}, [pathname]);  // 依赖项为 pathname，当路径名变化时会触发 effect
 	return (
 		<NextUINavbar maxWidth="full" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+			{isLoading && (
+				<div className="fixed top-0 left-0 w-full z-50 bg-white shadow-lg">
+					<Progress size="sm" isIndeterminate aria-label="Loading..." />
+				</div>
+			)}
 			<NavbarContent className="basis-1/5 sm:basis-full" justify="start">
 				<NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} className="md:hidden" />
 				<NavbarBrand as="li" className="gap-3 max-w-fit">
@@ -153,6 +203,9 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 								)}
 								color="foreground"
 								href={`${tournament_href_start}${item.href}`}
+								onClick={() => {
+									setIsLoading(true); // 点击菜单项后开始加载
+								}}
 							>
 								{item.label}
 							</NextLink>
@@ -213,6 +266,7 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 								size="lg"
 								onClick={() => {
 									setIsMenuOpen(false); // 点击菜单项后关闭菜单
+									setIsLoading(true); // 点击菜单项后开始加载
 								}}
 							>
 								{item.label}
