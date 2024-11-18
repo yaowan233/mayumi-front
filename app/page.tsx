@@ -7,6 +7,9 @@ import {Tournament} from "@/components/tournament_pic";
 
 export default async function Home() {
 	let tournaments_data = await GetTournamentInfo()
+	tournaments_data = tournaments_data.sort((a, b) => {
+		return new Date(a.start_date) < new Date(b.start_date) ? 1 : -1
+	})
 	return (
 		<>
 			<Navbar/>
