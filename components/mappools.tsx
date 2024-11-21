@@ -50,7 +50,7 @@ export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
 
 const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string}) => {
     const [isHovered, setIsHovered] = useState(false);
-
+    const color= mod === "HD"? "warning": mod === "HR"? "danger": mod === "DT"? "secondary": mod === "TB"? "success" : "default"
     return(
         <Card key={map.map_id} className={"max-w-lg"} onMouseEnter={() => {setIsHovered(true)}}  onMouseLeave={() => {setIsHovered(false)}}>
             <CardHeader className="absolute z-10 top-0 flex-col items-center">
@@ -66,9 +66,21 @@ const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string})
                         {map.mapper}
                     </p>
                 </Link>
-                <Chip size="lg" className="mt-3 text-xl" color={mod === "HD"? "warning": mod === "HR"? "danger": mod === "DT"? "secondary": mod === "TB"? "success" : "default"}>
-                    {mod} {index + 1}
-                </Chip>
+                <div className="flex flex-row gap-2">
+                    <Chip size="lg" className="mt-3 text-xl" color={color}>
+                        {mod} {index + 1}
+                    </Chip>
+                    {
+                        map.extra?.map((extra, ii) => {
+                            if (extra === "") return null
+                            return(
+                                <Chip key={ii} size="lg" className="mt-3 text-xl" color={color}>
+                                    {extra}
+                                </Chip>
+                            )
+                        })
+                    }
+                </div>
                 <div className="grid grid-cols-3 place-items-center w-full mt-3 text-gray-50 text-stroke dark:no-text-stroke">
                     <div className="line-clamp-1">
                         ★{map.star_rating}
@@ -148,4 +160,5 @@ interface Map {
     drain_time: string;
     number: string;
     diff_name: string;
+    extra?: string[];
 }

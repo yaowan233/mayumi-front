@@ -117,42 +117,74 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                                 return null; // 不满足条件的元素返回 null
                             }
                             return (
-                                <div key={index} className="flex flex-row gap-5 items-center">
-                                    <Image alt="bg" className="h-[60px] min-w-[100px]" width="100%" src={tournamentMap.map_id ? `https://osu.direct/api/media/background/${tournamentMap.map_id}`: undefined} />
-                                    <Input
-                                        label="图号"
-                                        isRequired
-                                        value={tournamentMap.map_id?.toString() || ''}
-                                        isInvalid={!!errMsg && !tournamentMap.map_id}
-                                        onChange={(e) => {
-                                            const updatedTournamentMaps = [...tournamentMaps];
-                                            updatedTournamentMaps[index]['map_id'] = Number(e.target.value);
-                                            setTournamentMaps(updatedTournamentMaps);
-                                        }}
-                                    />
-                                    <Input
-                                        label="mod"
-                                        isRequired
-                                        value={tournamentMap.mod}
-                                        isInvalid={!!errMsg && !tournamentMap.mod}
-                                        onChange={(e) => {
-                                            const updatedTournamentMaps = [...tournamentMaps];
-                                            updatedTournamentMaps[index]['mod'] = e.target.value;
-                                            setTournamentMaps(updatedTournamentMaps);
-                                        }}
-                                    />
-                                    <Input
-                                        label="序号"
-                                        isRequired
-                                        value={tournamentMap.number?.toString() || ''}
-                                        isInvalid={!!errMsg && !tournamentMap.number}
-                                        onChange={(e) => {
-                                            const updatedTournamentMaps = [...tournamentMaps];
-                                            updatedTournamentMaps[index]['number'] = Number(e.target.value);
-                                            setTournamentMaps(updatedTournamentMaps);
-                                        }}
-                                    />
+                                <div key={index} className="flex flex-col">
+                                    <div className="flex flex-row gap-5">
+                                        <Image alt="bg" className="h-[60px] min-w-[100px]" width="100%" src={tournamentMap.map_id ? `https://osu.direct/api/media/background/${tournamentMap.map_id}`: undefined} />
+                                        <Input
+                                            label="图号"
+                                            isRequired
+                                            value={tournamentMap.map_id?.toString() || ''}
+                                            isInvalid={!!errMsg && !tournamentMap.map_id}
+                                            onChange={(e) => {
+                                                const updatedTournamentMaps = [...tournamentMaps];
+                                                updatedTournamentMaps[index]['map_id'] = Number(e.target.value);
+                                                setTournamentMaps(updatedTournamentMaps);
+                                            }}
+                                        />
+                                        <Input
+                                            label="mod"
+                                            isRequired
+                                            value={tournamentMap.mod}
+                                            isInvalid={!!errMsg && !tournamentMap.mod}
+                                            onChange={(e) => {
+                                                const updatedTournamentMaps = [...tournamentMaps];
+                                                updatedTournamentMaps[index]['mod'] = e.target.value;
+                                                setTournamentMaps(updatedTournamentMaps);
+                                            }}
+                                        />
+                                        <Input
+                                            label="序号"
+                                            isRequired
+                                            value={tournamentMap.number?.toString() || ''}
+                                            isInvalid={!!errMsg && !tournamentMap.number}
+                                            onChange={(e) => {
+                                                const updatedTournamentMaps = [...tournamentMaps];
+                                                updatedTournamentMaps[index]['number'] = Number(e.target.value);
+                                                setTournamentMaps(updatedTournamentMaps);
+                                            }}
+                                        />
+                                        {
+                                            tournamentMap.extra?.map((info, i) => {
+                                                return (
+                                                    <Input key={i} label="额外信息" value={info}
+                                                           description="在这里加入对地图的额外介绍如地图风格，获胜条件" onChange={(e) => {
+                                                        const updatedTournamentMaps = [...tournamentMaps];
+                                                        updatedTournamentMaps[index].extra?.splice(i, 1, e.target.value);
+                                                        setTournamentMaps(updatedTournamentMaps);
+                                                    }}/>
+                                                )
+                                            })
+                                        }
+                                        <div className="flex-col self-start">
+                                            <Button radius={"none"} color="primary" isIconOnly onPress={() => {
+                                                const updatedTournamentMaps = [...tournamentMaps];
+                                                if (!updatedTournamentMaps[index].extra) {
+                                                    updatedTournamentMaps[index].extra = [];
+                                                }
+                                                updatedTournamentMaps[index].extra?.push("");
+                                                setTournamentMaps(updatedTournamentMaps);
+                                            }}>+</Button>
+                                            <Button radius={"none"} color="danger" isIconOnly onPress={() => {
+                                                const updatedTournamentMaps = [...tournamentMaps];
+                                                if (updatedTournamentMaps[index].extra && updatedTournamentMaps[index].extra?.length > 1) {
+                                                    updatedTournamentMaps[index].extra?.pop();
+                                                }
+                                                setTournamentMaps(updatedTournamentMaps);
+                                            }}>-</Button>
+                                        </div>
+                                    </div>
                                     <Button
+                                        className="max-w-fit"
                                         color="danger"
                                         onClick={() => {
                                             const updatedTournamentMaps = tournamentMaps.filter((_, i) => i !== index);
@@ -161,7 +193,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                                     >
                                         删除
                                     </Button>
-                                </div>)})}
+                            </div>)})}
                     </div>
                     <div className="flex flex-row gap-5">
                         <Button className="max-w-fit" color="primary" onPress={() => {setTournamentMaps([...tournamentMaps, {
@@ -170,7 +202,8 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                             mod: '',
                             map_id: undefined,
                             number: undefined,
-                            mode: tournamentInfo.mode
+                            mode: tournamentInfo.mode,
+                            extra: []
                         }])}}>
                             添加地图
                         </Button>
@@ -224,6 +257,7 @@ interface TournamentMap {
     map_id?: number;
     number?: number;
     mode?: string;
+    extra?: string[];
 }
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
