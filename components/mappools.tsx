@@ -71,10 +71,10 @@ const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string})
                         {mod} {index + 1}
                     </Chip>
                     {
-                        map.extra?.map((extra, ii) => {
+                        map.extra?.map((extra, i) => {
                             if (extra === "") return null
                             return(
-                                <Chip key={ii} size="lg" className="mt-3 text-xl" color={color}>
+                                <Chip key={i} size="lg" className="mt-3 text-xl" color={color}>
                                     {extra}
                                 </Chip>
                             )
