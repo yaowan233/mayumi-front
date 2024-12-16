@@ -37,4 +37,4 @@ jobs:
       # 推送 Docker 镜像到 Docker Hub 或 GitHub Container Registry
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/my-app:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/mayumi:${{ github.sha }}
