@@ -1,5 +1,5 @@
 # 使用基础的 Node.js 镜像
-FROM node:22
+FROM node:22.9
 
 # 在容器中创建一个工作目录
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # 安装依赖项
-RUN npm install
+RUN npm install --force
 
 # 构建前端应用
 RUN npm run build
