@@ -23,7 +23,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
         tournament: tournament_info.abbreviation,
         uid: currentUser?.currentUser?.uid,
         qqNumber: '',
-        isFirstTimeStaff: false,
+        isFirstTimeStaff: undefined,
         tournamentExperience: '',
         selectedPositions: [],
         otherDetails: '',
@@ -40,7 +40,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
         fetchData();
     }, [currentUser, tournament_info.abbreviation]);
     const handleRegistration = async (onClose: () => void) => {
-        if (!formData.qqNumber || !formData.isFirstTimeStaff || formData.selectedPositions.length === 0) {
+        if (formData.qqNumber === '' || formData.isFirstTimeStaff === undefined || formData.selectedPositions.length === 0) {
             // 显示错误消息或采取其他适当的操作
             setErrMsg('请填写所有必填字段')
         }
@@ -57,6 +57,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
             else {
                 // 关闭模态框
                 onClose();
+                alert('报名成功');
             }
         }
     };
@@ -101,74 +102,108 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                 <CardBody className={"whitespace-pre-wrap"}>
                     <p>{tournament_info.staff_registration_info}</p>
                 </CardBody>
-                <div className="flex gap-4 items-center py-2 px-2">
-                    <Button onPress={onOpen} size="md">立刻报名</Button>
-                </div>
-                <Modal isOpen={isOpen} onOpenChange={onOpenChange} size={"5xl"} scrollBehavior={"inside"}>
-                    <ModalContent>
-                        {(onClose) => (
-                            <>
-                                <ModalHeader className="flex flex-col gap-1">{"报名" + tournament_info.abbreviation}</ModalHeader>
-                                <ModalBody>
-                                    <p>
-                                        请务必填写正确的QQ号，以便我们联系您
-                                    </p>
-                                    <Input isRequired type={"QQ"} label={"QQ号"} placeholder="请输入QQ号" onChange={(e) => setFormData({...formData, qqNumber: e.target.value})}/>
-                                    <Divider/>
-                                    <RadioGroup label={"你是否是第一次做staff？"} isRequired={true} onChange={(e) => setFormData({...formData, isFirstTimeStaff: (e.target.value !== "")})}>
-                                        <Radio value="1">是</Radio>
-                                        <Radio value="">否</Radio>
-                                    </RadioGroup>
-                                    <p>
-                                        列举赛事经验（不必详细说明）只需简述在什么比赛做了什么工作即可
-                                    </p>
-                                    <Textarea
-                                        minRows={2}
-                                        label="赛事经验"
-                                        onChange={(e) => setFormData({...formData, tournamentExperience: e.target.value})}
-                                    />
-                                    <Divider/>
-                                    <CheckboxGroup
-                                        isRequired={true}
-                                        label="选择想要报名的职位"
-                                        //@ts-ignore
-                                        onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}
-                                    >
-                                        {tournament_info.streamer? <Checkbox value="直播">直播</Checkbox>: null}
-                                        {tournament_info.referee? <Checkbox value="裁判">裁判</Checkbox>: null}
-                                        {tournament_info.custom_mapper? <Checkbox value="作图">作图</Checkbox>: null}
-                                        {tournament_info.commentator? <Checkbox value="解说">解说</Checkbox>: null}
-                                        {tournament_info.mappooler? <Checkbox value="选图">选图</Checkbox>: null}
-                                        {tournament_info.donator? <Checkbox value="赞助">赞助</Checkbox>: null}
-                                        {tournament_info.designer? <Checkbox value="设计">设计</Checkbox>: null}
-                                        {tournament_info.scheduler? <Checkbox value="赛程安排">赛程安排</Checkbox>: null}
-                                        {tournament_info.map_tester? <Checkbox value="测图">测图</Checkbox>: null}
-                                    </CheckboxGroup>
-                                    <Textarea
-                                        minRows={2}
-                                        label="其他"
-                                        onChange={(e) => setFormData({...formData, otherDetails: e.target.value})}
-                                    />
-                                    <Divider/>
-                                    <Textarea
-                                        minRows={2}
-                                        label="有其他想要补充的？"
-                                        onChange={(e) => setFormData({...formData, additionalComments: e.target.value})}
-                                    />
-                                </ModalBody>
-                                <ModalFooter>
-                                    <p className="text-red-500">{errMsg}</p>
-                                    <Button color="danger" variant="light" onPress={onClose}>
-                                        关闭
-                                    </Button>
-                                    <Button color="primary" onPress={() => handleRegistration(onClose)}>
-                                        报名
-                                    </Button>
-                                </ModalFooter>
-                            </>
-                        )}
-                    </ModalContent>
-                </Modal>
+                {currentUser?.currentUser ?
+                    <>
+                        <div className="flex gap-4 items-center py-2 px-2">
+                            <Button onPress={onOpen} size="md">立刻报名</Button>
+                        </div>
+                        <Modal isOpen={isOpen} onOpenChange={onOpenChange} size={"5xl"} scrollBehavior={"inside"}>
+                            <ModalContent>
+                                {(onClose) => (
+                                    <>
+                                        <ModalHeader
+                                            className="flex flex-col gap-1">{"报名" + tournament_info.abbreviation}</ModalHeader>
+                                        <ModalBody>
+                                            <p>
+                                                请务必填写正确的QQ号，以便我们联系您
+                                            </p>
+                                            <Input isRequired type={"QQ"} label={"QQ号"} placeholder="请输入QQ号"
+                                                   onChange={(e) => setFormData({
+                                                       ...formData,
+                                                       qqNumber: e.target.value
+                                                   })}/>
+                                            <Divider/>
+                                            <RadioGroup label={"你是否是第一次做staff？"} isRequired={true}
+                                                        onChange={(e) => setFormData({
+                                                            ...formData,
+                                                            isFirstTimeStaff: (e.target.value !== "")
+                                                        })}>
+                                                <Radio value="1">是</Radio>
+                                                <Radio value="">否</Radio>
+                                            </RadioGroup>
+                                            <p>
+                                                列举赛事经验（不必详细说明）只需简述在什么比赛做了什么工作即可
+                                            </p>
+                                            <Textarea
+                                                minRows={2}
+                                                label="赛事经验"
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    tournamentExperience: e.target.value
+                                                })}
+                                            />
+                                            <Divider/>
+                                            <CheckboxGroup
+                                                isRequired={true}
+                                                label="选择想要报名的职位"
+                                                //@ts-ignore
+                                                onChange={(value: string[]) => setFormData({
+                                                    ...formData,
+                                                    selectedPositions: value
+                                                })}
+                                            >
+                                                {tournament_info.streamer ?
+                                                    <Checkbox value="直播">直播</Checkbox> : null}
+                                                {tournament_info.referee ?
+                                                    <Checkbox value="裁判">裁判</Checkbox> : null}
+                                                {tournament_info.custom_mapper ?
+                                                    <Checkbox value="作图">作图</Checkbox> : null}
+                                                {tournament_info.commentator ?
+                                                    <Checkbox value="解说">解说</Checkbox> : null}
+                                                {tournament_info.mappooler ?
+                                                    <Checkbox value="选图">选图</Checkbox> : null}
+                                                {tournament_info.donator ?
+                                                    <Checkbox value="赞助">赞助</Checkbox> : null}
+                                                {tournament_info.designer ?
+                                                    <Checkbox value="设计">设计</Checkbox> : null}
+                                                {tournament_info.scheduler ?
+                                                    <Checkbox value="赛程安排">赛程安排</Checkbox> : null}
+                                                {tournament_info.map_tester ?
+                                                    <Checkbox value="测图">测图</Checkbox> : null}
+                                            </CheckboxGroup>
+                                            <Textarea
+                                                minRows={2}
+                                                label="其他"
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    otherDetails: e.target.value
+                                                })}
+                                            />
+                                            <Divider/>
+                                            <Textarea
+                                                minRows={2}
+                                                label="有其他想要补充的？"
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    additionalComments: e.target.value
+                                                })}
+                                            />
+                                        </ModalBody>
+                                        <ModalFooter>
+                                            <p className="text-red-500">{errMsg}</p>
+                                            <Button color="danger" variant="light" onPress={onClose}>
+                                                关闭
+                                            </Button>
+                                            <Button color="primary" onPress={() => handleRegistration(onClose)}>
+                                                报名
+                                            </Button>
+                                        </ModalFooter>
+                                    </>
+                                )}
+                            </ModalContent>
+                        </Modal>
+                    </>
+                    : <div>若要报名比赛请点击右上角登录</div>}
             </Card>
             <Card>
                 <CardBody>
@@ -300,7 +335,7 @@ export type RegistrationInfo = {
     tournament: string;
     uid?: number;
     qqNumber: string;
-    isFirstTimeStaff: boolean;
+    isFirstTimeStaff?: boolean;
     tournamentExperience: string;
     selectedPositions: string[];
     otherDetails: string;
