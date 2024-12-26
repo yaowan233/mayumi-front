@@ -48,7 +48,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                         <p>
                             当该轮次所有比赛网页信息都正确填写之后，点击下方按钮更新比赛数据，数据会自动生成，如有错误请联系管理员
                         </p>
-                        <Button className="max-w-fit" color="primary" onClick={async () => {
+                        <Button className="max-w-fit" color="primary" onPress={async () => {
                             const res = await fetch(siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${params.tournament}&stage_name=${Array.from(round)[0]}`,
                                 { next: { revalidate: 0 }})
                             if (res.status != 200) {

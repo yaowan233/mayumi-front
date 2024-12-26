@@ -25,7 +25,7 @@ export const TournamentComponent = ({tournament}: { tournament: Tournament }) =>
     };
     let tournament_href = "/tournaments/" + tournament.abbreviation + "/home"
     return (
-        <Card onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} as={Link} className="items-center justify-center min-w-[300px] min-h-[180px]" href={tournament_href}>
+        <Card onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} as={Link} className="items-center justify-center min-w-[200px] min-h-[180px]" href={tournament_href}>
             <CardHeader className="absolute z-10 top-0 flex items-center justify-center text-center text-xl font-bold bg-clip-content dark:bg-black/30 bg-black/50 text-gray-50">
                 {isHovered ? tournament.name : tournament.abbreviation}
             </CardHeader>

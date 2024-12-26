@@ -9,11 +9,17 @@ export async function getMe(): Promise<Me | null> {
         return null
     }
     cookieStore.set('uuid', uuid, { path: '/' , expires: new Date(Date.now() + 30 * 60 * 60 * 24 * 1000)})
-    const res = await fetch(siteConfig.backend_url + '/api/me', {  headers: {
-            Cookie: `uuid=${cookieStore.get('uuid')?.value}`,
-        },
-    })
-    return await res.json()
+    try
+    {
+        const res = await fetch(siteConfig.backend_url + '/api/me', {  headers: {
+                Cookie: `uuid=${uuid}`,
+            },
+        })
+        return await res.json()
+    }
+    catch (e) {
+        return null
+    }
 }
 
 export interface Me {

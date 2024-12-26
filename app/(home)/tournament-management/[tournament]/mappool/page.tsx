@@ -186,7 +186,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                                     <Button
                                         className="max-w-fit"
                                         color="danger"
-                                        onClick={() => {
+                                        onPress={() => {
                                             const updatedTournamentMaps = tournamentMaps.filter((_, i) => i !== index);
                                             setTournamentMaps(updatedTournamentMaps);
                                         }}

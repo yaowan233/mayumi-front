@@ -130,7 +130,7 @@ export const Navbar = () => {
 				{/*{searchInput}*/}
 				<div className="mx-4 mt-2 flex flex-col gap-2">
 					<NavbarMenuItem>
-						<Link href="/" size="lg" color="foreground" onClick={() => {
+						<Link href="/" size="lg" color="foreground" onPress={() => {
 							setIsMenuOpen(false); // 点击菜单项后关闭菜单
 							setIsLoading(true); // 点击菜单项后开始加载
 						}}>
@@ -138,7 +138,7 @@ export const Navbar = () => {
 						</Link>
 					</NavbarMenuItem>
 					<NavbarMenuItem>
-						<Link href={"/tournament-management"} size="lg" color="foreground" onClick={() => {
+						<Link href={"/tournament-management"} size="lg" color="foreground" onPress={() => {
 							setIsMenuOpen(false); // 点击菜单项后关闭菜单
 							setIsLoading(true); // 点击菜单项后开始加载
 						}}>
@@ -146,7 +146,7 @@ export const Navbar = () => {
 						</Link>
 					</NavbarMenuItem>
 					<NavbarMenuItem>
-						<Link href={"/about"} size="lg" color="foreground" onClick={() => {
+						<Link href={"/about"} size="lg" color="foreground" onPress={() => {
 							setIsMenuOpen(false); // 点击菜单项后关闭菜单
 							setIsLoading(true); // 点击菜单项后开始加载
 						}}>
@@ -219,12 +219,6 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 				justify="end"
 			>
 				<NavbarItem className="hidden sm:flex gap-2">
-					{/*<Link isExternal href={siteConfig.links.twitter} aria-label="Twitter">*/}
-					{/*	<TwitterIcon className="text-default-500" />*/}
-					{/*</Link>*/}
-					{/*<Link isExternal href={siteConfig.links.discord} aria-label="Discord">*/}
-					{/*	<DiscordIcon className="text-default-500" />*/}
-					{/*</Link>*/}
 					<Link isExternal href={siteConfig.links.github} aria-label="Github">
 						<GithubIcon className="text-default-500" />
 					</Link>
@@ -264,7 +258,7 @@ export const TournamentNavbar = ({ tournament_name }: { tournament_name: string 
 										: `${tournament_href_start}${item.href}`
 								}
 								size="lg"
-								onClick={() => {
+								onPress={() => {
 									setIsMenuOpen(false); // 点击菜单项后关闭菜单
 									setIsLoading(true); // 点击菜单项后开始加载
 								}}

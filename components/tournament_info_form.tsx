@@ -168,7 +168,7 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {formData: T
                         updatedLinks[index]['url'] = e.target.value;
                         setFormData({ ...formData, links: updatedLinks });
                     }}/>
-                    <Button color="danger" onClick={() => {
+                    <Button color="danger" onPress={() => {
                         const updatedLinks = formData.links.filter((_, i) => i !== index);
                         setFormData({ ...formData, links: updatedLinks });
                     }}>
