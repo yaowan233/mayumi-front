@@ -25,7 +25,6 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
         fetchData();
     }, [currentUser, tournament_name]);
     const link_prefix = `/tournament-management/${tournament_name}`;
-    console.log(link_prefix);
     return (
         <div className={'flex flex-wrap gap-3'}>
             {tournamentManagementInfo?.filter((info) =>
