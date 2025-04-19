@@ -4,8 +4,8 @@
 import React, {useContext, useEffect, useState} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
-import {Select, SelectItem} from "@nextui-org/select";
-import {Button} from "@nextui-org/button";
+import {Select, SelectItem} from "@heroui/select";
+import {Button} from "@heroui/button";
 import {siteConfig} from "@/config/site";
 
 export default function EditStatisticsPage(props: { params: Promise<{ tournament: string }> }) {
@@ -37,7 +37,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                 onSelectionChange={setRound}
             >
                 {roundInfo.map((round) => (
-                    <SelectItem key={round.stage_name} value={round.stage_name}>
+                    <SelectItem key={round.stage_name}>
                         {round.stage_name}
                     </SelectItem>
                 ))}

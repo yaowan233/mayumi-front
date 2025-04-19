@@ -3,7 +3,7 @@ import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
-import {Button} from "@nextui-org/button";
+import {Button} from "@heroui/button";
 import {useRouter} from "next/navigation";
 import {siteConfig} from "@/config/site";
 

@@ -1,6 +1,6 @@
-import {Card, CardBody, CardHeader} from "@nextui-org/card";
-import {Link} from "@nextui-org/link";
-import {Image} from "@nextui-org/image";
+import {Card, CardBody, CardHeader} from "@heroui/card";
+import {Link} from "@heroui/link";
+import {Image} from "@heroui/image";
 import {siteConfig} from "@/config/site";
 
 export default async function StaffPage(props: { params: Promise<{ tournament: string }> }) {

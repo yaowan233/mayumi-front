@@ -1,21 +1,21 @@
 "use client"
 
-import {useDisclosure} from "@nextui-org/use-disclosure";
-import {Alert} from "@nextui-org/alert";
-import {Card, CardBody, CardFooter} from "@nextui-org/card";
-import {Divider} from "@nextui-org/divider";
-import {Button} from "@nextui-org/button";
-import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader} from "@nextui-org/modal";
-import {Link} from "@nextui-org/link";
-import {Input, Textarea} from "@nextui-org/input";
-import {Radio, RadioGroup} from "@nextui-org/radio";
-import {Checkbox, CheckboxGroup} from "@nextui-org/checkbox";
+import {useDisclosure} from "@heroui/use-disclosure";
+import {Alert} from "@heroui/alert";
+import {Card, CardBody, CardFooter} from "@heroui/card";
+import {Divider} from "@heroui/divider";
+import {Button} from "@heroui/button";
+import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader} from "@heroui/modal";
+import {Link} from "@heroui/link";
+import {Input, Textarea} from "@heroui/input";
+import {Radio, RadioGroup} from "@heroui/radio";
+import {Checkbox, CheckboxGroup} from "@heroui/checkbox";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Tooltip} from "@nextui-org/tooltip";
+import {Tooltip} from "@heroui/tooltip";
 import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Image} from "@nextui-org/image";
+import {Image} from "@heroui/image";
 
 export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) => {
     const currentUser  = useContext(CurrentUserContext);

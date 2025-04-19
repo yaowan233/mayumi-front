@@ -2,7 +2,7 @@
 import Image from "next/image";
 import {title} from "@/components/primitives";
 import {useState} from "react";
-import {Link} from "@nextui-org/link";
+import {Link} from "@heroui/link";
 
 export interface Tournament {
     name: string;

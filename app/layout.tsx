@@ -3,7 +3,7 @@ import {Metadata, Viewport} from "next";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Providers } from "./providers";
-import { Link } from "@nextui-org/link";
+import { Link } from "@heroui/link";
 import clsx from "clsx";
 import {UserProvider} from "@/app/user_context";
 import React from "react";

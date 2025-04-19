@@ -1,12 +1,12 @@
 "use client"
 
-import {Tab, Tabs} from "@nextui-org/tabs";
-import {Card, CardBody} from "@nextui-org/card";
+import {Tab, Tabs} from "@heroui/tabs";
+import {Card, CardBody} from "@heroui/card";
 import {UserInfo} from "@/components/user_info";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Image} from "@nextui-org/image";
-import {Link} from "@nextui-org/link";
-import {Tooltip} from "@nextui-org/tooltip";
+import {Image} from "@heroui/image";
+import {Link} from "@heroui/link";
+import {Tooltip} from "@heroui/tooltip";
 
 export const ParticipantsComp = ({tournament_players}: { tournament_players: TournamentPlayers }) => {
     const players = tournament_players.players

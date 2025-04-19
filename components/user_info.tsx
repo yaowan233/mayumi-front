@@ -1,5 +1,5 @@
-import {Image} from "@nextui-org/image";
-import {Link} from "@nextui-org/link";
+import {Image} from "@heroui/image";
+import {Link} from "@heroui/link";
 import {Player} from "@/app/tournaments/[tournament]/participants/page";
 
 

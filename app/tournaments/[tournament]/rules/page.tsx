@@ -1,4 +1,4 @@
-import {Card, CardBody} from "@nextui-org/card";
+import {Card, CardBody} from "@heroui/card";
 import {siteConfig} from "@/config/site";
 
 export default async function TournamentRulesPage(props: { params: Promise<{ tournament: string }> }) {

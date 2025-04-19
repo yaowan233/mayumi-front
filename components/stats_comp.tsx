@@ -1,16 +1,16 @@
 "use client"
 
 
-import {Tab, Tabs} from "@nextui-org/tabs";
-import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
-import {Card, CardHeader} from "@nextui-org/card";
-import {Link} from "@nextui-org/link";
-import {Image} from "@nextui-org/image";
+import {Tab, Tabs} from "@heroui/tabs";
+import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@heroui/table";
+import {Card, CardHeader} from "@heroui/card";
+import {Link} from "@heroui/link";
+import {Image} from "@heroui/image";
 import React, {useEffect, useState} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
 import {useRouter, useSearchParams} from "next/navigation";
-import {Chip} from "@nextui-org/chip";
+import {Chip} from "@heroui/chip";
 import {Player} from "@/app/tournaments/[tournament]/participants/page";
 import {siteConfig} from "@/config/site";
 

@@ -1,8 +1,8 @@
 'use client'
 import {useState} from "react";
-import {Link} from "@nextui-org/link";
-import {Image} from "@nextui-org/image";
-import {Card, CardFooter, CardHeader} from "@nextui-org/card";
+import {Link} from "@heroui/link";
+import {Image} from "@heroui/image";
+import {Card, CardFooter, CardHeader} from "@heroui/card";
 
 export interface Tournament {
     name: string;
@@ -33,7 +33,7 @@ export const TournamentComponent = ({tournament}: { tournament: Tournament }) =>
             <Image
                 className="z-0 w-full h-[180px] object-cover"
                 width="100%"
-                src={tournament.pic_url}
+                src={tournament.pic_url ? tournament.pic_url : undefined}
                 alt={tournament.name}
             />
             <CardFooter

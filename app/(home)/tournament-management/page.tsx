@@ -1,8 +1,8 @@
 'use client'
-import {Button} from "@nextui-org/button";
-import {Link} from "@nextui-org/link";
-import {Card, CardFooter, CardHeader} from "@nextui-org/card";
-import {Chip} from "@nextui-org/chip";
+import {Button} from "@heroui/button";
+import {Link} from "@heroui/link";
+import {Card, CardFooter, CardHeader} from "@heroui/card";
+import {Chip} from "@heroui/chip";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";

@@ -1,15 +1,15 @@
 "use client"
 
-import {Card, CardFooter, CardHeader} from "@nextui-org/card";
-import {Tab, Tabs} from "@nextui-org/tabs";
-import {Image} from "@nextui-org/image";
-import {Link} from "@nextui-org/link";
-import {Divider} from "@nextui-org/divider";
-import {Accordion, AccordionItem} from "@nextui-org/accordion";
+import {Card, CardFooter, CardHeader} from "@heroui/card";
+import {Tab, Tabs} from "@heroui/tabs";
+import {Image} from "@heroui/image";
+import {Link} from "@heroui/link";
+import {Divider} from "@heroui/divider";
+import {Accordion, AccordionItem} from "@heroui/accordion";
 import React, {Dispatch, SetStateAction, useContext, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Input} from "@nextui-org/input";
-import {Button} from "@nextui-org/button";
+import {Input} from "@heroui/input";
+import {Button} from "@heroui/button";
 import {siteConfig} from "@/config/site";
 import {LinkIcon} from "@/components/icons";
 import {useRouter, useSearchParams} from "next/navigation";

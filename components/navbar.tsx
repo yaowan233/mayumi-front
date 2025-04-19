@@ -8,11 +8,11 @@ import {
 	NavbarBrand,
 	NavbarItem,
 	NavbarMenuItem,
-} from "@nextui-org/navbar";
-import { Button } from "@nextui-org/button";
-import { Link } from "@nextui-org/link";
+} from "@heroui/navbar";
+import { Button } from "@heroui/button";
+import { Link } from "@heroui/link";
 
-import { link as linkStyles } from "@nextui-org/theme";
+import { link as linkStyles } from "@heroui/theme";
 
 import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
@@ -27,9 +27,9 @@ import {
 import { Logo } from "@/components/icons";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Avatar} from "@nextui-org/avatar";
-import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@nextui-org/dropdown";
-import {Progress} from "@nextui-org/progress";
+import {Avatar} from "@heroui/avatar";
+import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@heroui/dropdown";
+import {Progress} from "@heroui/progress";
 import {usePathname} from "next/navigation";
 
 

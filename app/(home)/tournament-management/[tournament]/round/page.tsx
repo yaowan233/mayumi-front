@@ -1,7 +1,7 @@
 "use client";
-import {Button} from "@nextui-org/button";
-import {Input} from "@nextui-org/input";
-import {Switch} from "@nextui-org/switch";
+import {Button} from "@heroui/button";
+import {Input} from "@heroui/input";
+import {Switch} from "@heroui/switch";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";

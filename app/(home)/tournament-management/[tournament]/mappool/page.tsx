@@ -1,11 +1,11 @@
 "use client";
-import {Button} from "@nextui-org/button";
-import {Select, SelectItem} from "@nextui-org/select";
+import {Button} from "@heroui/button";
+import {Select, SelectItem} from "@heroui/select";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
-import {Image} from "@nextui-org/image";
-import {Input} from "@nextui-org/input";
+import {Image} from "@heroui/image";
+import {Input} from "@heroui/input";
 import {siteConfig} from "@/config/site";
 import {InfoSection} from "@/components/hints";
 import {TournamentInfo} from "@/components/homepage";
@@ -104,7 +104,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                 onSelectionChange={setRound}
             >
                 {roundInfo.map((round) => (
-                    <SelectItem key={round.stage_name} value={round.stage_name}>
+                    <SelectItem key={round.stage_name}>
                         {round.stage_name}
                     </SelectItem>
                 ))}

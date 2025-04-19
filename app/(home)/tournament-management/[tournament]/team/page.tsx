@@ -3,15 +3,15 @@
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Button} from "@nextui-org/button";
-import {Input} from "@nextui-org/input";
-import {Divider} from "@nextui-org/divider";
-import {Avatar} from "@nextui-org/avatar";
-import {Chip} from "@nextui-org/chip";
-import {Autocomplete, AutocompleteItem} from "@nextui-org/autocomplete";
+import {Button} from "@heroui/button";
+import {Input} from "@heroui/input";
+import {Divider} from "@heroui/divider";
+import {Avatar} from "@heroui/avatar";
+import {Chip} from "@heroui/chip";
+import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
 import {AttentionSection, InfoSection} from "@/components/hints";
 import {siteConfig} from "@/config/site";
-import {Checkbox} from "@nextui-org/checkbox";
+import {Checkbox} from "@heroui/checkbox";
 
 export default function EditTeamPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);

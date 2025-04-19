@@ -1,19 +1,19 @@
 "use client";
 
-import {Select, SelectItem} from "@nextui-org/select";
+import {Select, SelectItem} from "@heroui/select";
 import React, {useContext, useEffect, useState} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
-import {Button} from "@nextui-org/button";
-import {Input} from "@nextui-org/input";
-import {Autocomplete, AutocompleteItem} from "@nextui-org/autocomplete";
-import {Avatar} from "@nextui-org/avatar";
-import {Divider} from "@nextui-org/divider";
+import {Button} from "@heroui/button";
+import {Input} from "@heroui/input";
+import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
+import {Avatar} from "@heroui/avatar";
+import {Divider} from "@heroui/divider";
 import {useFilter} from "@react-aria/i18n";
-import {Switch} from "@nextui-org/switch";
+import {Switch} from "@heroui/switch";
 import {MenuTriggerAction} from "@react-types/combobox";
-import {Chip} from "@nextui-org/chip";
-import {Spinner} from "@nextui-org/spinner";
+import {Chip} from "@heroui/chip";
+import {Spinner} from "@heroui/spinner";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {InfoSection} from "@/components/hints";
@@ -58,7 +58,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                 onSelectionChange={setRound}
             >
                 {roundInfo.map((round) => (
-                    <SelectItem key={round.stage_name} value={round.stage_name}>
+                    <SelectItem key={round.stage_name}>
                         {round.stage_name}
                     </SelectItem>
                 ))}

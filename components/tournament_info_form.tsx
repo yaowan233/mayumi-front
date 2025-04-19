@@ -1,10 +1,10 @@
-import {Input, Textarea} from "@nextui-org/input";
-import {Select, SelectItem} from "@nextui-org/select";
-import {Divider} from "@nextui-org/divider";
-import {Switch} from "@nextui-org/switch";
+import {Input, Textarea} from "@heroui/input";
+import {Select, SelectItem} from "@heroui/select";
+import {Divider} from "@heroui/divider";
+import {Switch} from "@heroui/switch";
 import {TournamentInfo} from "@/components/homepage";
 import {Dispatch, SetStateAction} from "react";
-import {Button} from "@nextui-org/button";
+import {Button} from "@heroui/button";
 
 
 export const TournamentInfoForm = ({formData, errMsg, setFormData}: {formData: TournamentInfo, errMsg: string, setFormData:  Dispatch<SetStateAction<TournamentInfo>>}) => {
@@ -30,10 +30,10 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {formData: T
                     isRequired
                     onChange={(e) => setFormData({...formData, is_group: e.target.value === '1'})}
                 >
-                    <SelectItem key='0' value=''>
+                    <SelectItem key='0'>
                         个人赛
                     </SelectItem>
-                    <SelectItem key='1' value='1'>
+                    <SelectItem key='1'>
                         团队赛
                     </SelectItem>
                 </Select>
@@ -44,16 +44,16 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {formData: T
                     selectedKeys={[formData.mode]}
                     onChange={(e) => setFormData({...formData, mode: e.target.value})}
                 >
-                    <SelectItem key='osu' value='osu'>
+                    <SelectItem key='osu'>
                         osu
                     </SelectItem>
-                    <SelectItem key='taiko' value='taiko'>
+                    <SelectItem key='taiko'>
                         taiko
                     </SelectItem>
-                    <SelectItem key='mania' value='mania'>
+                    <SelectItem key='mania'>
                         mania
                     </SelectItem>
-                    <SelectItem key='fruits' value='fruits'>
+                    <SelectItem key='fruits'>
                         fruits
                     </SelectItem>
                 </Select>

@@ -1,14 +1,14 @@
 "use client"
-import {Tab, Tabs} from "@nextui-org/tabs";
-import {Card, CardBody, CardHeader} from "@nextui-org/card";
-import {Link} from "@nextui-org/link";
-import {Image} from "@nextui-org/image";
+import {Tab, Tabs} from "@heroui/tabs";
+import {Card, CardBody, CardHeader} from "@heroui/card";
+import {Link} from "@heroui/link";
+import {Image} from "@heroui/image";
 import React, {useState} from 'react';
-import {Button} from "@nextui-org/button";
+import {Button} from "@heroui/button";
 import {CopyIcon, DownloadIcon} from "@/components/icons";
-import {Tooltip} from "@nextui-org/tooltip";
+import {Tooltip} from "@heroui/tooltip";
 import {useSearchParams, useRouter} from "next/navigation";
-import {Chip} from "@nextui-org/chip";
+import {Chip} from "@heroui/chip";
 
 
 export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {

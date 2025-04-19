@@ -1,21 +1,21 @@
 "use client";
 
-import {Divider} from "@nextui-org/divider";
+import {Divider} from "@heroui/divider";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Chip} from "@nextui-org/chip";
-import {Avatar} from "@nextui-org/avatar";
-import {Autocomplete, AutocompleteItem} from "@nextui-org/autocomplete";
-import {Button} from "@nextui-org/button";
+import {Chip} from "@heroui/chip";
+import {Avatar} from "@heroui/avatar";
+import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
+import {Button} from "@heroui/button";
 import {useFilter} from "@react-aria/i18n";
-import {Spinner} from "@nextui-org/spinner";
-import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure} from "@nextui-org/modal";
+import {Spinner} from "@heroui/spinner";
+import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure} from "@heroui/modal";
 import {RegistrationInfo} from "@/components/homepage";
-import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/table";
+import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@heroui/table";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {InfoSection} from "@/components/hints";
-import {Badge} from "@nextui-org/badge";
+import {Badge} from "@heroui/badge";
 
 const columns = [
     {name: "uid", key: "uid"},
