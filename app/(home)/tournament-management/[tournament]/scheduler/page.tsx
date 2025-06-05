@@ -77,8 +77,8 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                                                     基本信息
                                                 </div>
                                                 <div className={"flex flex-row gap-5 items-baseline"}>
-                                                    <Input label="比赛序号" value={schedule.match_id}
-                                                           description="不能重复" onChange={(e) => {
+                                                    <Input label="比赛序号" value={schedule.match_id} isRequired
+                                                           description="不能与别的序号重复" onChange={(e) => {
                                                         let newScheduleInfo = [...scheduleInfo];
                                                         newScheduleInfo[index].match_id = e.target.value;
                                                         setScheduleInfo(newScheduleInfo);
