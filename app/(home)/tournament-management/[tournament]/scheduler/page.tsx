@@ -20,6 +20,7 @@ import {InfoSection} from "@/components/hints";
 
 export default function SchedulerPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
+    const tournament_name = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
     const [round, setRound] = useState<Set<string>>(new Set([]));
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
@@ -32,16 +33,16 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getRoundInfo(params.tournament);
+                const data = await getRoundInfo(tournament_name);
                 setRoundInfo(data);
-                const data1 = await getSchedule(params.tournament);
+                const data1 = await getSchedule(tournament_name);
                 setScheduleInfo(data1);
-                const data2 = await getPlayers(params.tournament);
+                const data2 = await getPlayers(tournament_name);
                 setMembers(data2);
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser, tournament_name]);
     return (
         <div className="flex flex-col gap-5">
             <h1 className="text-3xl font-bold">
@@ -472,7 +473,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     }
                     let newScheduleInfo = [...scheduleInfo];
                     newScheduleInfo.push({
-                        tournament_name: params.tournament,
+                        tournament_name: tournament_name,
                         stage_name: Array.from(round)[0],
                         match_id: "",
                         match_url: [""],

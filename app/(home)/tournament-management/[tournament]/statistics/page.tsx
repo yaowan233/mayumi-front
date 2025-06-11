@@ -10,18 +10,19 @@ import {siteConfig} from "@/config/site";
 
 export default function EditStatisticsPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
+    const tournament_name = decodeURIComponent(params.tournament);
     const [round, setRound] = useState<Set<string>>(new Set([]));
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
     const currentUser = useContext(CurrentUserContext);
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getRoundInfo(params.tournament);
+                const data = await getRoundInfo(tournament_name);
                 setRoundInfo(data);
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser, tournament_name]);
 
     return (
         <div className="flex flex-col gap-5">
@@ -49,7 +50,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                             当该轮次所有比赛网页信息都正确填写之后，点击下方按钮更新比赛数据，数据会自动生成，如有错误请联系管理员
                         </p>
                         <Button className="max-w-fit" color="primary" onPress={async () => {
-                            const res = await fetch(siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${params.tournament}&stage_name=${Array.from(round)[0]}`,
+                            const res = await fetch(siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${tournament_name}&stage_name=${Array.from(round)[0]}`,
                                 { next: { revalidate: 0 }})
                             if (res.status != 200) {
                                 // 失败

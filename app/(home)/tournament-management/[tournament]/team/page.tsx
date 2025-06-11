@@ -15,6 +15,7 @@ import {Checkbox} from "@heroui/checkbox";
 
 export default function EditTeamPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
+    const tournament_name = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({players: []});
     const players = tournamentPlayers.players.filter(player => player.player == true);
@@ -22,12 +23,12 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getPlayers(params.tournament);
+                const data = await getPlayers(tournament_name);
                 setTournamentPlayers(data);
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser, tournament_name]);
     return (
         <div className="flex flex-col gap-3">
             <h1 className="text-3xl font-bold">队伍管理</h1>
@@ -186,7 +187,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                 ))
             }
             <Button className="max-w-fit" color="success" onPress={() => {
-                teams?.push({tournament_name: params.tournament ,name: '', icon_url: '', captains: [], members: [], is_verified: false});
+                teams?.push({tournament_name: tournament_name ,name: '', icon_url: '', captains: [], members: [], is_verified: false});
                 setTournamentPlayers({players: players, groups: teams});
             }}>
                 添加队伍

@@ -9,8 +9,9 @@ import {siteConfig} from "@/config/site";
 
 export default function EditRoundPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
+    const tournament_name = decodeURIComponent(params.tournament);
     const initialFormData: TournamentRoundInfo = {
-        tournament_name: params.tournament,
+        tournament_name: tournament_name,
         stage_name: '',
         start_time: undefined,
         end_time: undefined,
@@ -22,12 +23,12 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getRoundInfo(params.tournament);
+                const data = await getRoundInfo(tournament_name);
                 setFormData(data);
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser, tournament_name]);
     const handleUpdateTournament = async () => {
         if (!formData.every(round => round.stage_name && round.start_time)) {
             // 显示错误消息或采取其他适当的操作

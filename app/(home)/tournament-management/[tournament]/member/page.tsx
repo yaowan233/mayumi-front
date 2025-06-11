@@ -36,18 +36,19 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
     const players = tournamentPlayers.players;
     const teams = tournamentPlayers.groups;
+    const tournament_name = decodeURIComponent(params.tournament);
 
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getPlayers(params.tournament);
-                const registrationInfo = await getRegistrationInfo(params.tournament);
+                const data = await getPlayers(tournament_name);
+                const registrationInfo = await getRegistrationInfo(tournament_name);
                 settournamentPlayers(data);
                 setRegistrationInfo(registrationInfo);
             }
         };
         fetchData();
-    }, [currentUser, params.tournament]);
+    }, [currentUser, tournament_name]);
     return (
         <div className="flex flex-col gap-5">
             <div className="flex flex-row justify-between">
@@ -144,7 +145,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"host"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"host"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">选手</h1>
@@ -179,7 +180,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"player"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"player"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">裁判</h1>
@@ -214,7 +215,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"referee"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"referee"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">直播</h1>
@@ -249,7 +250,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"streamer"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"streamer"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">解说</h1>
@@ -284,7 +285,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"commentator"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"commentator"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">选图</h1>
@@ -319,7 +320,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"mappooler"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"mappooler"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">赞助</h1>
@@ -354,7 +355,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"donator"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"donator"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">设计</h1>
@@ -389,7 +390,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"graphic_designer"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"graphic_designer"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">时间安排</h1>
@@ -424,7 +425,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} teams={teams} position={"scheduler"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} teams={teams} position={"scheduler"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">测图</h1>
@@ -459,7 +460,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"map_tester"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"map_tester"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">作图</h1>
@@ -494,7 +495,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={params.tournament} position={"custom_mapper"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"custom_mapper"}/>
             </div>
             {
                 isLoading ?  <Spinner className="max-w-fit" /> :

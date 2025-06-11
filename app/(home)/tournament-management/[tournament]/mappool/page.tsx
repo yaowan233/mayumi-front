@@ -13,6 +13,7 @@ import {TournamentInfo} from "@/components/homepage";
 
 export default function EditTournamentMapPoolPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
+    const tournament_name = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
     const [errMsg, setErrMsg] = useState('');
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
@@ -71,22 +72,22 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getRoundInfo(params.tournament);
+                const data = await getRoundInfo(tournament_name);
                 setRoundInfo(data);
             }
         };
         const fetchTournamentMapsData = async () => {
-          const data = await getTournamentMaps(params.tournament);
+          const data = await getTournamentMaps(tournament_name);
           setTournamentMaps(data);
         }
         const fetchTournamentInfo = async () => {
-            const data = await getTournamentInfo(params.tournament);
+            const data = await getTournamentInfo(tournament_name);
             setTournamentInfo(data);
         }
         fetchData();
         fetchTournamentMapsData()
         fetchTournamentInfo()
-    }, [currentUser, params.tournament]);
+    }, [currentUser, tournament_name]);
 
     return (
         <div className="flex flex-col gap-5">
@@ -197,7 +198,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                     </div>
                     <div className="flex flex-row gap-5">
                         <Button className="max-w-fit" color="primary" onPress={() => {setTournamentMaps([...tournamentMaps, {
-                            tournament_name: params.tournament,
+                            tournament_name: tournament_name,
                             stage_name: Array.from(round)[0],
                             mod: '',
                             map_id: undefined,

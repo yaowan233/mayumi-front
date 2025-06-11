@@ -9,6 +9,7 @@ import {siteConfig} from "@/config/site";
 
 export default function EditTournamentMetaPage(props: { params: Promise<{ tournament: string }> }) {
 	const params = React.use(props.params);
+	const tournament_name = decodeURIComponent(params.tournament);
 	const currentUser = useContext(CurrentUserContext);
 	const router = useRouter();
 	const [formData, setFormData] = useState<TournamentInfo>({
@@ -42,13 +43,13 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
 	useEffect(() => {
 		const fetchData = async () => {
 			if (currentUser?.currentUser?.uid) {
-				const data = await getTournamentInfo(params.tournament);
+				const data = await getTournamentInfo(tournament_name);
 				setFormData(data);
 			}
 		};
 
 		fetchData();
-	}, [currentUser, params.tournament]);
+	}, [currentUser, tournament_name]);
 	const [errMsg, setErrMsg] = useState('');
 	const handleUpdateTournament = async () => {
 		if (!formData.name || !formData.abbreviation || !formData.mode || !formData.description || !formData.rules_info) {
