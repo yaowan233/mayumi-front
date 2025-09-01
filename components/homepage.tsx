@@ -63,10 +63,32 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
             }
         }
     };
-    const regNotAvailable = currentUser?.currentUser ? (tournament_info.rank_min? currentUser?.currentUser.statistics_rulesets.fruits.global_rank < tournament_info.rank_min: false)
-        || (tournament_info.rank_max? currentUser?.currentUser.statistics_rulesets.fruits.global_rank > tournament_info.rank_max: false)
-        || (new Date(tournament_info.start_date) < new Date())
-        : false;
+    let userRank: number = 0;
+    const currentUserStats = currentUser?.currentUser?.statistics_rulesets;
+
+    if (currentUserStats) {
+      switch (tournament_info.mode) {
+        case 'fruits':
+          userRank = currentUserStats.fruits?.global_rank ?? 0;
+          break;
+        case 'osu':
+          userRank = currentUserStats.osu?.global_rank ?? 0;
+          break;
+        case 'taiko':
+          userRank = currentUserStats.taiko?.global_rank ?? 0;
+          break;
+        case 'mania':
+          userRank = currentUserStats.mania?.global_rank ?? 0;
+          break;
+      }
+    }
+
+    const regNotAvailable = userRank
+      && (
+        (tournament_info.rank_min && userRank < tournament_info.rank_min) ||
+        (tournament_info.rank_max && userRank > tournament_info.rank_max) ||
+        (new Date(tournament_info.start_date) < new Date())
+      );
     useEffect(() => {
         if (!isOpen) {
             setErrMsg('');
