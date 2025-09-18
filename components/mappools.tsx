@@ -50,7 +50,17 @@ export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
 
 const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string}) => {
     const [isHovered, setIsHovered] = useState(false);
-    const color= mod === "HD"? "warning": mod === "HR"? "danger": mod === "DT"? "secondary": mod === "TB"? "success" : "default"
+    const colors = {
+        "HD": "warning",
+        "HR": "danger",
+        "DT": "success",
+        "RC": "primary",
+        "LN": "success",
+        "HB": "warning",
+        "TB": "secondary",
+    } as const;
+    type AllowedColors = typeof colors[keyof typeof colors] | "default";
+    const color: AllowedColors = colors[mod as keyof typeof colors] || "default";
     return(
         <Card key={map.map_id} className={"max-w-lg"} onMouseEnter={() => {setIsHovered(true)}}  onMouseLeave={() => {setIsHovered(false)}}>
             <CardHeader className="absolute z-10 top-0 flex-col items-center">
