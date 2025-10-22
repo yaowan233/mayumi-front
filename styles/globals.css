@@ -14,3 +14,39 @@
 .dark\:no-text-stroke:is(.dark *) {
     text-shadow: 0 0 0 black; /* Inner stroke in dark mode */
 }
+
+@font-face {
+  font-family: "FontAwesomeExtra";
+  src: url("/fonts/extra/extra.eot");
+  src:
+    url("/fonts/extra/extra.eot?#iefix") format("embedded-opentype"),
+    url("/fonts/extra/extra.woff2") format("woff2"),
+    url("/fonts/extra/extra.woff") format("woff"),
+    url("/fonts/extra/extra.ttf") format("truetype"),
+    url("/fonts/extra/extra.svg#extra") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="fa-extra-"], [class*=" fa-extra-"] {
+  font-family: "FontAwesomeExtra";
+  font-weight: normal;
+  font-style: normal;
+  speak: none;
+  display: inline-block;
+  text-decoration: inherit;
+  text-align: center;
+  line-height: 1;
+}
+
+/* osu! gamemode icons */
+.fa-extra-mode-osu::before { content: "\e800"; }
+.fa-extra-mode-fruits::before { content: "\e801"; }
+.fa-extra-mode-mania::before { content: "\e802"; }
+.fa-extra-mode-taiko::before { content: "\e803"; }
+
+/* osu! icon */
+.fa-extra-osu::before { content: "\e805"; }
+
+/* team leader icon */
+.fa-extra-team-leader::before { content: "\e806"; }
