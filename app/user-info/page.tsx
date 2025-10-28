@@ -10,58 +10,46 @@ import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import GameModeIcon from "@/components/gamemode_icon";
 import {Button, ButtonGroup} from "@heroui/button";
+import {Input} from "@heroui/input";
+import {Tooltip} from "@heroui/tooltip";
+import {Radio, RadioGroup} from "@heroui/radio";
 
 
 
 export default function TournamentHomePage() {
     const currentUser = useContext(CurrentUserContext);
-    const [userInfo, setUserInfo] = useState<User>({
-        avatar_url: "",
-        badges: [],
-        country_code: "",
-        cover_url: "",
-        default_group: "",
-        has_supported: false,
-        id: 0,
-        is_active: false,
-        is_bot: false,
-        is_deleted: false,
-        is_online: false,
-        is_supporter: false,
-        join_date: "",
-        last_visit: "",
-        location: "",
-        occupation: "",
-        playmode: undefined,
-        playstyle: [],
-        profile_colour: "",
-        statistics: undefined,
-        statistics_rulesets: undefined,
-        team: undefined,
-        username: ""
-    });
+    const [userInfo, setUserInfo] = useState<User | null>(null);
     const [selectedMode, setSelectedMode] = useState("osu");
+    const [selectedUserName, setSelectedUserName] = useState("");
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getUserInfo(selectedMode);
+                const data = await getUserInfo(selectedMode, selectedUserName);
                 setUserInfo(data);
             }
             console.log(selectedMode)
         };
         fetchData();
-    }, [currentUser, selectedMode]);
+    }, [currentUser, selectedMode, selectedUserName]);
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex gap-4 text-white items-center">
-            </div>
-            <ButtonGroup>
-              <Button onPress={() => {setSelectedMode("osu")}}><GameModeIcon mode="osu" size={30} color="#ff66aa" /></Button>
-              <Button onPress={() => {setSelectedMode("taiko")}}><GameModeIcon mode="taiko" size={30} color="#f33" /></Button>
-              <Button onPress={() => {setSelectedMode("fruits")}}><GameModeIcon mode="fruits" size={30} color="#ffa500" /></Button>
-                <Button onPress={() => {setSelectedMode("mania")}}><GameModeIcon mode="mania" size={30} color="#6cf" /></Button>
-            </ButtonGroup>
+            <Input label="Osu 用户名" onChange={(e) => {setSelectedUserName(e.target.value)}}/>
+            <RadioGroup label="选择模式" orientation="horizontal" value={selectedMode} onValueChange={setSelectedMode}>
+              <Radio value="osu"><GameModeIcon mode="osu" size={30} color="#ff66aa" /></Radio>
+              <Radio value="taiko"><GameModeIcon mode="taiko" size={30} color="#f33" /></Radio>
+              <Radio value="fruits"><GameModeIcon mode="fruits" size={30} color="#ffa500" /></Radio>
+              <Radio value="mania"><GameModeIcon mode="mania" size={30} color="#6cf" /></Radio>
+            </RadioGroup>
+            {/*<ButtonGroup>*/}
+            {/*  <Button className={selectedMode === "osu" ? "bg-gray-700/50 opacity-70" : ""}*/}
+            {/*      onPress={() => {setSelectedMode("osu")}}><GameModeIcon mode="osu" size={30} color="#ff66aa" /></Button>*/}
+            {/*  <Button className={selectedMode === "taiko" ? "bg-gray-700/50 opacity-70 border-2 border-[#f33]" : ""}*/}
+            {/*      onPress={() => {setSelectedMode("taiko")}}><GameModeIcon mode="taiko" size={30} color="#f33" /></Button>*/}
+            {/*  <Button onPress={() => {setSelectedMode("fruits")}}><GameModeIcon mode="fruits" size={30} color="#ffa500" /></Button>*/}
+            {/*    <Button onPress={() => {setSelectedMode("mania")}}><GameModeIcon mode="mania" size={30} color="#6cf" /></Button>*/}
+            {/*</ButtonGroup>*/}
+            {userInfo &&
         <div className="min-h-screen bg-cover bg-center bg-no-repeat flex flex-col gap-2 h-full flex-grow rounded-lg"
           style={{
             backgroundImage: "url('https://www.loliapi.com/acg')",
@@ -69,17 +57,19 @@ export default function TournamentHomePage() {
             <div className="flex flex-row gap-4 bg-black/40 rounded-lg p-1 px-4">
                 <div className="max-w-[100px]">
                     <Image
-                        className=""
-                        src={`https://a.ppy.sh/${userInfo.id}`}
-                        alt="user"
+                    className=""
+                    src={`https://a.ppy.sh/${userInfo.id}`}
+                    alt="user"
                     />
                 </div>
-                <div className="flex flex-col flex-grow">
+                <div className="flex flex-col flex-grow justify-around">
                     <div className="text-xl">{userInfo.username}</div>
-                    <div className="flex flex-row items-center gap-2">
-                        <Image radius="none" width={"30px"} src={userInfo.team?.flag_url} alt="team_flag"/>
-                        <p className="text-xl">{userInfo.team?.name}</p>
-                    </div>
+                    {userInfo.team &&
+                        <div className="flex flex-row items-center gap-2">
+                            <Image radius="none" width={"30px"} src={userInfo.team.flag_url} alt="team_flag"/>
+                            <p className="text-xl">{userInfo.team.name}</p>
+                        </div>
+                    }
                     <div className="flex flex-row justify-between">
                         <div className="flex flex-row text-xl gap-2 items-center">
                             <Image radius="none" width="25px" src={flagUrl(userInfo.country_code)} alt="country"/>
@@ -99,6 +89,69 @@ export default function TournamentHomePage() {
                     </div>
                 </div>
             </div>
+            {
+                !!userInfo.badges?.length && userInfo.badges?.length > 0 &&
+                <div className="relative flex flex-row bg-black/40 rounded-lg p-1 justify-start gap-3 px-4 flex-wrap py-2 justify-items-center">
+                    {userInfo.badges.map((badge) => {
+                        // 假设 URL 字段是 badge.url
+                        const hasLink = !!badge.url;
+                        const formatter = new Intl.DateTimeFormat('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit', // 或 'numeric'
+                            day: '2-digit',   // 或 'numeric'
+                        });
+                        const formattedDate = formatter.format(new Date(badge.awarded_at));
+                    // 徽章组件本身
+                    const badgeImage = (
+                        <Tooltip content={
+                            <div className="flex flex-col items-center px-1 py-2">
+                                <div>{badge.description}</div>
+                                <div>{formattedDate}</div>
+                            </div>
+                        } key={badge.image_url}>
+                            <Image
+                                radius="none"
+                                width="100px"
+                                src={badge.image_url}
+                                alt={badge.description}
+                            />
+                        </Tooltip>
+                    );
+                    if (hasLink) {
+                        return (
+                            <Tooltip content={
+                            <div className="flex flex-col items-center px-1 py-2">
+                                <div>{badge.description}</div>
+                                <div>{formattedDate}</div>
+                            </div>
+                        } key={badge.image_url}>
+                                <a
+                                    key={badge.image_url}
+                                    href={badge.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    // 添加 title 属性显示悬浮简介
+                                    title={badge.description}
+                                    className="cursor-pointer" // 链接有手形光标
+                                >
+                                    {badgeImage}
+                                </a>
+                            </Tooltip>
+                        );
+                }
+                    // 如果没有链接，使用一个普通的 <div> 标签来容纳
+                    return (
+                        <div
+                            key={badge.image_url}
+                            // 添加 title 属性显示悬浮简介
+                            title={badge.description}
+                            className="cursor-default" // 非链接显示默认光标
+                        >
+                            {badgeImage}
+                        </div>
+        )})}
+                </div>
+            }
             <div className="relative flex flex-row bg-black/40 rounded-lg p-1 justify-between gap-6 px-4">
                 <Progress label="等级" className="" classNames={{value: ""}} value={userInfo.statistics?.level.progress} showValueLabel={true}/>
                 <div className="w-[50px]">
@@ -221,6 +274,7 @@ export default function TournamentHomePage() {
             </div>
             {/*<TournamentChart/>*/}
         </div>
+            }
         </div>
     )
 }
@@ -242,8 +296,8 @@ function flagUrl(countryCode: string): string {
 }
 
 
-async function getUserInfo(mode: string): Promise<User> {
-  const res = await fetch(`${siteConfig.backend_url}/api/user-info?mode=${mode}`, {
+async function getUserInfo(mode: string, username: string): Promise<User> {
+  const res = await fetch(`${siteConfig.backend_url}/api/user-info?mode=${mode}&username=${username}`, {
     method: 'POST',
     credentials: 'include'
   });

@@ -12,14 +12,18 @@ export const siteConfig = {
 			label: "主页",
 			href: "/",
 		},
-    {
-      label: "比赛管理",
-      href: "/tournament-management",
-    },
-    {
-      label: "关于",
-      href: "/about",
-    }
+        {
+          label: "比赛管理",
+          href: "/tournament-management",
+        },
+        {
+          label: "个人信息",
+          href: "/user-info",
+        },
+        {
+          label: "关于",
+          href: "/about",
+        }
 	],
 	tournamentNavItems: [
 		{
