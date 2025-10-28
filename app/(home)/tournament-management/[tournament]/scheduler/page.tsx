@@ -372,7 +372,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                                                         <div className="text-xl font-bold">
                                                             解说
                                                         </div>
-                                                        <GroupMemberSelect members={members.filter((member) => member.referee)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} role="commentator" index={index} />
+                                                        <GroupMemberSelect members={members.filter((member) => member.commentator)} scheduleInfo={scheduleInfo} setScheduleInfo={setScheduleInfo} role="commentator" index={index} />
                                                         <div className="flex flex-wrap gap-5">
                                                             {
                                                                 schedule.commentators?.map((referee, memberIndex) => {

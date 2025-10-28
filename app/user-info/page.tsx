@@ -243,7 +243,7 @@ function flagUrl(countryCode: string): string {
 
 
 async function getUserInfo(mode: string): Promise<User> {
-  const res = await fetch(`${siteConfig.backend_url}/user-info?mode=${mode}`, {
+  const res = await fetch(`${siteConfig.backend_url}/api/user-info?mode=${mode}`, {
     method: 'POST',
     credentials: 'include'
   });
