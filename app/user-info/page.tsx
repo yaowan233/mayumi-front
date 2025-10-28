@@ -54,29 +54,31 @@ export default function TournamentHomePage() {
           style={{
             backgroundImage: "url('https://www.loliapi.com/acg')",
           }}>
-            <div className="flex flex-row gap-4 bg-black/40 rounded-lg p-1 px-4">
-                <div className="max-w-[100px]">
+            <div className="flex flex-row gap-4 bg-black/40 rounded-lg p-1 px-4 w-full">
+                <div className="max-w-[100px] flex-shrink-0">
                     <Image
                     className=""
                     src={`https://a.ppy.sh/${userInfo.id}`}
                     alt="user"
                     />
                 </div>
-                <div className="flex flex-col flex-grow justify-around">
-                    <div className="text-xl">{userInfo.username}</div>
+                <div className="flex flex-col flex-grow justify-around min-w-0">
+                    <div className="text-xl truncate min-w-0">{userInfo.username}</div>
                     {userInfo.team &&
-                        <div className="flex flex-row items-center gap-2">
-                            <Image radius="none" width={"30px"} src={userInfo.team.flag_url} alt="team_flag"/>
-                            <p className="text-xl">{userInfo.team.name}</p>
+                        <div className="flex flex-row items-center gap-2 min-w-0">
+                            <div  className="max-w-[35px] flex-shrink-0" >
+                                <Image radius="none" src={userInfo.team.flag_url} alt="team_flag"/>
+                            </div>
+                            <p className="text-xl truncate min-w-0">{userInfo.team.name}</p>
                         </div>
                     }
                     <div className="flex flex-row justify-between">
-                        <div className="flex flex-row text-xl gap-2 items-center">
+                        <div className="flex flex-row text-xl gap-2 items-center flex-shrink-0">
                             <Image radius="none" width="25px" src={flagUrl(userInfo.country_code)} alt="country"/>
                             #{userInfo.statistics?.country_rank}
                         </div>
                         {userInfo.statistics?.variants &&(
-                            <div className="flex flex-col">
+                            <div className="hidden sm:flex flex-col ">
                             <div className="text-xs">
                                 4k: {userInfo.statistics?.variants?.find(key => key.variant === "4k")?.pp} /
                                 #{userInfo.statistics?.variants?.find(key => key.variant === "4k")?.global_rank} / {userInfo.country_code} #{userInfo.statistics?.variants?.find(key => key.variant == "4k")?.country_rank}
@@ -158,7 +160,7 @@ export default function TournamentHomePage() {
                     <UserLevel level={userInfo.statistics?.level.current || 0}/>
                 </div>
             </div>
-            <div className="relative flex flex-row bg-black/40 rounded-lg p-1 justify-between px-4">
+            <div className="relative flex flex-row bg-black/40 rounded-lg p-1 justify-between px-4 flex-wrap">
                 <div className="flex flex-col">
                     <div>
                         世界排名
