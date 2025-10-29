@@ -49,7 +49,6 @@ export default function TournamentHomePage() {
                 const data = await getUserInfo(selectedMode, selectedUserName);
                 setUserInfo(data);
             }
-            console.log(selectedMode)
         };
         fetchData();
     }, [currentUser, selectedMode, selectedUserName]);
@@ -148,7 +147,7 @@ export default function TournamentHomePage() {
                         } key={badge.image_url}>
                             <Image
                                 radius="none"
-                                width="100px"
+                                width="86px"
                                 src={badge.image_url}
                                 alt={badge.description}
                             />

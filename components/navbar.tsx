@@ -145,6 +145,14 @@ export const Navbar = () => {
 							赛事管理
 						</Link>
 					</NavbarMenuItem>
+                    <NavbarMenuItem>
+						<Link href={"/user-info"} size="lg" color="foreground" onPress={() => {
+							setIsMenuOpen(false); // 点击菜单项后关闭菜单
+							setIsLoading(true); // 点击菜单项后开始加载
+						}}>
+							个人信息
+						</Link>
+					</NavbarMenuItem>
 					<NavbarMenuItem>
 						<Link href={"/about"} size="lg" color="foreground" onPress={() => {
 							setIsMenuOpen(false); // 点击菜单项后关闭菜单
