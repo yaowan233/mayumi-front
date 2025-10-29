@@ -23,6 +23,7 @@ export const GameModeIcon: React.FC<GameModeIconProps> = ({
         color,
         display: "inline-block",
         verticalAlign: "middle",
+        transition: "color 0.2s ease",
       }}
       aria-label={mode}
     />

@@ -8,19 +8,41 @@ import UserLevel from "@/components/user_level";
 import {User} from "@/app/user-info/types";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import GameModeIcon from "@/components/gamemode_icon";
-import {Button, ButtonGroup} from "@heroui/button";
+import GameModeIcon, {GameMode} from "@/components/gamemode_icon";
 import {Input} from "@heroui/input";
 import {Tooltip} from "@heroui/tooltip";
-import {Radio, RadioGroup} from "@heroui/radio";
 
 
+interface ModeData {
+  name: GameMode;
+  defaultColor: string;
+}
 
 export default function TournamentHomePage() {
     const currentUser = useContext(CurrentUserContext);
     const [userInfo, setUserInfo] = useState<User | null>(null);
-    const [selectedMode, setSelectedMode] = useState("osu");
+    const [selectedMode, setSelectedMode] = useState<GameMode>("osu");
+    const [hoveredMode, setHoveredMode] = useState<GameMode | null>(null);
     const [selectedUserName, setSelectedUserName] = useState("");
+    const MODE_DEFAULTS: Record<GameMode, ModeData> = {
+        osu: { name: 'osu', defaultColor: '#ff66aa' },
+        taiko: { name: 'taiko', defaultColor: '#f33' },
+        fruits: { name: 'fruits', defaultColor: '#ffa500' },
+        mania: { name: 'mania', defaultColor: '#6cf' },
+    };
+    const MODE_LIST: ModeData[] = Object.values(MODE_DEFAULTS);
+    const getIconColor = (mode: GameMode): string => {
+        const isSelected = selectedMode === mode;
+        const isHovered = hoveredMode === mode;
+
+        // 逻辑：如果选中 OR 悬浮，颜色为白色
+        if (isSelected || isHovered) {
+          return WHITE_COLOR;
+        }
+        // 否则，使用预设的默认颜色
+        return MODE_DEFAULTS[mode].defaultColor;
+  };
+    const WHITE_COLOR = '#ffffff';
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
@@ -33,24 +55,37 @@ export default function TournamentHomePage() {
     }, [currentUser, selectedMode, selectedUserName]);
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 items-center">
+            <div className="flex gap-2 bg-gray-800 rounded-lg shadow-xl max-w-fit justify-center">
+              {MODE_LIST.map((modeData) => (
+                <div
+                  key={modeData.name}
+                  onClick={() => setSelectedMode(modeData.name)}
+                  onMouseEnter={() => setHoveredMode(modeData.name)}
+                  onMouseLeave={() => setHoveredMode(null)}
+
+                  // Tailwind 类名：
+                  className={`
+                    p-3 rounded-md cursor-pointer 
+                    transition-all duration-200 ease-in-out
+                    hover:bg-gray-700
+                    ${selectedMode === modeData.name 
+                        ? 'bg-gray-700 ring-2 ring-white/50' // 选中时的样式
+                        : 'bg-transparent'
+                    }
+                  `}
+                >
+                  <GameModeIcon
+                    mode={modeData.name}
+                    size={30}
+                    color={getIconColor(modeData.name)} // 动态传入颜色
+                  />
+                </div>
+              ))}
+            </div>
             <Input label="Osu 用户名" onChange={(e) => {setSelectedUserName(e.target.value)}}/>
-            <RadioGroup label="选择模式" orientation="horizontal" value={selectedMode} onValueChange={setSelectedMode}>
-              <Radio value="osu"><GameModeIcon mode="osu" size={30} color="#ff66aa" /></Radio>
-              <Radio value="taiko"><GameModeIcon mode="taiko" size={30} color="#f33" /></Radio>
-              <Radio value="fruits"><GameModeIcon mode="fruits" size={30} color="#ffa500" /></Radio>
-              <Radio value="mania"><GameModeIcon mode="mania" size={30} color="#6cf" /></Radio>
-            </RadioGroup>
-            {/*<ButtonGroup>*/}
-            {/*  <Button className={selectedMode === "osu" ? "bg-gray-700/50 opacity-70" : ""}*/}
-            {/*      onPress={() => {setSelectedMode("osu")}}><GameModeIcon mode="osu" size={30} color="#ff66aa" /></Button>*/}
-            {/*  <Button className={selectedMode === "taiko" ? "bg-gray-700/50 opacity-70 border-2 border-[#f33]" : ""}*/}
-            {/*      onPress={() => {setSelectedMode("taiko")}}><GameModeIcon mode="taiko" size={30} color="#f33" /></Button>*/}
-            {/*  <Button onPress={() => {setSelectedMode("fruits")}}><GameModeIcon mode="fruits" size={30} color="#ffa500" /></Button>*/}
-            {/*    <Button onPress={() => {setSelectedMode("mania")}}><GameModeIcon mode="mania" size={30} color="#6cf" /></Button>*/}
-            {/*</ButtonGroup>*/}
             {userInfo &&
-        <div className="min-h-screen bg-cover bg-center bg-no-repeat flex flex-col gap-2 h-full flex-grow rounded-lg"
+        <div className="min-h-screen bg-cover bg-center bg-no-repeat flex flex-col gap-2 h-full flex-grow rounded-lg w-full"
           style={{
             backgroundImage: "url('https://www.loliapi.com/acg')",
           }}>
