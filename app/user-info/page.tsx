@@ -109,17 +109,17 @@ export default function TournamentHomePage() {
                     <div className="flex flex-row justify-between">
                         <div className="flex flex-row text-xl gap-2 items-center flex-shrink-0">
                             <Image radius="none" width="25px" src={flagUrl(userInfo.country_code)} alt="country"/>
-                            #{userInfo.statistics?.country_rank}
+                            #{userInfo.statistics?.country_rank || 0}
                         </div>
                         {userInfo.statistics?.variants &&(
                             <div className="hidden sm:flex flex-col ">
                             <div className="text-xs">
-                                4k: {userInfo.statistics?.variants?.find(key => key.variant === "4k")?.pp} /
-                                #{userInfo.statistics?.variants?.find(key => key.variant === "4k")?.global_rank} / {userInfo.country_code} #{userInfo.statistics?.variants?.find(key => key.variant == "4k")?.country_rank}
+                                4k: {userInfo.statistics?.variants?.find(key => key.variant === "4k")?.pp || 0} /
+                                #{userInfo.statistics?.variants?.find(key => key.variant === "4k")?.global_rank || 0} / {userInfo.country_code} #{userInfo.statistics?.variants?.find(key => key.variant == "4k")?.country_rank || 0}
                             </div>
                             <div className="text-xs">
-                                7k: {userInfo.statistics?.variants?.find(key => key.variant === "7k")?.pp} /
-                                #{userInfo.statistics?.variants?.find(key => key.variant === "7k")?.global_rank} / {userInfo.country_code} #{userInfo.statistics?.variants?.find(key => key.variant == "7k")?.country_rank}
+                                7k: {userInfo.statistics?.variants?.find(key => key.variant === "7k")?.pp || 0} /
+                                #{userInfo.statistics?.variants?.find(key => key.variant === "7k")?.global_rank || 0} / {userInfo.country_code} #{userInfo.statistics?.variants?.find(key => key.variant == "7k")?.country_rank || 0}
                             </div>
                         </div>)}
                     </div>
@@ -200,7 +200,7 @@ export default function TournamentHomePage() {
                         世界排名
                     </div>
                     <div>
-                        #{userInfo.statistics?.global_rank}
+                        #{userInfo.statistics?.global_rank || 0}
                     </div>
                 </div>
                 <div className="flex flex-col">
