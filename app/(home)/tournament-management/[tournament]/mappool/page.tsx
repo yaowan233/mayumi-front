@@ -9,6 +9,7 @@ import {Input} from "@heroui/input";
 import {siteConfig} from "@/config/site";
 import {InfoSection} from "@/components/hints";
 import {TournamentInfo} from "@/components/homepage";
+import {getRoundInfo, getTournamentInfo} from "@/lib/api";
 
 
 export default function EditTournamentMapPoolPage(props: { params: Promise<{ tournament: string }> }) {
@@ -266,16 +267,4 @@ interface TournamentMap {
     number?: number;
     mode?: string;
     extra?: string[];
-}
-
-async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 10}});
-    return await data.json();
-}
-
-async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
-    const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        {next: {revalidate: 10}})
-    return await res.json()
 }

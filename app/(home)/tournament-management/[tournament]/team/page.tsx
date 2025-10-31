@@ -12,6 +12,7 @@ import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
 import {AttentionSection, InfoSection} from "@/components/hints";
 import {siteConfig} from "@/config/site";
 import {Checkbox} from "@heroui/checkbox";
+import {getPlayers} from "@/lib/api";
 
 export default function EditTeamPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
@@ -218,10 +219,4 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
             </Button>
         </div>
     )
-}
-
-async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
-    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        {next: {revalidate: revalidate_time}})
-    return await res.json()
 }

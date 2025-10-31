@@ -16,6 +16,7 @@ import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {InfoSection} from "@/components/hints";
 import {Badge} from "@heroui/badge";
+import {getPlayers, getRegistrationInfo} from "@/lib/api";
 
 const columns = [
     {name: "uid", key: "uid"},
@@ -664,12 +665,6 @@ const AddMember = ({
 }
 
 
-async function getRegistrationInfo(tournament_name: string): Promise<RegistrationInfo[]> {
-    const res = await fetch(siteConfig.backend_url + `/api/get-registration-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 10}});
-    return await res.json();
-}
-
 interface User {
     id: string;
     username: string;
@@ -678,10 +673,4 @@ interface User {
         pp: number;
         global_rank: number;
     }
-}
-
-async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
-    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        {next: {revalidate: revalidate_time}})
-    return await res.json()
 }

@@ -17,6 +17,7 @@ import {Spinner} from "@heroui/spinner";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {InfoSection} from "@/components/hints";
+import {getPlayers, getRoundInfo} from "@/lib/api";
 
 export default function SchedulerPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
@@ -775,16 +776,4 @@ interface Schedule {
     team2_score?: number;
     team1_warmup?: number;
     team2_warmup?: number;
-}
-
-async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 10}});
-    return await data.json();
-}
-
-async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
-    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        {next: {revalidate: revalidate_time}})
-    return await res.json()
 }

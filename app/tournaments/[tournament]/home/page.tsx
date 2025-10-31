@@ -1,5 +1,5 @@
 import {HomePage, TournamentInfo} from "@/components/homepage";
-import {siteConfig} from "@/config/site";
+import {getTournamentInfo} from "@/lib/api";
 
 
 export default async function TournamentHomePage(props: { params: Promise<{ tournament: string }> }) {
@@ -11,10 +11,4 @@ export default async function TournamentHomePage(props: { params: Promise<{ tour
     return (
         <HomePage tournament_info={info}/>
     )
-}
-
-async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo | null> {
-    const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        {next: {revalidate: 10}})
-    return await res.json()
 }

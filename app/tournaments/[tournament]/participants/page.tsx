@@ -1,5 +1,5 @@
 import {ParticipantsComp} from "@/components/participants_comp";
-import {siteConfig} from "@/config/site";
+import {getPlayers} from "@/lib/api";
 
 export default async function ParticipantsPage(props: { params: Promise<{ tournament: string }> }) {
     const params = await props.params
@@ -8,12 +8,6 @@ export default async function ParticipantsPage(props: { params: Promise<{ tourna
     return (
         <ParticipantsComp tournament_players={tournament_players}/>
     )
-}
-
-async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
-    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        {next: {revalidate: revalidate_time}})
-    return await res.json()
 }
 
 

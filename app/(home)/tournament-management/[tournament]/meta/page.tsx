@@ -6,6 +6,7 @@ import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {Button} from "@heroui/button";
 import {useRouter} from "next/navigation";
 import {siteConfig} from "@/config/site";
+import {getTournamentInfo} from "@/lib/api";
 
 export default function EditTournamentMetaPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
@@ -43,7 +44,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
-                const data = await getTournamentInfo(tournament_name);
+                const data = await getTournamentInfo(tournament_name, 0);
                 setFormData(data);
             }
         };
@@ -87,10 +88,4 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
             </div>
         </div>
     );
-}
-
-async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
-    const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        {next: {revalidate: 0}})
-    return await res.json()
 }
