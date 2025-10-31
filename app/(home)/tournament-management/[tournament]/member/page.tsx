@@ -109,406 +109,96 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                     (不能输入用户名)
                 </h1>
             </InfoSection>
-            <Divider/>
-            <h1 className="text-3xl font-bold">主办</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players?.map((member, index) => {
-                            if (!member.host) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        if (member.uid === currentUser?.currentUser?.uid) {
-                                            alert('不能删除自己');
-                                            return;
-                                        }
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].host = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"host"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">选手</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.player) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].player = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"player"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">裁判</h1>
-            <div className="grid grid-cols-2 justify-evenly">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.referee) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].referee = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"referee"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">直播</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.streamer) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].streamer = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"streamer"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">解说</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.commentator) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].commentator = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"commentator"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">选图</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.mappooler) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].mappooler = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"mappooler"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">赞助</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.donator) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].donator = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"donator"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">设计</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.graphic_designer) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].graphic_designer = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"graphic_designer"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">时间安排</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.scheduler) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].scheduler = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           teams={teams} position={"scheduler"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">测图</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.map_tester) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].map_tester = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"map_tester"}/>
-            </div>
-            <Divider/>
-            <h1 className="text-3xl font-bold">作图</h1>
-            <div className="grid grid-cols-2">
-                <div className="flex flex-wrap gap-5">
-                    {
-                        players && players.map((member, index) => {
-                            if (!member.custom_mapper) {
-                                return null;
-                            }
-                            return (
-                                <Chip
-                                    key={index}
-                                    variant="bordered"
-                                    size="lg"
-                                    onClose={() => {
-                                        const updatedMembers = [...players];
-                                        updatedMembers[index].custom_mapper = false;
-                                        settournamentPlayers({players: updatedMembers, groups: teams});
-                                    }}
-                                    avatar={
-                                        <Avatar
-                                            size="lg"
-                                            name={member.name}
-                                            src={`https://a.ppy.sh/${member.uid}`}
-                                        />
-                                    }
-                                >
-                                    {member.name}
-                                </Chip>
-                            )
-                        })
-                    }
-                </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
-                           position={"custom_mapper"}/>
-            </div>
+            <RoleSection
+                title="主办"
+                position="host"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+                currentUser={currentUser}
+                cannotRemoveSelf={true}
+            />
+            <RoleSection
+                title="选手"
+                position="player"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="裁判"
+                position="referee"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="直播"
+                position="streamer"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="解说"
+                position="commentator"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="选图"
+                position="mappooler"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="赞助"
+                position="donator"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="设计"
+                position="graphic_designer"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="时间安排"
+                position="scheduler"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="测图"
+                position="map_tester"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
+            <RoleSection
+                title="作图"
+                position="custom_mapper"
+                players={players}
+                teams={teams}
+                settournamentPlayers={settournamentPlayers}
+                tournamentName={tournament_name}
+            />
             {
                 isLoading ? <Spinner className="max-w-fit"/> :
                     <Button className="max-w-fit" color="primary" onPress={async () => {
@@ -534,6 +224,75 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
         </div>
     )
 }
+
+// Helper component to render role sections
+const RoleSection = ({
+    title,
+    position,
+    players,
+    teams,
+    settournamentPlayers,
+    tournamentName,
+    currentUser,
+    cannotRemoveSelf = false
+}: {
+    title: string;
+    position: keyof Player;
+    players: Player[];
+    teams?: Team[];
+    settournamentPlayers: React.Dispatch<React.SetStateAction<TournamentPlayers>>;
+    tournamentName: string;
+    currentUser?: { currentUser?: { uid: number } } | null;
+    cannotRemoveSelf?: boolean;
+}) => (
+    <>
+        <Divider/>
+        <h1 className="text-3xl font-bold">{title}</h1>
+        <div className="grid grid-cols-2">
+            <div className="flex flex-wrap gap-5">
+                {
+                    players?.map((member, index) => {
+                        if (!member[position]) {
+                            return null;
+                        }
+                        return (
+                            <Chip
+                                key={index}
+                                variant="bordered"
+                                size="lg"
+                                onClose={() => {
+                                    if (cannotRemoveSelf && member.uid === currentUser?.currentUser?.uid) {
+                                        alert('不能删除自己');
+                                        return;
+                                    }
+                                    const updatedMembers = [...players];
+                                    updatedMembers[index][position] = false as any;
+                                    settournamentPlayers({players: updatedMembers, groups: teams});
+                                }}
+                                avatar={
+                                    <Avatar
+                                        size="lg"
+                                        name={member.name}
+                                        src={`https://a.ppy.sh/${member.uid}`}
+                                    />
+                                }
+                            >
+                                {member.name}
+                            </Chip>
+                        )
+                    })
+                }
+            </div>
+            <AddMember 
+                members={players} 
+                setMembers={settournamentPlayers} 
+                tournamentName={tournamentName}
+                teams={teams}
+                position={position}
+            />
+        </div>
+    </>
+);
 
 
 const AddMember = ({
