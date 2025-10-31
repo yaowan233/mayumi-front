@@ -13,6 +13,6 @@ export default async function MapPollsPage(props: { params: Promise<{ tournament
 
 async function getStages(tournament_name: string): Promise<Stage[]> {
     const res = await fetch(siteConfig.backend_url + '/api/map_pools?tournament_name=' + tournament_name,
-        { next: { revalidate: 60 }})
+        {next: {revalidate: 60}})
     return await res.json()
 }

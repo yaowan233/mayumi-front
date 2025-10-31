@@ -8,16 +8,15 @@ export async function getMe(): Promise<Me | null> {
     if (!uuid) {
         return null
     }
-    cookieStore.set('uuid', uuid, { path: '/' , expires: new Date(Date.now() + 30 * 60 * 60 * 24 * 1000)})
-    try
-    {
-        const res = await fetch(siteConfig.backend_url + '/api/me', {  headers: {
+    cookieStore.set('uuid', uuid, {path: '/', expires: new Date(Date.now() + 30 * 60 * 60 * 24 * 1000)})
+    try {
+        const res = await fetch(siteConfig.backend_url + '/api/me', {
+            headers: {
                 Cookie: `uuid=${uuid}`,
             },
         })
         return await res.json()
-    }
-    catch (e) {
+    } catch (e) {
         return null
     }
 }
@@ -52,6 +51,7 @@ interface UserStatistics {
     badges?: Badge[];
 
 }
+
 interface Badge {
     awarded_at: string;
     description: string;

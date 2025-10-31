@@ -28,17 +28,26 @@ const columns = [
     {name: "平均miss数", key: "miss_avg"},
 ];
 
-export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo: TournamentRoundInfo[], stats: Stats[], stage: Stage[], scores: Score[], players?: Player[]}) => {
+export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
+    roundInfo: TournamentRoundInfo[],
+    stats: Stats[],
+    stage: Stage[],
+    scores: Score[],
+    players?: Player[]
+}) => {
     const searchParams = useSearchParams()
     const router = useRouter()
     return (
-        <Tabs aria-label="Dynamic tabs" className={"flex flex-row justify-center"} size={"lg"} defaultSelectedKey={searchParams.get('stage') || roundInfo.at(-1)?.stage_name}
-              onSelectionChange={(key) => {router.replace(`?stage=${key}`)}}
+        <Tabs aria-label="Dynamic tabs" className={"flex flex-row justify-center"} size={"lg"}
+              defaultSelectedKey={searchParams.get('stage') || roundInfo.at(-1)?.stage_name}
+              onSelectionChange={(key) => {
+                  router.replace(`?stage=${key}`)
+              }}
               classNames={{
-                tabList: "gap-3 flex flex-row flex-auto",
-                tab: "min-h-[45px] flex-auto",
-                tabContent: "text-2xl",
-        }}>
+                  tabList: "gap-3 flex flex-row flex-auto",
+                  tab: "min-h-[45px] flex-auto",
+                  tabContent: "text-2xl",
+              }}>
             {roundInfo.map((round) => (
                     <Tab key={round.stage_name} title={round.stage_name} className="flex flex-col gap-3">
                         <Tabs aria-label="Dynamic tabs" className={"flex flex-row justify-center"} size={"lg"} classNames={{
@@ -46,9 +55,10 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                             tab: "min-h-[40px] flex-auto",
                             tabContent: "text-xl",
                         }}>
-                            { round.is_lobby && <Tab key={"leaderboard"} title={"排行榜"} className="flex flex-col gap-3 py-0">
-                                {Leaderboard({round})}
-                            </Tab>
+                            {round.is_lobby &&
+                                <Tab key={"leaderboard"} title={"排行榜"} className="flex flex-col gap-3 py-0">
+                                    {Leaderboard({round})}
+                                </Tab>
                             }
                             <Tab key={"stats"} title={"图池统计"} className="flex flex-col gap-3 py-0">
                                 <Table>
@@ -78,9 +88,10 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                                 </Table>
                             </Tab>
                             <Tab key={"scores"} title={"单图排行"} className="flex flex-col gap-3 py-0">
-                                <div className="w-full flex flex-row-reverse gap-3 overflow-x-auto pb-2 scroll-smooth rotate-180">
+                                <div
+                                    className="w-full flex flex-row-reverse gap-3 overflow-x-auto pb-2 scroll-smooth rotate-180">
                                     {
-                                        stage.filter((stage) => stage.stage_name === round.stage_name).length > 0?
+                                        stage.filter((stage) => stage.stage_name === round.stage_name).length > 0 ?
                                             stage.filter((stage) => stage.stage_name === round.stage_name)[0].mod_bracket.map((maps) => (
                                                 maps.maps.map((map, index) => {
                                                     const is_contain_mods = scores.filter((score) => score.stage_name === round.stage_name && score.map_id === map.map_id).some(score => score.mod.some(mod => mod !== 'NF' && mod !== maps.mod))
@@ -109,28 +120,35 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                                                                     </Chip>
                                                                     <div
                                                                         className="grid grid-cols-3 place-items-center w-full mt-3">
-                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                        <div
+                                                                            className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             ★{map.star_rating}
                                                                         </div>
-                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                        <div
+                                                                            className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             bpm {map.bpm}
                                                                         </div>
-                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                        <div
+                                                                            className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             {map.length}
                                                                         </div>
                                                                     </div>
                                                                     <div
                                                                         className="grid grid-cols-4 place-items-center w-full">
-                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                        <div
+                                                                            className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             CS {map.cs}
                                                                         </div>
-                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                        <div
+                                                                            className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             HP {map.hp}
                                                                         </div>
-                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                        <div
+                                                                            className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             OD {map.od}
                                                                         </div>
-                                                                        <div className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
+                                                                        <div
+                                                                            className="line-clamp-1 text-gray-50 text-stroke dark:no-text-stroke">
                                                                             AR {map.ar}
                                                                         </div>
                                                                     </div>
@@ -206,7 +224,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
                                                         </div>
                                                     )
                                                 })
-                                            )): null
+                                            )) : null
                                     }
                                 </div>
                             </Tab>
@@ -219,7 +237,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {roundInfo
 }
 
 
-const Leaderboard = ({round}: {round: TournamentRoundInfo}) => {
+const Leaderboard = ({round}: { round: TournamentRoundInfo }) => {
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const fetchLeaderboard = async (tournamentName: string, stageName: string) => {
         const res = await fetch(`${siteConfig.backend_url}/api/cal_rank?tournament_name=${tournamentName}&stage_name=${stageName}`,

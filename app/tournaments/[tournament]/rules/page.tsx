@@ -15,7 +15,7 @@ export default async function TournamentRulesPage(props: { params: Promise<{ tou
 
 async function getTournamentRule(tournament_name: string): Promise<{ data: string }> {
     const res = await fetch(siteConfig.backend_url + '/api/tournament_rule?tournament_name=' + tournament_name,
-        { next: { revalidate: 60 }})
+        {next: {revalidate: 60}})
     return await res.json()
 }
 

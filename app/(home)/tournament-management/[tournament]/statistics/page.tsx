@@ -44,24 +44,23 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                 ))}
             </Select>
             {
-                round.size > 0 ?(
+                round.size > 0 ? (
                     <div className="flex flex-col gap-5">
                         <p>
                             当该轮次所有比赛网页信息都正确填写之后，点击下方按钮更新比赛数据，数据会自动生成，如有错误请联系管理员
                         </p>
                         <Button className="max-w-fit" color="primary" onPress={async () => {
                             const res = await fetch(siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${tournament_name}&stage_name=${Array.from(round)[0]}`,
-                                { next: { revalidate: 0 }})
+                                {next: {revalidate: 0}})
                             if (res.status != 200) {
                                 // 失败
                                 alert(await res.text());
                                 return;
-                            }
-                            else {
+                            } else {
                                 alert('更新成功');
                             }
                         }}>
-                                更新比赛数据
+                            更新比赛数据
                         </Button>
                     </div>
                 ) : (
@@ -74,6 +73,6 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
+        {next: {revalidate: 10}});
     return await data.json();
 }

@@ -11,17 +11,20 @@ import {useSearchParams, useRouter} from "next/navigation";
 import {Chip} from "@heroui/chip";
 
 
-export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
+export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
     const searchParams = useSearchParams()
     const router = useRouter()
     return (
-        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"} defaultSelectedKey={searchParams.get('stage') || tabs.at(-1)?.stage_name}
-              onSelectionChange={(key) => {router.replace(`?stage=${key}`)}}
+        <Tabs aria-label="Dynamic tabs" items={tabs} className={"flex justify-center"} size={"lg"}
+              defaultSelectedKey={searchParams.get('stage') || tabs.at(-1)?.stage_name}
+              onSelectionChange={(key) => {
+                  router.replace(`?stage=${key}`)
+              }}
               classNames={{
-                tabList: "gap-6 flex",
-                tab: "min-h-[50px]",
-                tabContent: "text-3xl",
-        }}>
+                  tabList: "gap-6 flex",
+                  tab: "min-h-[50px]",
+                  tabContent: "text-3xl",
+              }}>
             {(item) => (
                 <Tab key={item.stage_name} title={item.stage_name} id={item.stage_name}>
                     <div className="grid grid-cols-1 gap-6">
@@ -35,7 +38,8 @@ export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
                                 <CardBody className={"flex flex-wrap flex-row justify-center gap-4"}>
                                     {
                                         mod_bracket.maps.map((map, index) => (
-                                            <MapComponent map={map} key={map.map_id} index={index} mod={mod_bracket.mod}/>
+                                            <MapComponent map={map} key={map.map_id} index={index}
+                                                          mod={mod_bracket.mod}/>
                                         ))
                                     }
                                 </CardBody>
@@ -48,7 +52,7 @@ export const MappoolsComponents = ({tabs}: {tabs: Stage[] }) => {
     );
 }
 
-const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string}) => {
+const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string }) => {
     const [isHovered, setIsHovered] = useState(false);
     const colors = {
         "HD": "warning",
@@ -61,8 +65,12 @@ const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string})
     } as const;
     type AllowedColors = typeof colors[keyof typeof colors] | "default";
     const color: AllowedColors = colors[mod as keyof typeof colors] || "default";
-    return(
-        <Card key={map.map_id} className={"max-w-lg"} onMouseEnter={() => {setIsHovered(true)}}  onMouseLeave={() => {setIsHovered(false)}}>
+    return (
+        <Card key={map.map_id} className={"max-w-lg"} onMouseEnter={() => {
+            setIsHovered(true)
+        }} onMouseLeave={() => {
+            setIsHovered(false)
+        }}>
             <CardHeader className="absolute z-10 top-0 flex-col items-center">
                 <Link isExternal size={"lg"} color={"foreground"}
                       className="font-bold leading-5 text-center"
@@ -83,7 +91,7 @@ const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string})
                     {
                         map.extra?.map((extra, i) => {
                             if (extra === "") return null
-                            return(
+                            return (
                                 <Chip key={i} size="lg" className="mt-3 text-xl" color={color}>
                                     {extra}
                                 </Chip>
@@ -91,7 +99,8 @@ const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string})
                         })
                     }
                 </div>
-                <div className="grid grid-cols-3 place-items-center w-full mt-3 text-gray-50 text-stroke dark:no-text-stroke">
+                <div
+                    className="grid grid-cols-3 place-items-center w-full mt-3 text-gray-50 text-stroke dark:no-text-stroke">
                     <div className="line-clamp-1">
                         ★{map.star_rating}
                     </div>
@@ -127,17 +136,22 @@ const MapComponent = ({map, index, mod}: {map: Map, index: number, mod: string})
                 isHovered &&
                 <div className='absolute z-20 flex flex-col gap-1'>
                     <Tooltip content="复制地图id" placement="right">
-                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {await navigator.clipboard.writeText(map.map_id)}}>
+                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {
+                            await navigator.clipboard.writeText(map.map_id)
+                        }}>
                             <CopyIcon/>
                         </Button>
                     </Tooltip>
                     <Tooltip content="复制mp指令" placement="right">
-                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {await navigator.clipboard.writeText(`!mp map ${map.map_id}`)}}>
+                        <Button size="sm" isIconOnly className="bg-amber-50" onPress={async () => {
+                            await navigator.clipboard.writeText(`!mp map ${map.map_id}`)
+                        }}>
                             <CopyIcon/>
                         </Button>
                     </Tooltip>
                     <Tooltip content="使用镜像站下载" placement="right">
-                        <Button size="sm" isIconOnly className="bg-amber-50" as={Link} href={`https://dl.sayobot.cn/beatmaps/download/novideo/${map.map_set_id}`}>
+                        <Button size="sm" isIconOnly className="bg-amber-50" as={Link}
+                                href={`https://dl.sayobot.cn/beatmaps/download/novideo/${map.map_set_id}`}>
                             <DownloadIcon/>
                         </Button>
                     </Tooltip>

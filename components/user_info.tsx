@@ -4,8 +4,9 @@ import {Player} from "@/app/tournaments/[tournament]/participants/page";
 
 
 export const UserInfo = ({user}: { user: Player }) => {
-    return(
-        <Link color={"foreground"} isExternal className={"flex gap-3 justify-start border-2 p-2 shadow-lg"} href={`https://osu.ppy.sh/u/${user.uid}`}>
+    return (
+        <Link color={"foreground"} isExternal className={"flex gap-3 justify-start border-2 p-2 shadow-lg"}
+              href={`https://osu.ppy.sh/u/${user.uid}`}>
             <div className={"grid content-center px-2"}>
                 <Image alt="icon" height={60} width={60} src={`https://a.ppy.sh/${user.uid}`}/>
             </div>

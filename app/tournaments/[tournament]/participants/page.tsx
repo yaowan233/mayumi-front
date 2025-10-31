@@ -12,7 +12,7 @@ export default async function ParticipantsPage(props: { params: Promise<{ tourna
 
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        { next: { revalidate: revalidate_time }})
+        {next: {revalidate: revalidate_time}})
     return await res.json()
 }
 
@@ -21,6 +21,7 @@ export interface TournamentPlayers {
     groups?: Team[];
     players: Player[];
 }
+
 export type Team = {
     tournament_name: string
     name: string

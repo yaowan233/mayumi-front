@@ -31,32 +31,32 @@ export const TournamentComponent = (tournament: Tournament) => {
             href={tournament_href}
             target="_blank"
         >
-        <div
-            className="relative flex-auto"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-        >
-            <div className="image-container">
-                <Image
-                    width={300}
-                    height={200}
-                    src={tournament.pic_url}
-                    alt={tournament.name}
-                />
-                <div
-                    className={`description-container opacity-0 ${
-                        isHovered ? 'opacity-100' : ''
-                    } transition-opacity duration-300`}
-                >
-                    <h2 className={title({ size: 'sm' })}>{tournament.description}</h2>
+            <div
+                className="relative flex-auto"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
+                <div className="image-container">
+                    <Image
+                        width={300}
+                        height={200}
+                        src={tournament.pic_url}
+                        alt={tournament.name}
+                    />
+                    <div
+                        className={`description-container opacity-0 ${
+                            isHovered ? 'opacity-100' : ''
+                        } transition-opacity duration-300`}
+                    >
+                        <h2 className={title({size: 'sm'})}>{tournament.description}</h2>
+                    </div>
+                </div>
+                <div className="absolute top-0 left-0 right-0 flex items-center justify-center">
+                    <h1 className={title({size: 'sm'})}>{
+                        isHovered ? tournament.name : tournament.abbreviation
+                    }</h1>
                 </div>
             </div>
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-center">
-                <h1 className={title({ size: 'sm' })}>{
-                    isHovered ? tournament.name : tournament.abbreviation
-                }</h1>
-            </div>
-        </div>
         </Link>
     );
 };

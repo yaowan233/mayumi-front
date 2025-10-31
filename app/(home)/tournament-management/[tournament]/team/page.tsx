@@ -44,7 +44,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
             {
                 teams?.map((team, num) => (
                     <div key={num} className="flex flex-col gap-3">
-                        <Checkbox isSelected={team.is_verified} onValueChange={(isSelected)=> {
+                        <Checkbox isSelected={team.is_verified} onValueChange={(isSelected) => {
                             teams[num].is_verified = isSelected;
                             setTournamentPlayers({players: players, groups: teams});
                         }}>
@@ -57,15 +57,16 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                                     setTournamentPlayers({players: players, groups: teams});
                                 }}/>
                                 <div className='flex flex-row gap-3'>
-                                    {team.icon_url?
+                                    {team.icon_url ?
                                         <>
                                             <Avatar onClick={() => {
-                                                    const newTab = window.open(team.icon_url, '_blank');
-                                                    newTab?.focus();}
+                                                const newTab = window.open(team.icon_url, '_blank');
+                                                newTab?.focus();
+                                            }
                                             }
                                                     size="lg" src={team.icon_url}
-                                                    style={{ cursor: 'pointer' }}
-                                                    className='min-w-fit' />
+                                                    style={{cursor: 'pointer'}}
+                                                    className='min-w-fit'/>
                                         </>
                                         : null
                                     }
@@ -94,9 +95,10 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                                 }}>
                                     {
                                         (player) =>
-                                            <AutocompleteItem key={player.uid}  textValue={player.name}>
+                                            <AutocompleteItem key={player.uid} textValue={player.name}>
                                                 <div className="flex gap-2 items-center">
-                                                    <Avatar alt={player.name} className="flex-shrink-0" size="sm" src={`https://a.ppy.sh/${player.uid}`} />
+                                                    <Avatar alt={player.name} className="flex-shrink-0" size="sm"
+                                                            src={`https://a.ppy.sh/${player.uid}`}/>
                                                     <div className="flex flex-col">
                                                         <span className="text-small">{player.name}</span>
                                                         <span className="text-tiny text-default-400">{player.uid}</span>
@@ -187,7 +189,14 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                 ))
             }
             <Button className="max-w-fit" color="success" onPress={() => {
-                teams?.push({tournament_name: tournament_name ,name: '', icon_url: '', captains: [], members: [], is_verified: false});
+                teams?.push({
+                    tournament_name: tournament_name,
+                    name: '',
+                    icon_url: '',
+                    captains: [],
+                    members: [],
+                    is_verified: false
+                });
                 setTournamentPlayers({players: players, groups: teams});
             }}>
                 添加队伍
@@ -201,8 +210,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                 });
                 if (res.status != 200) {
                     alert(await res.text());
-                }
-                else {
+                } else {
                     alert('更新成功');
                 }
             }}>
@@ -214,6 +222,6 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
 
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        { next: { revalidate: revalidate_time }})
+        {next: {revalidate: revalidate_time}})
     return await res.json()
 }

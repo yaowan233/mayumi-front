@@ -17,8 +17,8 @@ import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {Image} from "@heroui/image";
 
-export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) => {
-    const currentUser  = useContext(CurrentUserContext);
+export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
+    const currentUser = useContext(CurrentUserContext);
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
     const [errMsg, setErrMsg] = useState('');
     const [formData, setFormData] = useState<RegistrationInfo>({
@@ -45,18 +45,19 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
         if (formData.qqNumber === '' || formData.isFirstTimeStaff === undefined || formData.selectedPositions.length === 0) {
             // 显示错误消息或采取其他适当的操作
             setErrMsg('请填写所有必填字段')
-        }
-        else if (isNaN(Number(formData.qqNumber))){
+        } else if (isNaN(Number(formData.qqNumber))) {
             setErrMsg('QQ号必须是数字')
-        }
-        else {
+        } else {
             // 执行报名操作或其他相关逻辑
-            const res = await fetch(siteConfig.backend_url + '/api/tournament-info', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}})
+            const res = await fetch(siteConfig.backend_url + '/api/tournament-info', {
+                'method': 'POST',
+                'body': JSON.stringify(formData),
+                'headers': {'Content-Type': 'application/json'}
+            })
             if (res.status != 200) {
                 // 失败
                 setErrMsg(await res.text());
-            }
-            else {
+            } else {
                 // 关闭模态框
                 onClose();
                 alert('报名成功');
@@ -67,28 +68,28 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
     const currentUserStats = currentUser?.currentUser?.statistics_rulesets;
 
     if (currentUserStats) {
-      switch (tournament_info.mode) {
-        case 'fruits':
-          userRank = currentUserStats.fruits?.global_rank ?? 0;
-          break;
-        case 'osu':
-          userRank = currentUserStats.osu?.global_rank ?? 0;
-          break;
-        case 'taiko':
-          userRank = currentUserStats.taiko?.global_rank ?? 0;
-          break;
-        case 'mania':
-          userRank = currentUserStats.mania?.global_rank ?? 0;
-          break;
-      }
+        switch (tournament_info.mode) {
+            case 'fruits':
+                userRank = currentUserStats.fruits?.global_rank ?? 0;
+                break;
+            case 'osu':
+                userRank = currentUserStats.osu?.global_rank ?? 0;
+                break;
+            case 'taiko':
+                userRank = currentUserStats.taiko?.global_rank ?? 0;
+                break;
+            case 'mania':
+                userRank = currentUserStats.mania?.global_rank ?? 0;
+                break;
+        }
     }
 
     const regNotAvailable = userRank
-      && (
-        (tournament_info.rank_min && userRank < tournament_info.rank_min) ||
-        (tournament_info.rank_max && userRank > tournament_info.rank_max) ||
-        (new Date(tournament_info.start_date) < new Date())
-      );
+        && (
+            (tournament_info.rank_min && userRank < tournament_info.rank_min) ||
+            (tournament_info.rank_max && userRank > tournament_info.rank_max) ||
+            (new Date(tournament_info.start_date) < new Date())
+        );
     useEffect(() => {
         if (!isOpen) {
             setErrMsg('');
@@ -228,7 +229,7 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                             </ModalContent>
                         </Modal>
                     </>
-                    : <CardFooter><Alert color={'warning'} title="请点击右上角登录后进行报名" /></CardFooter>}
+                    : <CardFooter><Alert color={'warning'} title="请点击右上角登录后进行报名"/></CardFooter>}
             </Card>
             <Card>
                 <CardBody>
@@ -248,81 +249,88 @@ export const HomePage = ({tournament_info}: {tournament_info: TournamentInfo}) =
                     {tournament_info.prize_info}
                 </CardBody>
             </Card>
-            {(new Date(tournament_info.start_date) < new Date())?
-                <Alert color={'warning'} title="该比赛已结束报名" />
-                :currentUser?.currentUser?
-            <Card>
-                <CardBody>
-                    <p>报名</p>
-                </CardBody>
-                <Divider/>
-                <CardBody className="gap-3">
-                    {tournament_info.rank_max || tournament_info.rank_min ?
-                        <div>
-                            本比赛有排名限制
-                            {tournament_info.rank_max ? <div>最高排名：{tournament_info.rank_max}</div>: null}
-                            {tournament_info.rank_min ? <div>最低排名：{tournament_info.rank_min}</div>: null}
-                        </div>:null
-                    }
-                    <div>
-                        {tournament_info.registration_info}
-                    </div>
-                    {regNotAvailable ?
-                        <Alert color={'danger'} title="您不符合报名条件" />
-                        :
-                        <div className="flex flex-row gap-3">
-                            <Tooltip content="排名需符合赛事要求才能报名">
-                                <Button color="primary"
-                                        isDisabled={regNotAvailable || members.some((member) => {
-                                    return member.player && member.uid === currentUser?.currentUser?.uid
-                                })}
-                                        onPress={async () => {
-                                            const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
-                                            if (res.status != 200) {
-                                                // 失败
-                                                alert(await res.text());
-                                            }
-                                            else {
-                                                // 关闭模态框
-                                                alert('报名成功');
-                                                setMembers(await res.json())
-                                            }
-                                        }}
-                                >
-                                    报名比赛
-                                </Button>
-                            </Tooltip>
-                            <Button color="danger" isDisabled={
-                                !members.some((member) => {
-                                    return member.player && member.uid === currentUser?.currentUser?.uid
-                                }) || (new Date(tournament_info.start_date) < new Date())
+            {(new Date(tournament_info.start_date) < new Date()) ?
+                <Alert color={'warning'} title="该比赛已结束报名"/>
+                : currentUser?.currentUser ?
+                    <Card>
+                        <CardBody>
+                            <p>报名</p>
+                        </CardBody>
+                        <Divider/>
+                        <CardBody className="gap-3">
+                            {tournament_info.rank_max || tournament_info.rank_min ?
+                                <div>
+                                    本比赛有排名限制
+                                    {tournament_info.rank_max ? <div>最高排名：{tournament_info.rank_max}</div> : null}
+                                    {tournament_info.rank_min ? <div>最低排名：{tournament_info.rank_min}</div> : null}
+                                </div> : null
                             }
-                                onPress={async () => {
-                                    const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
-                                    if (res.status != 200) {
-                                        // 失败
-                                        alert(await res.text());
+                            <div>
+                                {tournament_info.registration_info}
+                            </div>
+                            {regNotAvailable ?
+                                <Alert color={'danger'} title="您不符合报名条件"/>
+                                :
+                                <div className="flex flex-row gap-3">
+                                    <Tooltip content="排名需符合赛事要求才能报名">
+                                        <Button color="primary"
+                                                isDisabled={regNotAvailable || members.some((member) => {
+                                                    return member.player && member.uid === currentUser?.currentUser?.uid
+                                                })}
+                                                onPress={async () => {
+                                                    const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${tournament_info.abbreviation}`, {
+                                                        'method': 'GET',
+                                                        'headers': {'Content-Type': 'application/json'},
+                                                        credentials: 'include'
+                                                    })
+                                                    if (res.status != 200) {
+                                                        // 失败
+                                                        alert(await res.text());
+                                                    } else {
+                                                        // 关闭模态框
+                                                        alert('报名成功');
+                                                        setMembers(await res.json())
+                                                    }
+                                                }}
+                                        >
+                                            报名比赛
+                                        </Button>
+                                    </Tooltip>
+                                    <Button color="danger" isDisabled={
+                                        !members.some((member) => {
+                                            return member.player && member.uid === currentUser?.currentUser?.uid
+                                        }) || (new Date(tournament_info.start_date) < new Date())
                                     }
-                                    else {
-                                        // 关闭模态框
-                                        alert('取消报名成功');
-                                        setMembers(await res.json())
-                                    }
-                                }}
-                            >
-                                取消报名
-                            </Button>
-                        </div>
-                    }
-                    {(members.some((member) => {
-                        return member.player && member.uid === currentUser?.currentUser?.uid
-                    }))?
-                        <Alert color={'success'} title="您已成功报名" description={tournament_info.qq_group?`报名后请务必加群${tournament_info.qq_group}`: null} />
-                        : null
-                    }
-                </CardBody>
-            </Card>:
-                <Alert color={'warning'} title="请点击右上角登录后进行赛事报名" />
+                                            onPress={async () => {
+                                                const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {
+                                                    'method': 'GET',
+                                                    'headers': {'Content-Type': 'application/json'},
+                                                    credentials: 'include'
+                                                })
+                                                if (res.status != 200) {
+                                                    // 失败
+                                                    alert(await res.text());
+                                                } else {
+                                                    // 关闭模态框
+                                                    alert('取消报名成功');
+                                                    setMembers(await res.json())
+                                                }
+                                            }}
+                                    >
+                                        取消报名
+                                    </Button>
+                                </div>
+                            }
+                            {(members.some((member) => {
+                                return member.player && member.uid === currentUser?.currentUser?.uid
+                            })) ?
+                                <Alert color={'success'} title="您已成功报名"
+                                       description={tournament_info.qq_group ? `报名后请务必加群${tournament_info.qq_group}` : null}/>
+                                : null
+                            }
+                        </CardBody>
+                    </Card> :
+                    <Alert color={'warning'} title="请点击右上角登录后进行赛事报名"/>
             }
         </div>
     );
@@ -380,6 +388,6 @@ export type RegistrationInfo = {
 
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        { next: { revalidate: revalidate_time }})
+        {next: {revalidate: revalidate_time}})
     return await res.json()
 }

@@ -15,6 +15,6 @@ export default async function TournamentHomePage(props: { params: Promise<{ tour
 
 async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo | null> {
     const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        { next: { revalidate: 10 }})
+        {next: {revalidate: 10}})
     return await res.json()
 }

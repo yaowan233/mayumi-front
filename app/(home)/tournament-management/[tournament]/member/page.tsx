@@ -117,7 +117,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.host) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -145,7 +145,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"host"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"host"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">选手</h1>
@@ -156,7 +157,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.player) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -180,7 +181,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"player"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"player"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">裁判</h1>
@@ -191,7 +193,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.referee) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -215,7 +217,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"referee"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"referee"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">直播</h1>
@@ -226,16 +229,16 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.streamer) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
                                     size="lg"
                                     onClose={() => {
-                                    const updatedMembers = [...players];
-                                    updatedMembers[index].streamer = false;
-                                    settournamentPlayers({players: updatedMembers, groups: teams});
-                                }}
+                                        const updatedMembers = [...players];
+                                        updatedMembers[index].streamer = false;
+                                        settournamentPlayers({players: updatedMembers, groups: teams});
+                                    }}
                                     avatar={
                                         <Avatar
                                             size="lg"
@@ -250,7 +253,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"streamer"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"streamer"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">解说</h1>
@@ -261,7 +265,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.commentator) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -285,7 +289,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"commentator"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"commentator"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">选图</h1>
@@ -296,7 +301,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.mappooler) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -320,7 +325,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"mappooler"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"mappooler"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">赞助</h1>
@@ -331,7 +337,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.donator) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -355,7 +361,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"donator"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"donator"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">设计</h1>
@@ -366,7 +373,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.graphic_designer) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -390,7 +397,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"graphic_designer"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"graphic_designer"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">时间安排</h1>
@@ -401,7 +409,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.scheduler) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -425,7 +433,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} teams={teams} position={"scheduler"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           teams={teams} position={"scheduler"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">测图</h1>
@@ -436,7 +445,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.map_tester) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -460,7 +469,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"map_tester"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"map_tester"}/>
             </div>
             <Divider/>
             <h1 className="text-3xl font-bold">作图</h1>
@@ -471,7 +481,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                             if (!member.custom_mapper) {
                                 return null;
                             }
-                            return(
+                            return (
                                 <Chip
                                     key={index}
                                     variant="bordered"
@@ -495,19 +505,24 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         })
                     }
                 </div>
-                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name} position={"custom_mapper"}/>
+                <AddMember members={players} setMembers={settournamentPlayers} tournamentName={tournament_name}
+                           position={"custom_mapper"}/>
             </div>
             {
-                isLoading ?  <Spinner className="max-w-fit" /> :
+                isLoading ? <Spinner className="max-w-fit"/> :
                     <Button className="max-w-fit" color="primary" onPress={async () => {
                         setIsLoading(true)
-                        const res = await fetch(siteConfig.backend_url + '/api/update-members', {'method': 'POST', 'body': JSON.stringify(players), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+                        const res = await fetch(siteConfig.backend_url + '/api/update-members', {
+                            'method': 'POST',
+                            'body': JSON.stringify(players),
+                            'headers': {'Content-Type': 'application/json'},
+                            credentials: 'include'
+                        })
                         setIsLoading(false)
                         if (res.status != 200) {
                             // 失败
                             alert(await res.text());
-                        }
-                        else {
+                        } else {
                             // 关闭模态框
                             alert('修改成功');
                         }
@@ -533,12 +548,12 @@ const AddMember = ({
     tournamentName: string;
     position: keyof Player;
 }) => {
-    const [fieldState, setFieldState] = React.useState<{selectedKey: string, inputValue: string, items: Player[]}>({
+    const [fieldState, setFieldState] = React.useState<{ selectedKey: string, inputValue: string, items: Player[] }>({
         selectedKey: "",
         inputValue: "",
         items: members,
     });
-    let { contains } = useFilter({
+    let {contains} = useFilter({
         sensitivity: 'base'
     });
     const onInputChange = (value: string) => {
@@ -553,7 +568,7 @@ const AddMember = ({
             let selectedItem = prevState.items.find((option) => option.uid.toString() == key)
             return {
                 inputValue: key === null ? "" : selectedItem?.uid.toString() || fieldState.inputValue,
-                selectedKey: key? key : "",
+                selectedKey: key ? key : "",
                 items: members.filter((item) => contains(item.uid.toString() + item.name, selectedItem?.uid.toString() || "")),
             };
         });
@@ -631,7 +646,8 @@ const AddMember = ({
                 {(member) => (
                     <AutocompleteItem key={member.uid} textValue={member.uid.toString()}>
                         <div className="flex gap-2 items-center">
-                            <Avatar alt={member.name} className="flex-shrink-0" size="sm" src={`https://a.ppy.sh/${member.uid}`} />
+                            <Avatar alt={member.name} className="flex-shrink-0" size="sm"
+                                    src={`https://a.ppy.sh/${member.uid}`}/>
                             <div className="flex flex-col">
                                 <span className="text-small">{member.name}</span>
                                 <span className="text-tiny text-default-400">{member.uid}</span>
@@ -650,7 +666,7 @@ const AddMember = ({
 
 async function getRegistrationInfo(tournament_name: string): Promise<RegistrationInfo[]> {
     const res = await fetch(siteConfig.backend_url + `/api/get-registration-info?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
+        {next: {revalidate: 10}});
     return await res.json();
 }
 
@@ -666,6 +682,6 @@ interface User {
 
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
-        { next: { revalidate: revalidate_time }})
+        {next: {revalidate: revalidate_time}})
     return await res.json()
 }

@@ -33,15 +33,18 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
         if (!formData.every(round => round.stage_name && round.start_time)) {
             // 显示错误消息或采取其他适当的操作
             setErrMsg('请填写所有必填字段')
-        }
-        else {
+        } else {
             // 执行报名操作或其他相关逻辑
-            const res = await fetch(siteConfig.backend_url + '/api/update-tournament-round-info', {'method': 'POST', 'body': JSON.stringify(formData), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+            const res = await fetch(siteConfig.backend_url + '/api/update-tournament-round-info', {
+                'method': 'POST',
+                'body': JSON.stringify(formData),
+                'headers': {'Content-Type': 'application/json'},
+                credentials: 'include'
+            })
             if (res.status != 200) {
                 // 失败
                 setErrMsg(await res.text());
-            }
-            else {
+            } else {
                 // 关闭模态框
                 alert('修改成功');
             }
@@ -52,7 +55,9 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
         <div className="flex flex-col gap-5">
             <h1 className="text-3xl font-bold">轮次管理</h1>
             <div>
-                <Button color="primary" onPress={() => { setFormData([...formData, initialFormData]) }}>
+                <Button color="primary" onPress={() => {
+                    setFormData([...formData, initialFormData])
+                }}>
                     添加轮次
                 </Button>
             </div>
@@ -90,7 +95,7 @@ interface RoundInfoFormProps {
     errMsg?: string;
 }
 
-const RoundInfoForm = ({ roundData, setFormData, deleteRound, errMsg }: RoundInfoFormProps) => {
+const RoundInfoForm = ({roundData, setFormData, deleteRound, errMsg}: RoundInfoFormProps) => {
 
 
     return (
@@ -100,7 +105,7 @@ const RoundInfoForm = ({ roundData, setFormData, deleteRound, errMsg }: RoundInf
                 value={roundData.stage_name}
                 isRequired
                 isInvalid={!!errMsg && !roundData.stage_name}
-                onChange={e => setFormData({ ...roundData, stage_name: e.target.value })}
+                onChange={e => setFormData({...roundData, stage_name: e.target.value})}
             />
             <Input
                 label="开始日期"
@@ -109,19 +114,19 @@ const RoundInfoForm = ({ roundData, setFormData, deleteRound, errMsg }: RoundInf
                 placeholder="Enter your email"
                 type="date"
                 isInvalid={!!errMsg && !roundData.start_time}
-                onChange={e => setFormData({ ...roundData, start_time: e.target.value })}
+                onChange={e => setFormData({...roundData, start_time: e.target.value})}
             />
             <Input
                 label="结束日期"
                 value={roundData.end_time || ''}
                 placeholder="Enter your email"
                 type="date"
-                onChange={e => setFormData({ ...roundData, end_time: e.target.value })}
+                onChange={e => setFormData({...roundData, end_time: e.target.value})}
             />
             <Switch
                 defaultSelected={roundData.is_lobby}
                 className="min-w-fit"
-                onChange={e => setFormData({ ...roundData, is_lobby: e.target.checked })}
+                onChange={e => setFormData({...roundData, is_lobby: e.target.checked})}
             >
                 小组赛
             </Switch>
@@ -140,6 +145,6 @@ export interface TournamentRoundInfo {
 
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
+        {next: {revalidate: 10}});
     return await data.json();
 }

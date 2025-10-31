@@ -3,6 +3,7 @@ import React, {createContext, useEffect, useState} from 'react';
 import {getMe, Me} from "@/app/actions";
 
 const CurrentUserContext = createContext<CurrentUserContextType | null>(null);
+
 interface CurrentUserContextType {
     currentUser: Me | null;
     setCurrentUser: React.Dispatch<React.SetStateAction<Me | null>>;

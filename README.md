@@ -12,7 +12,6 @@
 
 ## How to Use
 
-
 ### Install dependencies
 
 ```bash

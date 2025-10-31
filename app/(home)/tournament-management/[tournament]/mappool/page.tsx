@@ -53,18 +53,20 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         if (!tournamentMaps.every(tournamentMap => tournamentMap.map_id && tournamentMap.mod && tournamentMap.number)) {
             // 显示错误消息或采取其他适当的操作
             setErrMsg('请填写所有必填字段')
-        }
-        else if (validateModOrder(tournamentMaps)) {
+        } else if (validateModOrder(tournamentMaps)) {
             setErrMsg('同一轮次下同一mod的序号不能相同')
-        }
-        else {
+        } else {
             // 执行报名操作或其他相关逻辑
-            const res = await fetch(siteConfig.backend_url + '/api/update-tournament-maps', {'method': 'POST', 'body': JSON.stringify(tournamentMaps), 'headers': {'Content-Type': 'application/json'}, credentials: 'include'})
+            const res = await fetch(siteConfig.backend_url + '/api/update-tournament-maps', {
+                'method': 'POST',
+                'body': JSON.stringify(tournamentMaps),
+                'headers': {'Content-Type': 'application/json'},
+                credentials: 'include'
+            })
             if (res.status != 200) {
                 // 失败
                 setErrMsg(await res.text());
-            }
-            else {
+            } else {
                 alert('修改成功');
             }
         }
@@ -77,8 +79,8 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
             }
         };
         const fetchTournamentMapsData = async () => {
-          const data = await getTournamentMaps(tournament_name);
-          setTournamentMaps(data);
+            const data = await getTournamentMaps(tournament_name);
+            setTournamentMaps(data);
         }
         const fetchTournamentInfo = async () => {
             const data = await getTournamentInfo(tournament_name);
@@ -120,7 +122,8 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                             return (
                                 <div key={index} className="flex flex-col">
                                     <div className="flex flex-row gap-5">
-                                        <Image alt="bg" className="h-[60px] min-w-[100px]" width="100%" src={tournamentMap.map_id ? `https://osu.direct/api/media/background/${tournamentMap.map_id}`: undefined} />
+                                        <Image alt="bg" className="h-[60px] min-w-[100px]" width="100%"
+                                               src={tournamentMap.map_id ? `https://osu.direct/api/media/background/${tournamentMap.map_id}` : undefined}/>
                                         <Input
                                             label="图号"
                                             isRequired
@@ -158,11 +161,12 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                                             tournamentMap.extra?.map((info, i) => {
                                                 return (
                                                     <Input key={i} label="额外信息" value={info}
-                                                           description="在这里加入对地图的额外介绍如地图风格，获胜条件" onChange={(e) => {
-                                                        const updatedTournamentMaps = [...tournamentMaps];
-                                                        updatedTournamentMaps[index].extra?.splice(i, 1, e.target.value);
-                                                        setTournamentMaps(updatedTournamentMaps);
-                                                    }}/>
+                                                           description="在这里加入对地图的额外介绍如地图风格，获胜条件"
+                                                           onChange={(e) => {
+                                                               const updatedTournamentMaps = [...tournamentMaps];
+                                                               updatedTournamentMaps[index].extra?.splice(i, 1, e.target.value);
+                                                               setTournamentMaps(updatedTournamentMaps);
+                                                           }}/>
                                                 )
                                             })
                                         }
@@ -194,18 +198,21 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                                     >
                                         删除
                                     </Button>
-                            </div>)})}
+                                </div>)
+                        })}
                     </div>
                     <div className="flex flex-row gap-5">
-                        <Button className="max-w-fit" color="primary" onPress={() => {setTournamentMaps([...tournamentMaps, {
-                            tournament_name: tournament_name,
-                            stage_name: Array.from(round)[0],
-                            mod: '',
-                            map_id: undefined,
-                            number: undefined,
-                            mode: tournamentInfo.mode,
-                            extra: []
-                        }])}}>
+                        <Button className="max-w-fit" color="primary" onPress={() => {
+                            setTournamentMaps([...tournamentMaps, {
+                                tournament_name: tournament_name,
+                                stage_name: Array.from(round)[0],
+                                mod: '',
+                                map_id: undefined,
+                                number: undefined,
+                                mode: tournamentInfo.mode,
+                                extra: []
+                            }])
+                        }}>
                             添加地图
                         </Button>
                         <Button color="success" className="max-w-fit" onPress={handleUpdateTournament}>
@@ -224,9 +231,9 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
     )
 }
 
-async function getTournamentMaps(tournament_name: string): Promise<TournamentMap[]>{
+async function getTournamentMaps(tournament_name: string): Promise<TournamentMap[]> {
     const data = await fetch(siteConfig.backend_url + `/api/get_tournament_maps?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
+        {next: {revalidate: 10}});
     return await data.json();
 }
 
@@ -260,14 +267,15 @@ interface TournamentMap {
     mode?: string;
     extra?: string[];
 }
+
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        { next: { revalidate: 10 }});
+        {next: {revalidate: 10}});
     return await data.json();
 }
 
 async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
     const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        { next: { revalidate: 10 }})
+        {next: {revalidate: 10}})
     return await res.json()
 }
