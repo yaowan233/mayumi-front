@@ -244,55 +244,73 @@ const RoleSection = ({
     tournamentName: string;
     currentUser?: { currentUser?: { uid: number } } | null;
     cannotRemoveSelf?: boolean;
-}) => (
-    <>
-        <Divider/>
-        <h1 className="text-3xl font-bold">{title}</h1>
-        <div className="grid grid-cols-2">
-            <div className="flex flex-wrap gap-5">
-                {
-                    players?.map((member, index) => {
-                        if (!member[position]) {
-                            return null;
-                        }
-                        return (
-                            <Chip
-                                key={index}
-                                variant="bordered"
-                                size="lg"
-                                onClose={() => {
-                                    if (cannotRemoveSelf && member.uid === currentUser?.currentUser?.uid) {
-                                        alert('不能删除自己');
-                                        return;
+}) => {
+    const handleRemove = (index: number, memberId: number) => {
+        if (cannotRemoveSelf && memberId === currentUser?.currentUser?.uid) {
+            alert('不能删除自己');
+            return;
+        }
+        const updatedMembers = [...players];
+        const member = updatedMembers[index];
+        // Type-safe update of the boolean field
+        switch(position) {
+            case 'host': member.host = false; break;
+            case 'player': member.player = false; break;
+            case 'referee': member.referee = false; break;
+            case 'streamer': member.streamer = false; break;
+            case 'commentator': member.commentator = false; break;
+            case 'mappooler': member.mappooler = false; break;
+            case 'custom_mapper': member.custom_mapper = false; break;
+            case 'donator': member.donator = false; break;
+            case 'graphic_designer': member.graphic_designer = false; break;
+            case 'scheduler': member.scheduler = false; break;
+            case 'map_tester': member.map_tester = false; break;
+        }
+        settournamentPlayers({players: updatedMembers, groups: teams});
+    };
+
+    return (
+        <>
+            <Divider/>
+            <h1 className="text-3xl font-bold">{title}</h1>
+            <div className="grid grid-cols-2">
+                <div className="flex flex-wrap gap-5">
+                    {
+                        players?.map((member, index) => {
+                            if (!member[position]) {
+                                return null;
+                            }
+                            return (
+                                <Chip
+                                    key={index}
+                                    variant="bordered"
+                                    size="lg"
+                                    onClose={() => handleRemove(index, member.uid)}
+                                    avatar={
+                                        <Avatar
+                                            size="lg"
+                                            name={member.name}
+                                            src={`https://a.ppy.sh/${member.uid}`}
+                                        />
                                     }
-                                    const updatedMembers = [...players];
-                                    updatedMembers[index][position] = false as any;
-                                    settournamentPlayers({players: updatedMembers, groups: teams});
-                                }}
-                                avatar={
-                                    <Avatar
-                                        size="lg"
-                                        name={member.name}
-                                        src={`https://a.ppy.sh/${member.uid}`}
-                                    />
-                                }
-                            >
-                                {member.name}
-                            </Chip>
-                        )
-                    })
-                }
+                                >
+                                    {member.name}
+                                </Chip>
+                            )
+                        })
+                    }
+                </div>
+                <AddMember 
+                    members={players} 
+                    setMembers={settournamentPlayers} 
+                    tournamentName={tournamentName}
+                    teams={teams}
+                    position={position}
+                />
             </div>
-            <AddMember 
-                members={players} 
-                setMembers={settournamentPlayers} 
-                tournamentName={tournamentName}
-                teams={teams}
-                position={position}
-            />
-        </div>
-    </>
-);
+        </>
+    );
+};
 
 
 const AddMember = ({
