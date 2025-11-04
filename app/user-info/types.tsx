@@ -42,10 +42,22 @@ export interface UserStatistics {
     total_hits: number;
     total_score: number;
     global_rank?: number;
+    global_rank_percent?: number;
     country_rank?: number;
     badges?: Badge[];
     variants?: Variant[];
 }
+
+export type Tier =
+  | 'lustrous'
+  | 'radiant'
+  | 'rhodium'
+  | 'platinum'
+  | 'gold'
+  | 'silver'
+  | 'bronze'
+  | 'iron'
+  | 'base';
 
 export interface RuleSets {
     osu?: UserStatistics;

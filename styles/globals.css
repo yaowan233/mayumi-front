@@ -63,3 +63,34 @@
 .fa-extra-team-leader::before {
     content: "\e806";
 }
+
+:root {
+  --level-tier-iron: #bab3ab, #bab3ab;
+  --level-tier-bronze: #b88f7a, #855c47;
+  --level-tier-silver: #e0e0eb, #a3a3c2;
+  --level-tier-gold: #f0e4a8, #e0c952;
+  --level-tier-platinum: #a8f0ef, #52e0df;
+  --level-tier-rhodium: #d9f8d3, #a0cf96;
+  --level-tier-radiant: #97dcff, #ed82ff;
+  --level-tier-lustrous: #ffe600, #ed82ff;
+
+  /* 默认颜色 (hsl(var(--hsl-c2)), hsl(var(--hsl-c2))) - 假设您已经在其他地方定义了 --hsl-c2 */
+  --rank-value-default-colour: hsl(var(#333)), hsl(var(#333));
+}
+
+/* Rank Value 基础样式，使用 @apply 结合 Tailwind 类和自定义 CSS */
+/* ⚠️ 注意：我们使用一个通用的类名 .rank-value，并注入样式 */
+.rank-value {
+    /* 1. 默认颜色和字体设置 */
+    --colour: var(--rank-value-default-colour);
+    /* 默认 font-weight: bold 对应 font-bold 类，这里不设置变量，直接在 TSX 中用类控制 */
+    /* font-weight: var(--font-weight); 这一行将被 Tailwind 类替换 */
+
+    /* 2. 渐变文本核心样式 */
+    background-clip: text;
+    color: transparent; /* 确保文本透明以显示背景 */
+
+    /* 3. 应用渐变背景 */
+    /* 默认从左到右 (to right)，如果需要其他方向请修改 */
+    background-image: linear-gradient(var(--colour));
+}

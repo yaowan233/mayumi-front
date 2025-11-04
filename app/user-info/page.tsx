@@ -11,6 +11,7 @@ import CurrentUserContext from "@/app/user_context";
 import GameModeIcon, {GameMode} from "@/components/gamemode_icon";
 import {Input} from "@heroui/input";
 import {Tooltip} from "@heroui/tooltip";
+import RankDisplay from "@/app/user-info/rank-display";
 
 
 interface ModeData {
@@ -91,7 +92,7 @@ export default function TournamentHomePage() {
                     style={{
                         backgroundImage: "url('https://www.loliapi.com/acg')",
                     }}>
-                    <div className="flex flex-row gap-4 bg-black/40 rounded-lg p-1 px-4 w-full">
+                    <div className="flex flex-row gap-4 bg-black/60 rounded-lg p-1 px-4 w-full">
                         <div className="max-w-[100px] flex-shrink-0">
                             <Image
                                 className=""
@@ -132,7 +133,7 @@ export default function TournamentHomePage() {
                     {
                         !!userInfo.badges?.length && userInfo.badges?.length > 0 &&
                         <div
-                            className="relative flex flex-row bg-black/40 rounded-lg p-1 justify-start gap-3 px-4 flex-wrap py-2 justify-items-center">
+                            className="relative flex flex-row bg-black/60 rounded-lg p-1 justify-start gap-3 px-4 flex-wrap py-2 justify-items-center">
                             {userInfo.badges.map((badge) => {
                                 // 假设 URL 字段是 badge.url
                                 const hasLink = !!badge.url;
@@ -194,20 +195,20 @@ export default function TournamentHomePage() {
                             })}
                         </div>
                     }
-                    <div className="relative flex flex-row bg-black/40 rounded-lg p-1 justify-between gap-6 px-4">
+                    <div className="relative flex flex-row bg-black/60 rounded-lg p-1 justify-between gap-6 px-4">
                         <Progress label="等级" className="" classNames={{value: ""}}
                                   value={userInfo.statistics?.level.progress} showValueLabel={true}/>
                         <div className="w-[50px]">
                             <UserLevel level={userInfo.statistics?.level.current || 0}/>
                         </div>
                     </div>
-                    <div className="relative flex flex-row bg-black/40 rounded-lg p-1 justify-between px-4 flex-wrap">
+                    <div className="relative flex flex-row bg-black/60 rounded-lg p-1 justify-between px-4 flex-wrap">
                         <div className="flex flex-col">
                             <div>
                                 世界排名
                             </div>
                             <div>
-                                #{userInfo.statistics?.global_rank || 0}
+                                <RankDisplay user={userInfo} type="global" />
                             </div>
                         </div>
                         <div className="flex flex-col">
@@ -241,7 +242,7 @@ export default function TournamentHomePage() {
                             </div>
                         </div>
                     </div>
-                    <div className="relative flex flex-col gap-2 bg-black/40 rounded-lg p-1 flex-grow px-4">
+                    <div className="relative flex flex-col gap-2 bg-black/60 rounded-lg p-1 flex-grow px-4">
                         <div className="flex flex-row justify-between">
                             <div>
                                 Ranked 谱面总分
