@@ -7,6 +7,7 @@ import CurrentUserContext from "@/app/user_context";
 import {Select, SelectItem} from "@heroui/select";
 import {Button} from "@heroui/button";
 import {siteConfig} from "@/config/site";
+import {getRoundInfo} from "@/lib/api";
 
 export default function EditStatisticsPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
@@ -69,10 +70,4 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
             }
         </div>
     )
-}
-
-async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 10}});
-    return await data.json();
 }

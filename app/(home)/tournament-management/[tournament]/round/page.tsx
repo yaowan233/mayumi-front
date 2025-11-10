@@ -5,6 +5,7 @@ import {Switch} from "@heroui/switch";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
+import {getRoundInfo} from "@/lib/api";
 
 
 export default function EditRoundPage(props: { params: Promise<{ tournament: string }> }) {
@@ -141,10 +142,4 @@ export interface TournamentRoundInfo {
     start_time?: string;
     end_time?: string;
     is_lobby: boolean;
-}
-
-async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 10}});
-    return await data.json();
 }
