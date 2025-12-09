@@ -655,7 +655,7 @@ const MemberSelect = ({members, scheduleInfo, setScheduleInfo, team, index, errM
             {(member) => (
                 <AutocompleteItem key={member.name} textValue={member.name}>
                     <div className="flex gap-2 items-center">
-                        <Avatar alt={member.name} className="flex-shrink-0" size="sm"
+                        <Avatar alt={member.name} className="shrink-0" size="sm"
                                 src={(member as Team).icon_url || `https://a.ppy.sh/${(member as Player).uid}` as string}/>
                         <div className="flex flex-col">
                             <span className="text-small">{member.name}</span>
@@ -735,7 +735,7 @@ const GroupMemberSelect = ({members, scheduleInfo, setScheduleInfo, role, index}
             {(member) => (
                 <AutocompleteItem key={member.name} textValue={member.name}>
                     <div className="flex gap-2 items-center">
-                        <Avatar alt={member.name} className="flex-shrink-0" size="sm"
+                        <Avatar alt={member.name} className="shrink-0" size="sm"
                                 src={(member as Team).icon_url || `https://a.ppy.sh/${(member as Player).uid}` as string}/>
                         <div className="flex flex-col">
                             <span className="text-small">{member.name}</span>

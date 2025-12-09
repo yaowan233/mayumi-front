@@ -7,9 +7,9 @@ export default async function HomeLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="flex flex-col flex-grow">
+        <div className="flex flex-col grow">
             <Navbar/>
-            <main className="w-full mx-auto pt-6 px-6 flex-grow">
+            <main className="w-full mx-auto pt-6 px-6 grow">
                 {children}
             </main>
         </div>

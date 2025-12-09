@@ -4,7 +4,7 @@ export default function NotFound() {
     return (
         <>
             <Navbar/>
-            <div className="container mx-auto pt-4 flex-grow justify-center text-center">
+            <div className="container mx-auto pt-4 grow justify-center text-center">
                 {"没有这个页面哦>_<"}
             </div>
         </>

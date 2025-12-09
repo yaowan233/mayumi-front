@@ -646,7 +646,7 @@ const AddMember = ({
                 {(member) => (
                     <AutocompleteItem key={member.uid} textValue={member.uid.toString()}>
                         <div className="flex gap-2 items-center">
-                            <Avatar alt={member.name} className="flex-shrink-0" size="sm"
+                            <Avatar alt={member.name} className="shrink-0" size="sm"
                                     src={`https://a.ppy.sh/${member.uid}`}/>
                             <div className="flex flex-col">
                                 <span className="text-small">{member.name}</span>

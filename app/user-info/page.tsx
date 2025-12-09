@@ -88,30 +88,30 @@ export default function TournamentHomePage() {
             }}/>
             {userInfo &&
                 <div
-                    className="min-h-screen bg-cover bg-center bg-no-repeat flex flex-col gap-2 h-full flex-grow rounded-lg w-full"
+                    className="min-h-screen bg-cover bg-center bg-no-repeat flex flex-col gap-2 h-full grow rounded-lg w-full"
                     style={{
                         backgroundImage: "url('https://www.loliapi.com/acg')",
                     }}>
                     <div className="flex flex-row gap-4 bg-black/60 rounded-lg p-1 px-4 w-full">
-                        <div className="max-w-[100px] flex-shrink-0">
+                        <div className="max-w-[100px] shrink-0">
                             <Image
                                 className=""
                                 src={`https://a.ppy.sh/${userInfo.id}`}
                                 alt="user"
                             />
                         </div>
-                        <div className="flex flex-col flex-grow justify-around min-w-0">
+                        <div className="flex flex-col grow justify-around min-w-0">
                             <div className="text-xl truncate min-w-0">{userInfo.username}</div>
                             {userInfo.team &&
                                 <div className="flex flex-row items-center gap-2 min-w-0">
-                                    <div className="max-w-[35px] flex-shrink-0">
+                                    <div className="max-w-[35px] shrink-0">
                                         <Image radius="none" src={userInfo.team.flag_url} alt="team_flag"/>
                                     </div>
                                     <p className="text-xl truncate min-w-0">{userInfo.team.name}</p>
                                 </div>
                             }
                             <div className="flex flex-row justify-between">
-                                <div className="flex flex-row text-xl gap-2 items-center flex-shrink-0">
+                                <div className="flex flex-row text-xl gap-2 items-center shrink-0">
                                     <Image radius="none" width="25px" src={flagUrl(userInfo.country_code)}
                                            alt="country"/>
                                     #{userInfo.statistics?.country_rank || 0}
@@ -242,7 +242,7 @@ export default function TournamentHomePage() {
                             </div>
                         </div>
                     </div>
-                    <div className="relative flex flex-col gap-2 bg-black/60 rounded-lg p-1 flex-grow px-4">
+                    <div className="relative flex flex-col gap-2 bg-black/60 rounded-lg p-1 grow px-4">
                         <div className="flex flex-row justify-between">
                             <div>
                                 Ranked 谱面总分

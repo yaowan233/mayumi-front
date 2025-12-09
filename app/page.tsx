@@ -18,7 +18,7 @@ export default async function Home() {
                 <div className="w-full flex mx-auto justify-center">
                     <h1 className={title()}>正在进行中的比赛</h1>
                 </div>
-                <div className="w-full mx-auto pt-4 px-6 flex-grow">
+                <div className="w-full mx-auto pt-4 px-6 grow">
                     <div className="w-full flex flex-wrap items-center justify-center gap-2">
                         {tournaments_data.filter((tournament) => (
                             new Date(tournament.end_date) >= new Date()
@@ -30,7 +30,7 @@ export default async function Home() {
                 <div className="w-full flex mx-auto justify-center">
                     <h1 className={title()}>已结束的比赛</h1>
                 </div>
-                <div className="w-full mx-auto pt-4 px-6 flex-grow">
+                <div className="w-full mx-auto pt-4 px-6 grow">
                     <div className="flex flex-wrap items-center justify-center gap-2">
                         {tournaments_data.filter((tournament) => (
                             new Date(tournament.end_date) < new Date()

@@ -97,7 +97,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                                         (player) =>
                                             <AutocompleteItem key={player.uid} textValue={player.name}>
                                                 <div className="flex gap-2 items-center">
-                                                    <Avatar alt={player.name} className="flex-shrink-0" size="sm"
+                                                    <Avatar alt={player.name} className="shrink-0" size="sm"
                                                             src={`https://a.ppy.sh/${player.uid}`}/>
                                                     <div className="flex flex-col">
                                                         <span className="text-small">{player.name}</span>
