@@ -1,6 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@config "../tailwind.config.js";
 
 .text-stroke {
     text-shadow: -1px -1px 0 black,
@@ -75,7 +75,7 @@
   --level-tier-lustrous: #ffe600, #ed82ff;
 
   /* 默认颜色 (hsl(var(--hsl-c2)), hsl(var(--hsl-c2))) - 假设您已经在其他地方定义了 --hsl-c2 */
-  --rank-value-default-colour: hsl(var(#333)), hsl(var(#333));
+  --rank-value-default-colour: #333, #333;
 }
 
 /* Rank Value 基础样式，使用 @apply 结合 Tailwind 类和自定义 CSS */
