@@ -42,7 +42,7 @@ export default function RootLayout({
         >
         <Providers themeProps={{attribute: "class", defaultTheme: "dark", children}}>
             <UserProvider>
-                <div className="w-full relative flex flex-col min-h-screen">
+                <div className="w-full relative flex flex-col min-h-dvh">
                     {children}
                     <footer className="w-full flex flex-col items-center justify-center py-3">
                         <Link
