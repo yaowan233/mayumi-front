@@ -296,7 +296,7 @@ const VSInfoComp = ({match_info}: { match_info: MatchInfo }) => {
                     </div>
                 </div>
             </div>
-            <div className={"lg:w-[75px]"}>
+            <div className={"flex flex-row gap-1 lg:w-[75px]"}>
                 {
                     match_info.match_url && match_info.match_url.length > 0 ?
                         match_info.match_url.map((url) => (
