@@ -159,18 +159,42 @@ export const HeartFilledIcon = ({
     </svg>
 );
 
-export const LinkIcon = () => (
-    <svg width="24" height="24" viewBox="0 0 48 48" fill="none">
+export const LinkIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+        width="1em"
+        height="1em"
+        viewBox="0 0 48 48"
+        fill="none"
+        {...props}
+    >
         <path
             d="M26.2401 16.373L17.1001 7.23303C14.4388 4.57168 10.0653 4.6303 7.33158 7.36397C4.59791 10.0976 4.53929 14.4712 7.20064 17.1325L15.1359 25.0678"
-            stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
         <path
             d="M32.9027 23.0031L40.838 30.9384C43.4994 33.5998 43.4407 37.9733 40.7071 40.707C37.9734 43.4407 33.5999 43.4993 30.9385 40.8379L21.7985 31.6979"
-            stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M26.1093 26.1416C28.843 23.4079 28.9016 19.0344 26.2403 16.373" stroke="#333" strokeWidth="4"
-              strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M21.7989 21.7984C19.0652 24.5321 19.0066 28.9056 21.6679 31.5669" stroke="#333" strokeWidth="4"
-              strokeLinecap="round" strokeLinejoin="round"/>
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M26.1093 26.1416C28.843 23.4079 28.9016 19.0344 26.2403 16.373"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M21.7989 21.7984C19.0652 24.5321 19.0066 28.9056 21.6679 31.5669"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
     </svg>
 )
 
@@ -230,8 +254,8 @@ export const NextUILogo: React.FC<IconSvgProps> = (props) => {
     );
 };
 
-export const CopyIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const CopyIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
         <path
             d="M13 12.4316V7.8125C13 6.2592 14.2592 5 15.8125 5H40.1875C41.7408 5 43 6.2592 43 7.8125V32.1875C43 33.7408 41.7408 35 40.1875 35H35.5163"
             stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -241,8 +265,8 @@ export const CopyIcon = () => (
     </svg>
 )
 
-export const DownloadIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const DownloadIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
         <path d="M6 24.0083V42H42V24" stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M33 23L24 32L15 23" stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M23.9917 6V32" stroke="#333" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
