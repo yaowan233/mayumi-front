@@ -309,23 +309,26 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
     }, [mapScores, map.mod]);
 
     return (
-        <Card className="h-[500px] flex flex-col border border-white/5 bg-zinc-900 shadow-lg">
-            {/* 1. 地图头部信息 (仿 Mappool 样式) */}
+        <Card
+            className="h-[500px] flex flex-col border border-default-200 dark:border-white/5 bg-white dark:bg-zinc-900 shadow-lg"
+        >
+            {/* 1. 地图头部信息 */}
             <CardHeader className="p-0 relative h-[140px] shrink-0 overflow-hidden z-0">
                 <Image
                     removeWrapper
                     src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
                     alt="bg"
-                    className="w-full h-full object-cover opacity-60 z-0"
+                    className="w-full h-full object-cover opacity-90 dark:opacity-60 z-0"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent z-10" />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
 
                 <div className="absolute inset-0 z-20 p-4 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
-                        <Chip color={modColor} variant="solid" size="sm" className="font-bold shadow-md">
+                        <Chip color={modColor} variant="solid" size="sm" className="font-bold shadow-md text-white">
                             {map.mod} {map.index + 1}
                         </Chip>
-                        <div className="bg-black/50 backdrop-blur-md px-2 py-0.5 rounded text-xs text-yellow-400 font-bold border border-white/10">
+                        <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-xs text-yellow-400 font-bold border border-white/20">
                             ★ {map.star_rating}
                         </div>
                     </div>
@@ -334,7 +337,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                         <Link isExternal href={`https://osu.ppy.sh/b/${map.map_id}`} className="text-white font-bold line-clamp-1 hover:text-primary transition-colors text-lg">
                             {map.map_name}
                         </Link>
-                        <div className="flex justify-between text-xs text-default-400 mt-1">
+                        <div className="flex justify-between text-xs text-gray-300 mt-1">
                             <span>{map.diff_name}</span>
                             <span>by {map.mapper}</span>
                         </div>
@@ -345,12 +348,12 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                 <div className={`absolute left-0 top-0 bottom-0 w-1 z-20 bg-${modColor === 'default' ? 'zinc-500' : modColor}`} />
             </CardHeader>
 
-            {/* 2. 成绩列表区域 (可滚动) */}
-            <CardBody className="p-0 overflow-y-auto scrollbar-hide bg-content1/50">
+            {/* 2. 成绩列表区域 */}
+            <CardBody className="p-0 overflow-y-auto scrollbar-hide bg-content1/50 dark:bg-transparent">
                 {mapScores.length > 0 ? (
                     <div className="flex flex-col">
                         {/* 表头 */}
-                        <div className="grid grid-cols-[40px_1fr_auto_auto] gap-2 p-3 text-xs font-bold text-default-500 bg-content2 sticky top-0 z-30 border-b border-divider">
+                        <div className="grid grid-cols-[40px_1fr_auto_auto] gap-2 p-3 text-xs font-bold text-default-500 bg-default-100 dark:bg-content2 sticky top-0 z-30 border-b border-divider">
                             <div className="text-center">#</div>
                             <div>Player</div>
                             {isContainMods && <div className="text-center">Mods</div>}
@@ -361,7 +364,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                         {mapScores.map((score, idx) => {
                             const player = players?.find(p => p.uid.toString() === score.player);
                             return (
-                                <div key={idx} className="grid grid-cols-[40px_1fr_auto_auto] gap-2 p-3 border-b border-divider/50 hover:bg-white/5 transition-colors items-center text-sm">
+                                <div key={idx} className="grid grid-cols-[40px_1fr_auto_auto] gap-2 p-3 border-b border-divider/50 hover:bg-default-100 dark:hover:bg-white/5 transition-colors items-center text-sm">
                                     <div className={`text-center font-bold ${idx < 3 ? 'text-primary' : 'text-default-400'}`}>
                                         {idx + 1}
                                     </div>
@@ -371,10 +374,11 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                                             avatarProps={{
                                                 src: `https://a.ppy.sh/${player?.uid}` || "https://a.ppy.sh",
                                                 size: "sm",
-                                                className: "hidden sm:flex" // 移动端隐藏头像省空间，或者一直显示看你喜好
+                                                className: "hidden sm:flex"
                                             }}
                                             classNames={{
-                                                name: "truncate font-medium text-small",
+                                                // 修复 4: 名字颜色使用默认的前景色
+                                                name: "truncate font-medium text-small text-foreground",
                                             }}
                                         />
                                     </div>
@@ -386,7 +390,8 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                                     )}
 
                                     <div className="text-right pr-2">
-                                        <div className="font-mono font-bold">{score.score.toLocaleString()}</div>
+                                        {/* 修复 5: 分数颜色 */}
+                                        <div className="font-mono font-bold text-foreground">{score.score.toLocaleString()}</div>
                                         <div className={`text-xs ${score.acc === 1 ? 'text-success' : 'text-default-400'}`}>
                                             {(score.acc * 100).toFixed(2)}%
                                         </div>

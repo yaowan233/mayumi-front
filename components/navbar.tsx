@@ -60,7 +60,7 @@ export const Navbar = () => {
             <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
                 <NavbarMenuToggle className="flex sm:hidden"/>
                 <NavbarBrand as="li" className="hidden sm:flex gap-3 max-w-fit">
-                    <NextLink className="flex justify-start items-center gap-1" href="/">
+                    <NextLink className="flex justify-start items-center gap-2" href="/">
                         <Logo/>
                         <p className="font-bold text-inherit">Mayumi</p>
                     </NextLink>
@@ -196,7 +196,7 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
             <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
                 <NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} className="md:hidden"/>
                 <NavbarBrand as="li" className="gap-3 max-w-fit">
-                    <NextLink className="hidden sm:flex justify-start items-center gap-1" href="/">
+                    <NextLink className="hidden sm:flex justify-start items-center gap-2" href="/">
                         <Logo/>
                         <p className="font-bold text-inherit">Mayumi</p>
                     </NextLink>

@@ -2,26 +2,34 @@ import * as React from "react";
 import {IconSvgProps} from "@/types";
 
 
-export const Logo: React.FC<IconSvgProps> = ({
-                                                 size = 36,
-                                                 width,
-                                                 height,
-                                                 ...props
-                                             }) => (
-    <svg
-        fill="none"
-        height={size || height}
-        viewBox="0 0 32 32"
-        width={size || width}
-        {...props}
-    >
-        <path
-            clipRule="evenodd"
-            d="M17.6482 10.1305L15.8785 7.02583L7.02979 22.5499H10.5278L17.6482 10.1305ZM19.8798 14.0457L18.11 17.1983L19.394 19.4511H16.8453L15.1056 22.5499H24.7272L19.8798 14.0457Z"
-            fill="currentColor"
-            fillRule="evenodd"
-        />
-    </svg>
+export const Logo = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    width="36"
+    height="36"
+    viewBox="0 0 36 36"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props} // 允许接收 className 等参数
+  >
+    {/* 1. 背景：圆角矩形 */}
+    <rect width="36" height="36" rx="8" fill="url(#logo_gradient)" />
+
+    {/* 2. 字母 M (白色矢量路径) */}
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M9 9H13.5L18 17.5L22.5 9H27V27H23V16L18 25L13 16V27H9V9Z"
+      fill="white"
+    />
+
+    {/* 3. 渐变定义 (左上 #006FEE -> 右下 #004ECB) */}
+    <defs>
+      <linearGradient id="logo_gradient" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#006FEE"/>
+        <stop offset="1" stopColor="#004ECB"/>
+      </linearGradient>
+    </defs>
+  </svg>
 );
 
 export const DiscordIcon: React.FC<IconSvgProps> = ({
