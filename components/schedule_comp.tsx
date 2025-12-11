@@ -633,7 +633,7 @@ const ParticipantJoinHere = ({tournament_name, stage_name, lobbyInfo, role, setS
                   }
             }}
         >
-            + Join
+            加入
         </Button>
     )
 }

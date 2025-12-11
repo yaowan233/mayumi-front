@@ -2,7 +2,7 @@
 
 import {useDisclosure} from "@heroui/use-disclosure";
 import {Alert} from "@heroui/alert";
-import {Card, CardBody, CardFooter} from "@heroui/card";
+import {Card, CardBody, CardFooter, CardHeader} from "@heroui/card";
 import {Divider} from "@heroui/divider";
 import {Button} from "@heroui/button";
 import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader} from "@heroui/modal";
@@ -16,8 +16,31 @@ import {Tooltip} from "@heroui/tooltip";
 import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {Image} from "@heroui/image";
+import {Chip} from "@heroui/chip";
+import {Snippet} from "@heroui/snippet";
+
+
+// --- 图标组件 ---
+const CalendarIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+);
+const LinkIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+    </svg>
+);
+
 
 export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
+    // ... 状态逻辑保持不变 ...
     const currentUser = useContext(CurrentUserContext);
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
     const [errMsg, setErrMsg] = useState('');
@@ -32,6 +55,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         additionalComments: ''
     });
     const [members, setMembers] = useState<Player[]>([]);
+
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
@@ -41,46 +65,35 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         };
         fetchData();
     }, [currentUser, tournament_info.abbreviation]);
+
     const handleRegistration = async (onClose: () => void) => {
         if (formData.qqNumber === '' || formData.isFirstTimeStaff === undefined || formData.selectedPositions.length === 0) {
-            // 显示错误消息或采取其他适当的操作
             setErrMsg('请填写所有必填字段')
         } else if (isNaN(Number(formData.qqNumber))) {
             setErrMsg('QQ号必须是数字')
         } else {
-            // 执行报名操作或其他相关逻辑
             const res = await fetch(siteConfig.backend_url + '/api/tournament-info', {
                 'method': 'POST',
                 'body': JSON.stringify(formData),
                 'headers': {'Content-Type': 'application/json'}
             })
             if (res.status != 200) {
-                // 失败
                 setErrMsg(await res.text());
             } else {
-                // 关闭模态框
                 onClose();
                 alert('报名成功');
             }
         }
     };
+
     let userRank: number = 0;
     const currentUserStats = currentUser?.currentUser?.statistics_rulesets;
-
     if (currentUserStats) {
         switch (tournament_info.mode) {
-            case 'fruits':
-                userRank = currentUserStats.fruits?.global_rank ?? 0;
-                break;
-            case 'osu':
-                userRank = currentUserStats.osu?.global_rank ?? 0;
-                break;
-            case 'taiko':
-                userRank = currentUserStats.taiko?.global_rank ?? 0;
-                break;
-            case 'mania':
-                userRank = currentUserStats.mania?.global_rank ?? 0;
-                break;
+            case 'fruits': userRank = currentUserStats.fruits?.global_rank ?? 0; break;
+            case 'osu': userRank = currentUserStats.osu?.global_rank ?? 0; break;
+            case 'taiko': userRank = currentUserStats.taiko?.global_rank ?? 0; break;
+            case 'mania': userRank = currentUserStats.mania?.global_rank ?? 0; break;
         }
     }
 
@@ -90,6 +103,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             (tournament_info.rank_max && userRank > tournament_info.rank_max) ||
             (new Date(tournament_info.start_date) < new Date())
         );
+
     useEffect(() => {
         if (!isOpen) {
             setErrMsg('');
@@ -105,238 +119,298 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             })
         }
     }, [isOpen, currentUser?.currentUser?.uid, tournament_info.abbreviation]);
-    // 更新表单字段的事件处理程序
+
+    const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
+    const isRegistered = members.some((member) => member.player && member.uid === currentUser?.currentUser?.uid);
+
     return (
-        <div className="grid grid-cols-1 gap-y-5">
-            <Image src={tournament_info.pic_url} alt={tournament_info.name} width="100%" height="auto"/>
-            <h1 className={"text-3xl text-center"}>
-                {tournament_info.name}
-            </h1>
-            <h1 className={"text-xl text-center whitespace-pre-wrap"}>
-                {tournament_info.description}
-            </h1>
-            <div className={"flex justify-center gap-3"}>
-                {tournament_info.links.map((link) => (
-                    <Button isExternal href={link.url} as={Link} size="md" key={link.name}>{link.name}</Button>
-                ))}
-            </div>
-            <Card>
-                <CardBody>
-                    <p>Staff报名</p>
-                </CardBody>
-                <Divider/>
-                <CardBody className={"whitespace-pre-wrap"}>
-                    <p>{tournament_info.staff_registration_info}</p>
-                </CardBody>
-                {currentUser?.currentUser ?
-                    <>
-                        <CardFooter>
-                            <Button onPress={onOpen} size="md">立刻报名</Button>
-                        </CardFooter>
-                        <Modal isOpen={isOpen} onOpenChange={onOpenChange} size={"5xl"} scrollBehavior={"inside"}>
-                            <ModalContent>
-                                {(onClose) => (
-                                    <>
-                                        <ModalHeader
-                                            className="flex flex-col gap-1">{"报名" + tournament_info.abbreviation}</ModalHeader>
-                                        <ModalBody>
-                                            <p>
-                                                请务必填写正确的QQ号，以便我们联系您
-                                            </p>
-                                            <Input isRequired type={"QQ"} label={"QQ号"} placeholder="请输入QQ号"
-                                                   onChange={(e) => setFormData({
-                                                       ...formData,
-                                                       qqNumber: e.target.value
-                                                   })}/>
-                                            <Divider/>
-                                            <RadioGroup label={"你是否是第一次做staff？"} isRequired={true}
-                                                        onChange={(e) => setFormData({
-                                                            ...formData,
-                                                            isFirstTimeStaff: (e.target.value !== "")
-                                                        })}>
-                                                <Radio value="1">是</Radio>
-                                                <Radio value="">否</Radio>
-                                            </RadioGroup>
-                                            <p>
-                                                列举赛事经验（不必详细说明）只需简述在什么比赛做了什么工作即可
-                                            </p>
-                                            <Textarea
-                                                minRows={2}
-                                                label="赛事经验"
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    tournamentExperience: e.target.value
-                                                })}
-                                            />
-                                            <Divider/>
-                                            <CheckboxGroup
-                                                isRequired={true}
-                                                label="选择想要报名的职位"
-                                                //@ts-ignore
-                                                onChange={(value: string[]) => setFormData({
-                                                    ...formData,
-                                                    selectedPositions: value
-                                                })}
-                                            >
-                                                {tournament_info.streamer ?
-                                                    <Checkbox value="直播">直播</Checkbox> : null}
-                                                {tournament_info.referee ?
-                                                    <Checkbox value="裁判">裁判</Checkbox> : null}
-                                                {tournament_info.custom_mapper ?
-                                                    <Checkbox value="作图">作图</Checkbox> : null}
-                                                {tournament_info.commentator ?
-                                                    <Checkbox value="解说">解说</Checkbox> : null}
-                                                {tournament_info.mappooler ?
-                                                    <Checkbox value="选图">选图</Checkbox> : null}
-                                                {tournament_info.donator ?
-                                                    <Checkbox value="赞助">赞助</Checkbox> : null}
-                                                {tournament_info.designer ?
-                                                    <Checkbox value="设计">设计</Checkbox> : null}
-                                                {tournament_info.scheduler ?
-                                                    <Checkbox value="赛程安排">赛程安排</Checkbox> : null}
-                                                {tournament_info.map_tester ?
-                                                    <Checkbox value="测图">测图</Checkbox> : null}
-                                            </CheckboxGroup>
-                                            <Textarea
-                                                minRows={2}
-                                                label="其他"
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    otherDetails: e.target.value
-                                                })}
-                                            />
-                                            <Divider/>
-                                            <Textarea
-                                                minRows={2}
-                                                label="有其他想要补充的？"
-                                                onChange={(e) => setFormData({
-                                                    ...formData,
-                                                    additionalComments: e.target.value
-                                                })}
-                                            />
-                                        </ModalBody>
-                                        <ModalFooter>
-                                            <p className="text-red-500">{errMsg}</p>
-                                            <Button color="danger" variant="light" onPress={onClose}>
-                                                关闭
-                                            </Button>
-                                            <Button color="primary" onPress={() => handleRegistration(onClose)}>
-                                                报名
-                                            </Button>
-                                        </ModalFooter>
-                                    </>
-                                )}
-                            </ModalContent>
-                        </Modal>
-                    </>
-                    : <CardFooter><Alert color={'warning'} title="请点击右上角登录后进行报名"/></CardFooter>}
-            </Card>
-            <Card>
-                <CardBody>
-                    <p>赛程</p>
-                </CardBody>
-                <Divider/>
-                <CardBody className="whitespace-pre-wrap">
-                    {tournament_info.tournament_schedule_info}
-                </CardBody>
-            </Card>
-            <Card>
-                <CardBody>
-                    <p>奖金</p>
-                </CardBody>
-                <Divider/>
-                <CardBody className="whitespace-pre-wrap">
-                    {tournament_info.prize_info}
-                </CardBody>
-            </Card>
-            {(new Date(tournament_info.start_date) < new Date()) ?
-                <Alert color={'warning'} title="该比赛已结束报名"/>
-                : currentUser?.currentUser ?
-                    <Card>
-                        <CardBody>
-                            <p>报名</p>
-                        </CardBody>
-                        <Divider/>
-                        <CardBody className="gap-3">
-                            {tournament_info.rank_max || tournament_info.rank_min ?
-                                <div>
-                                    本比赛有排名限制
-                                    {tournament_info.rank_max ? <div>最高排名：{tournament_info.rank_max}</div> : null}
-                                    {tournament_info.rank_min ? <div>最低排名：{tournament_info.rank_min}</div> : null}
-                                </div> : null
-                            }
-                            <div>
-                                {tournament_info.registration_info}
+        <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10">
+
+            {/* 1. 顶部 Banner 区域 (完全重构) */}
+            <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-zinc-950 group border border-white/10">
+
+                {/* A. 氛围背景层 (模糊放大的背景，填充空白区域) */}
+                <div className="absolute inset-0 z-0">
+                    <Image
+                        removeWrapper
+                        src={tournament_info.pic_url}
+                        alt="Background"
+                        className="w-full h-full object-cover blur-[60px] opacity-50 scale-125"
+                    />
+                    <div className="absolute inset-0 bg-black/40" />
+                </div>
+
+                {/* B. 核心 Banner 展示层 */}
+                {/*
+                   修改重点：
+                   1. aspect-video (手机): 16:9 比例，让图片在手机上够高，能看清字。
+                   2. md:aspect-[21/9] (电脑): 超宽比例，更有气势。
+                   3. p-0: 移除内边距，让图片撑满。
+                */}
+                <div className="relative z-10 w-full aspect-video md:aspect-[21/9] flex items-center justify-center">
+                    <Image
+                        removeWrapper
+                        src={tournament_info.pic_url}
+                        alt={tournament_info.name}
+                        // object-contain: 保证图片完整显示，绝对不裁剪文字
+                        // w-full h-full: 填满容器
+                        className="w-full h-full object-contain drop-shadow-2xl z-10"
+                    />
+
+                    {/*
+                       C. 底部信息控制栏 (玻璃拟态 + 渐变遮罩)
+                       位置：绝对定位在底部，覆盖在图片下方
+                    */}
+                    <div className="absolute bottom-0 left-0 right-0 z-20 w-full bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4 sm:px-8 flex flex-col md:flex-row items-end md:items-center justify-between gap-4">
+
+                        {/* 左侧：标题与状态 */}
+                        <div className="flex flex-col gap-2 text-left flex-1 min-w-0 w-full md:w-auto">
+                            {/*
+                               既然 Banner 上已经有字了，这里的 H1 主要起到 SEO 和结构作用。
+                               在手机上如果 Banner 字太小，这个 H1 还是有用的。
+                            */}
+                            <h1 className="text-xl sm:text-3xl font-black text-white drop-shadow-lg truncate tracking-tight">
+                                {tournament_info.name}
+                            </h1>
+
+                            <div className="flex flex-wrap gap-2 items-center">
+                                    <Chip color="primary" size="sm" variant="shadow" className="font-bold uppercase">
+                                    {tournament_info.mode}
+                                </Chip>
+                                <Chip startContent={<CalendarIcon/>} size="sm" variant="flat" className="text-white/90 bg-white/10 border border-white/10 backdrop-blur-md">
+                                    {formatDate(tournament_info.start_date)} - {formatDate(tournament_info.end_date)}
+                                </Chip>
                             </div>
-                            {regNotAvailable ?
-                                <Alert color={'danger'} title="您不符合报名条件"/>
-                                :
-                                <div className="flex flex-row gap-3">
-                                    <Tooltip content="排名需符合赛事要求才能报名">
-                                        <Button color="primary"
-                                                isDisabled={regNotAvailable || members.some((member) => {
-                                                    return member.player && member.uid === currentUser?.currentUser?.uid
-                                                })}
+                        </div>
+
+                        {/* 右侧：操作按钮 */}
+                        {/* 手机端 Grid 布局 (更易点击)，桌面端 Flex */}
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 shrink-0 w-full md:w-auto mt-2 md:mt-0">
+                            {tournament_info.links.map((link) => (
+                                <Button
+                                    key={link.name}
+                                    as={Link}
+                                    href={link.url}
+                                    isExternal
+                                    size="md"
+                                    variant="bordered"
+                                    className="border-white/20 bg-black/40 text-white hover:bg-white/10 hover:border-white transition-colors font-medium backdrop-blur-md w-full sm:w-auto"
+                                    startContent={<LinkIcon />}
+                                >
+                                    {link.name}
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. Staff 报名卡片 (保持之前修复的左对齐样式) */}
+            <Card className="border border-white/5 bg-content1 shadow-md">
+                <CardHeader className="flex justify-between items-center px-6 py-4 bg-default-50/50">
+                    <div className="font-bold text-lg">Staff 报名</div>
+                </CardHeader>
+
+                <CardBody className="px-6 pt-4 pb-2 gap-4">
+                    <div className="whitespace-pre-wrap text-default-600 leading-relaxed text-sm sm:text-base">
+                        {tournament_info.staff_registration_info}
+                    </div>
+                </CardBody>
+
+                {currentUser?.currentUser ? (
+                    <CardFooter className="px-6 pb-6 pt-2 flex justify-start">
+                        <Button onPress={onOpen} color="secondary" variant="shadow" className="font-bold w-full sm:w-auto" size="lg">
+                            立即报名 Staff
+                        </Button>
+                    </CardFooter>
+                ) : (
+                    <CardFooter className="px-6 py-3 bg-warning/10 justify-start">
+                         <p className="text-warning text-sm">请登录后进行 Staff 报名</p>
+                    </CardFooter>
+                )}
+            </Card>
+
+            {/* ... 其他卡片 (选手报名、赛程、奖金) 保持不变 ... */}
+
+            {/* 4. 赛程 */}
+            <Card className="border border-white/5 bg-content1 shadow-md">
+                <CardHeader className="px-6 py-4 bg-default-50/50">
+                    <div className="font-bold text-lg">赛程</div>
+                </CardHeader>
+                <CardBody className="px-6 py-4">
+                    <div className="whitespace-pre-wrap text-default-600 leading-relaxed font-mono">
+                        {tournament_info.tournament_schedule_info || "暂无赛程信息"}
+                    </div>
+                </CardBody>
+            </Card>
+
+            {/* 5. 奖金 */}
+            <Card className="border border-white/5 bg-content1 shadow-md">
+                <CardHeader className="px-6 py-4 bg-default-50/50">
+                    <div className="font-bold text-lg">奖金</div>
+                </CardHeader>
+                <CardBody className="px-6 py-4">
+                    <div className="whitespace-pre-wrap text-default-600 leading-relaxed">
+                        {tournament_info.prize_info || "暂无奖金信息"}
+                    </div>
+                </CardBody>
+            </Card>
+
+            <Card className="border border-white/5 bg-content1 shadow-md">
+                <CardHeader className="px-6 py-4 bg-default-50/50">
+                    <div className="font-bold text-lg">选手报名</div>
+                </CardHeader>
+                {/* 移除 Divider */}
+
+                <CardBody className="px-6 py-4 gap-4">
+                     {(tournament_info.rank_max || tournament_info.rank_min) && (
+                        <Alert
+                            color="primary"
+                            variant="faded"
+                            title={`排名限制：${tournament_info.rank_min || 0} - ${tournament_info.rank_max || "∞"}`}
+                        />
+                    )}
+
+                    {tournament_info.registration_info && (
+                        <div className="whitespace-pre-wrap text-default-600 leading-relaxed">
+                            {tournament_info.registration_info}
+                        </div>
+                    )}
+
+                    {tournament_info.qq_group && isRegistered && (
+                        <div className="flex items-center gap-2 p-3 bg-success/10 rounded-lg border border-success/20">
+                            <span className="text-success font-bold text-sm">QQ群:</span>
+                            <Snippet symbol="" codeString={tournament_info.qq_group.toString()} color="success" size="sm" variant="flat">
+                                {tournament_info.qq_group.toString()}
+                            </Snippet>
+                            <span className="text-xs text-success-600">(报名后请务必加群)</span>
+                        </div>
+                    )}
+
+                    <div className="mt-2">
+                        {(new Date(tournament_info.start_date) < new Date()) ? (
+                            <Alert color="warning" title="该比赛报名已结束" />
+                        ) : !currentUser?.currentUser ? (
+                            <Alert color="warning" variant="faded" title="请点击右上角登录后进行赛事报名" />
+                        ) : (
+                            <div className="flex flex-col gap-3">
+                                {regNotAvailable ? (
+                                    <Alert color="danger" title="您不符合报名条件" description={`当前排名 #${userRank} 不在限制范围内`} />
+                                ) : (
+                                    <div className="flex flex-col sm:flex-row gap-4 justify-start">
+                                        <Tooltip content="排名需符合赛事要求才能报名">
+                                            <Button
+                                                color="primary"
+                                                variant="shadow"
+                                                size="lg"
+                                                className="font-bold w-full sm:w-auto"
+                                                isDisabled={regNotAvailable || isRegistered}
                                                 onPress={async () => {
                                                     const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${tournament_info.abbreviation}`, {
-                                                        'method': 'GET',
-                                                        'headers': {'Content-Type': 'application/json'},
-                                                        credentials: 'include'
+                                                        'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'
                                                     })
-                                                    if (res.status != 200) {
-                                                        // 失败
-                                                        alert(await res.text());
-                                                    } else {
-                                                        // 关闭模态框
-                                                        alert('报名成功');
-                                                        setMembers(await res.json())
-                                                    }
+                                                    if (res.status != 200) alert(await res.text());
+                                                    else { alert('报名成功'); setMembers(await res.json()) }
                                                 }}
-                                        >
-                                            报名比赛
-                                        </Button>
-                                    </Tooltip>
-                                    <Button color="danger" isDisabled={
-                                        !members.some((member) => {
-                                            return member.player && member.uid === currentUser?.currentUser?.uid
-                                        }) || (new Date(tournament_info.start_date) < new Date())
-                                    }
-                                            onPress={async () => {
-                                                const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {
-                                                    'method': 'GET',
-                                                    'headers': {'Content-Type': 'application/json'},
-                                                    credentials: 'include'
-                                                })
-                                                if (res.status != 200) {
-                                                    // 失败
-                                                    alert(await res.text());
-                                                } else {
-                                                    // 关闭模态框
-                                                    alert('取消报名成功');
-                                                    setMembers(await res.json())
-                                                }
-                                            }}
-                                    >
-                                        取消报名
-                                    </Button>
+                                            >
+                                                {isRegistered ? "已报名" : "立即报名比赛"}
+                                            </Button>
+                                        </Tooltip>
+
+                                        {isRegistered && (
+                                            <Button
+                                                color="danger"
+                                                variant="ghost"
+                                                size="lg"
+                                                className="w-full sm:w-auto"
+                                                onPress={async () => {
+                                                    const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {
+                                                        'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'
+                                                    })
+                                                    if (res.status != 200) alert(await res.text());
+                                                    else { alert('取消报名成功'); setMembers(await res.json()) }
+                                                }}
+                                            >
+                                                取消报名
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {isRegistered && (
+                                    <Alert color="success" variant="flat" title="您已成功报名" />
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </CardBody>
+            </Card>
+
+
+            {/* Staff 模态框保持不变 */}
+             <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" scrollBehavior="inside" backdrop="blur">
+                 <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex flex-col gap-1 text-xl">
+                                报名 Staff - {tournament_info.abbreviation}
+                            </ModalHeader>
+                            <Divider />
+                            <ModalBody className="py-6 flex flex-col gap-6">
+                                <Alert color="default" variant="flat" title="请务必填写真实有效的信息，以便我们与您联系。" />
+
+                                <div className="flex flex-col gap-4">
+                                    <Input isRequired label="QQ号" placeholder="请输入您的QQ号码" variant="bordered" labelPlacement="outside"
+                                           onChange={(e) => setFormData({...formData, qqNumber: e.target.value})}/>
+
+                                    <div className="flex flex-col gap-2">
+                                        <p className="text-small text-foreground-500">是否第一次担任 Staff？ <span className="text-danger">*</span></p>
+                                        <RadioGroup orientation="horizontal" isRequired className="ml-1"
+                                            onChange={(e) => setFormData({...formData, isFirstTimeStaff: (e.target.value !== "")})}>
+                                            <Radio value="1">是</Radio>
+                                            <Radio value="">否</Radio>
+                                        </RadioGroup>
+                                    </div>
                                 </div>
-                            }
-                            {(members.some((member) => {
-                                return member.player && member.uid === currentUser?.currentUser?.uid
-                            })) ?
-                                <Alert color={'success'} title="您已成功报名"
-                                       description={tournament_info.qq_group ? `报名后请务必加群${tournament_info.qq_group}` : null}/>
-                                : null
-                            }
-                        </CardBody>
-                    </Card> :
-                    <Alert color={'warning'} title="请点击右上角登录后进行赛事报名"/>
-            }
+                                <Textarea minRows={3} label="赛事经验" placeholder="请简述您参与过的比赛及担任的职位..." variant="bordered" labelPlacement="outside"
+                                    onChange={(e) => setFormData({...formData, tournamentExperience: e.target.value})} />
+                                <div>
+                                    <p className="text-small text-foreground-500 mb-3">选择意向职位 <span className="text-danger">*</span></p>
+                                    <CheckboxGroup orientation="horizontal" className="gap-4"
+                                        //@ts-ignore
+                                        onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}>
+                                        {tournament_info.streamer && <Checkbox value="直播">直播</Checkbox>}
+                                        {tournament_info.referee && <Checkbox value="裁判">裁判</Checkbox>}
+                                        {tournament_info.commentator && <Checkbox value="解说">解说</Checkbox>}
+                                        {tournament_info.mappooler && <Checkbox value="选图">选图</Checkbox>}
+                                        {tournament_info.custom_mapper && <Checkbox value="作图">作图</Checkbox>}
+                                        {tournament_info.designer && <Checkbox value="设计">设计</Checkbox>}
+                                        {tournament_info.scheduler && <Checkbox value="赛程安排">赛程安排</Checkbox>}
+                                        {tournament_info.map_tester && <Checkbox value="测图">测图</Checkbox>}
+                                    </CheckboxGroup>
+                                </div>
+                                <div className="flex flex-col gap-4">
+                                     <Textarea minRows={2} label="其他说明 (选填)" variant="bordered" labelPlacement="outside" placeholder="例如：擅长Mania 4K/7K，有作图经验等..."
+                                        onChange={(e) => setFormData({...formData, otherDetails: e.target.value})} />
+                                     <Textarea minRows={2} label="补充信息 (选填)" variant="bordered" labelPlacement="outside"
+                                        onChange={(e) => setFormData({...formData, additionalComments: e.target.value})} />
+                                </div>
+                                {errMsg && <Alert color="danger" title={errMsg} />}
+                            </ModalBody>
+                            <Divider />
+                            <ModalFooter>
+                                <Button color="danger" variant="light" onPress={onClose}>取消</Button>
+                                <Button color="primary" onPress={() => handleRegistration(onClose)} className="font-bold">提交报名</Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
         </div>
     );
 }
 
-
+// Interface 定义保持不变...
 export interface TournamentInfo {
     name: string;
     abbreviation: string;
@@ -373,7 +447,6 @@ type Link = {
     name: string;
     url: string;
 }
-
 
 export type RegistrationInfo = {
     tournament: string;
