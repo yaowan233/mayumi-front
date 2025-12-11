@@ -31,7 +31,7 @@ export const DownloadIcon = ({className}: {className?: string}) => (
     </IconWrapper>
 );
 
-// --- 2. 增强的 Mod 颜色映射 (包含 RC, LN, HB) ---
+
 const getModColor = (mod: string) => {
     // 提取 Mod 前缀 (比如 RC1 -> RC)
     const key = mod.replace(/[0-9]/g, '').trim().toUpperCase();

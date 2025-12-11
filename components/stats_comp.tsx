@@ -31,12 +31,24 @@ const STATS_COLUMNS = [
 ];
 
 const getModColor = (mod: string) => {
-    const map: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
-        "NM": "default", "HD": "warning", "HR": "danger", "DT": "secondary", "FM": "success", "TB": "primary"
+    // 提取 Mod 前缀 (比如 RC1 -> RC)
+    const key = mod.replace(/[0-9]/g, '').trim().toUpperCase();
+
+    const map: Record<string, { color: "default" | "primary" | "secondary" | "success" | "warning" | "danger", hex: string }> = {
+        "RC": { color: "primary", hex: "#006FEE" },   // Blue (Rice)
+        "SV": { color: "secondary", hex: "#9353d3" }, // Purple (Long Note)
+        "HB": { color: "warning", hex: "#f5a524" },   // Orange/Gold (Hybrid)
+        "LN": { color: "success", hex: "#17c964" },   // Green (Slider Velocity)
+        "TB": { color: "danger", hex: "#f31260" },    // Red (Tiebreaker)
+        "NM": { color: "default", hex: "#a1a1aa" },
+        "HD": { color: "warning", hex: "#f5a524" },
+        "HR": { color: "primary", hex: "#006FEE" },
+        "DT": { color: "secondary", hex: "#9353d3" },
+        "FM": { color: "success", hex: "#17c964" },
     };
-    // 简单匹配前缀
-    const key = Object.keys(map).find(k => mod.includes(k)) || "default";
-    return map[key];
+
+    // 如果找不到匹配，返回默认灰色
+    return map[key] || { color: "default", hex: "#71717a" };
 };
 
 // --- 主组件 ---
@@ -249,7 +261,7 @@ const StatsTable = ({ stats, stageName }: { stats: Stats[], stageName: string })
                             }
                             // 给 Mod 列加个高亮
                             if (columnKey === 'mod_name') {
-                                return <TableCell><Chip size="sm" color={getModColor(val)} variant="flat">{val}</Chip></TableCell>
+                                return <TableCell><Chip size="sm" color={getModColor(val).color} variant="flat">{val}</Chip></TableCell>
                             }
                             return <TableCell>{val ?? '-'}</TableCell>;
                         }}
@@ -325,7 +337,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
 
                 <div className="absolute inset-0 z-20 p-4 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
-                        <Chip color={modColor} variant="solid" size="sm" className="font-bold shadow-md text-white">
+                        <Chip color={modColor.color} variant="solid" size="sm" className="font-bold shadow-md text-white">
                             {map.mod} {map.index + 1}
                         </Chip>
                         <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-xs text-yellow-400 font-bold border border-white/20">
@@ -345,7 +357,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                 </div>
 
                 {/* 侧边装饰条 */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 z-20 bg-${modColor === 'default' ? 'zinc-500' : modColor}`} />
+                <div className={`absolute left-0 top-0 bottom-0 w-1 z-20 bg-${modColor.color === 'default' ? 'zinc-500' : modColor}`} />
             </CardHeader>
 
             {/* 2. 成绩列表区域 */}
