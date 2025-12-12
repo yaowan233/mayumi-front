@@ -1,18 +1,43 @@
 "use client";
-import React, { useContext, useEffect, useState } from "react";
+import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import { siteConfig } from "@/config/site";
-import { Button } from "@heroui/button";
-import { Input } from "@heroui/input";
-import { Switch } from "@heroui/switch";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Spinner } from "@heroui/spinner";
-import { useRouter } from "next/navigation";
+import {siteConfig} from "@/config/site";
+import {Button} from "@heroui/button";
+import {Input} from "@heroui/input";
+import {Switch} from "@heroui/switch";
+import {Card, CardBody, CardHeader} from "@heroui/card";
+import {Spinner} from "@heroui/spinner";
+import {useRouter} from "next/navigation";
 
-const SaveIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>);
-const PlusIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
-const TrashIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>);
-const RoundIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>);
+const SaveIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+    </svg>);
+const PlusIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>);
+const TrashIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>);
+const RoundIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/>
+        <line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>);
 
 export default function EditRoundPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
@@ -92,7 +117,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     if (isLoading) {
         return (
             <div className="w-full h-[50vh] flex flex-col items-center justify-center gap-4">
-                <Spinner size="lg" color="primary" />
+                <Spinner size="lg" color="primary"/>
                 <p className="text-default-500">正在加载轮次信息...</p>
             </div>
         );
@@ -110,7 +135,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                 </div>
                 {/* 修复：text-white -> text-foreground */}
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                    <RoundIcon />
+                    <RoundIcon/>
                     轮次管理
                 </h1>
                 <p className="text-default-500">配置比赛的各个阶段（如：预选赛、小组赛、淘汰赛）及其时间安排。</p>
@@ -133,13 +158,14 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                     onClick={() => setFormData([...formData, initialFormData])}
                     className="w-full h-16 border-2 border-dashed border-default-300 rounded-2xl flex items-center justify-center gap-2 text-default-500 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 group"
                 >
-                    <PlusIcon />
+                    <PlusIcon/>
                     <span className="font-bold group-hover:tracking-wider transition-all">添加新轮次</span>
                 </button>
             </div>
 
             {/* Sticky Footer: 修复背景色和边框 */}
-            <Card className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
+            <Card
+                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <CardBody className="flex flex-row justify-between items-center py-4 px-6">
                     <div className="flex items-center gap-4">
                         <Button variant="light" onPress={() => router.back()}>取消</Button>
@@ -152,7 +178,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                         size="lg"
                         variant="shadow"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon />}
+                        startContent={!isSaving && <SaveIcon/>}
                         isLoading={isSaving}
                         onPress={handleUpdateTournament}
                     >
@@ -172,7 +198,7 @@ interface RoundCardProps {
     onDelete: () => void;
 }
 
-const RoundCard = ({ index, roundData, onChange, onDelete }: RoundCardProps) => {
+const RoundCard = ({index, roundData, onChange, onDelete}: RoundCardProps) => {
     return (
         <Card
             // 修复：
@@ -181,9 +207,11 @@ const RoundCard = ({ index, roundData, onChange, onDelete }: RoundCardProps) => 
             className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900/50 transition-colors shadow-sm"
         >
             {/* Header: 修复背景色和边框 */}
-            <CardHeader className="flex justify-between items-center px-6 py-4 bg-default-50 dark:bg-white/5 border-b border-default-200 dark:border-white/5">
+            <CardHeader
+                className="flex justify-between items-center px-6 py-4 bg-default-50 dark:bg-white/5 border-b border-default-200 dark:border-white/5">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                    <div
+                        className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">
                         {index + 1}
                     </div>
                     {/* 修复：text-default-700 -> text-foreground */}
@@ -199,7 +227,7 @@ const RoundCard = ({ index, roundData, onChange, onDelete }: RoundCardProps) => 
                     onPress={onDelete}
                     className="opacity-50 hover:opacity-100"
                 >
-                    <TrashIcon />
+                    <TrashIcon/>
                 </Button>
             </CardHeader>
 

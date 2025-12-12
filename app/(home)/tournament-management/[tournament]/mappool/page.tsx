@@ -1,22 +1,40 @@
 "use client";
-import React, { useContext, useEffect, useState } from "react";
+import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import { TournamentRoundInfo } from "@/app/(home)/tournament-management/[tournament]/round/page";
-import { Image } from "@heroui/image";
-import { Input } from "@heroui/input";
-import { siteConfig } from "@/config/site";
-import { TournamentInfo } from "@/components/homepage";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Button } from "@heroui/button";
-import { Tab, Tabs } from "@heroui/tabs";
-import { Spinner } from "@heroui/spinner";
-import { Link } from "@heroui/link";
+import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
+import {Image} from "@heroui/image";
+import {Input} from "@heroui/input";
+import {siteConfig} from "@/config/site";
+import {TournamentInfo} from "@/components/homepage";
+import {Card, CardBody, CardHeader} from "@heroui/card";
+import {Button} from "@heroui/button";
+import {Tab, Tabs} from "@heroui/tabs";
+import {Spinner} from "@heroui/spinner";
+import {Link} from "@heroui/link";
 
 // --- 图标 ---
-const MapIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>);
-const PlusIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
-const SaveIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>);
-const TrashIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>);
+const MapIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+        <line x1="8" y1="2" x2="8" y2="18"/>
+        <line x1="16" y1="6" x2="16" y2="22"/>
+    </svg>);
+const PlusIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>);
+const SaveIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+    </svg>);
+const TrashIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>);
 
 export default function EditTournamentMapPoolPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
@@ -69,8 +87,8 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
             return;
         }
         if (validateModOrder(tournamentMaps)) { // 注意：这里校验的是全局，可能需要改为只校验当前轮次
-             setErrMsg('同一轮次下 Mod 序号不能重复');
-             return;
+            setErrMsg('同一轮次下 Mod 序号不能重复');
+            return;
         }
 
         setIsSaving(true);
@@ -119,11 +137,13 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         }]);
     };
 
-    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg" color="primary" /></div>;
+    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg"
+                                                                                                     color="primary"/>
+    </div>;
 
     // 过滤当前轮次的地图
     const currentMapsWithIndex = tournamentMaps
-        .map((map, index) => ({ ...map, originalIndex: index })) // 保留原始索引以便更新
+        .map((map, index) => ({...map, originalIndex: index})) // 保留原始索引以便更新
         .filter(map => map.stage_name === selectedRound);
 
     return (
@@ -137,7 +157,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                     <span>{tournament_name}</span>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                    <MapIcon />
+                    <MapIcon/>
                     图池管理
                 </h1>
                 <p className="text-default-500">为每个比赛轮次配置地图池 (Mappool)。</p>
@@ -160,7 +180,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                             tabContent: "group-data-[selected=true]:text-primary font-bold text-lg"
                         }}
                     >
-                        {(item) => <Tab key={item.stage_name} title={item.stage_name} />}
+                        {(item) => <Tab key={item.stage_name} title={item.stage_name}/>}
                     </Tabs>
 
                     {/* Map Grid */}
@@ -180,24 +200,28 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                             onClick={addMap}
                             className="h-[320px] border-2 border-dashed border-default-300 rounded-2xl flex flex-col items-center justify-center gap-4 text-default-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 group"
                         >
-                            <div className="p-4 rounded-full bg-default-100 group-hover:bg-primary/10 transition-colors">
-                                <PlusIcon />
+                            <div
+                                className="p-4 rounded-full bg-default-100 group-hover:bg-primary/10 transition-colors">
+                                <PlusIcon/>
                             </div>
                             <span className="font-bold">添加地图</span>
                         </button>
                     </div>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-default-200 rounded-xl">
+                <div
+                    className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-default-200 rounded-xl">
                     <p className="text-default-500">暂无轮次信息，请先前往“轮次管理”添加。</p>
-                    <Button as={Link} href={`/tournament-management/${tournament_name}/round`} color="primary" className="mt-4">
+                    <Button as={Link} href={`/tournament-management/${tournament_name}/round`} color="primary"
+                            className="mt-4">
                         去添加轮次
                     </Button>
                 </div>
             )}
 
             {/* Sticky Footer */}
-            <Card className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
+            <Card
+                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <CardBody className="flex flex-row justify-between items-center py-4 px-6">
                     <div className="text-danger font-medium text-sm animate-pulse">
                         {errMsg && <span>⚠️ {errMsg}</span>}
@@ -207,7 +231,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                         size="lg"
                         variant="shadow"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon />}
+                        startContent={!isSaving && <SaveIcon/>}
                         isLoading={isSaving}
                         onPress={handleUpdateTournament}
                     >
@@ -220,7 +244,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
 }
 
 // --- 子组件：地图编辑卡片 ---
-const MapEditCard = ({ map, index, onChange, onDelete }: any) => {
+const MapEditCard = ({map, index, onChange, onDelete}: any) => {
     // 动态背景图
 
     return (
@@ -242,7 +266,8 @@ const MapEditCard = ({ map, index, onChange, onDelete }: any) => {
                 )}
 
                 {/* 遮罩 & 标题 */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 flex flex-col justify-end p-4">
+                <div
+                    className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 flex flex-col justify-end p-4">
                     <span className="text-white font-bold text-lg">
                         {map.mod || "Mod?"} {map.number || "?"}
                     </span>
@@ -262,7 +287,7 @@ const MapEditCard = ({ map, index, onChange, onDelete }: any) => {
                     // md:group-hover:opacity-100: 电脑端悬停显示
                     className="absolute top-2 right-2 z-20 shadow-lg border border-white/20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >
-                    <TrashIcon />
+                    <TrashIcon/>
                 </Button>
             </CardHeader>
 

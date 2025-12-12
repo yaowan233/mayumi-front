@@ -16,11 +16,33 @@ import {useRouter} from "next/navigation";
 import {Divider} from "@heroui/divider";
 
 // --- 图标 ---
-const TeamIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>);
-const PlusIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
-const SaveIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>);
-const CrownIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" className="text-warning"><path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" /></svg>);
-const TrashIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>);
+const TeamIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>);
+const PlusIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>);
+const SaveIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+    </svg>);
+const CrownIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" className="text-warning">
+    <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z"/>
+</svg>);
+const TrashIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>);
 
 export default function EditTeamPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
@@ -50,55 +72,57 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
     }, [currentUser, tournament_name]);
 
     const handleSave = async () => {
-            // --- 新增：校验逻辑 ---
-            const names = teams.map(t => t.name.trim());
+        // --- 新增：校验逻辑 ---
+        const names = teams.map(t => t.name.trim());
 
-            // 1. 检查空名
-            if (names.some(n => n === "")) {
-                alert("保存失败：存在空白的队伍名称，请检查。");
-                return;
-            }
+        // 1. 检查空名
+        if (names.some(n => n === "")) {
+            alert("保存失败：存在空白的队伍名称，请检查。");
+            return;
+        }
 
-            // 2. 检查重名 (利用 Set 去重比较长度)
-            const uniqueNames = new Set(names);
-            if (uniqueNames.size !== names.length) {
-                // 找出重复的名字提示给用户
-                const duplicates = names.filter((item, index) => names.indexOf(item) !== index);
-                alert(`保存失败：队伍名称重复 [${duplicates[0]}]`);
-                return;
-            }
-            setIsSaving(true);
-            try {
-                // 修改这里：在 URL 中拼接 ?tournament_name=...
-                // 注意：虽然 teams 数组里也有 tournament_name，但如果数组为空就取不到了，
-                // 所以直接使用页面 props 中获取到的 tournament_name 变量
-                const res = await fetch(
-                    siteConfig.backend_url +
-                    `/api/update-teams?tournament_name=${encodeURIComponent(tournament_name)}`,
-                    {
-                        method: 'POST',
-                        body: JSON.stringify(teams),
-                        headers: {'Content-Type': 'application/json'},
-                        credentials: 'include'
-                    }
-                );
-
-                if (res.status != 200) {
-                    alert(await res.text());
-                } else {
-                    alert('更新成功');
+        // 2. 检查重名 (利用 Set 去重比较长度)
+        const uniqueNames = new Set(names);
+        if (uniqueNames.size !== names.length) {
+            // 找出重复的名字提示给用户
+            const duplicates = names.filter((item, index) => names.indexOf(item) !== index);
+            alert(`保存失败：队伍名称重复 [${duplicates[0]}]`);
+            return;
+        }
+        setIsSaving(true);
+        try {
+            // 修改这里：在 URL 中拼接 ?tournament_name=...
+            // 注意：虽然 teams 数组里也有 tournament_name，但如果数组为空就取不到了，
+            // 所以直接使用页面 props 中获取到的 tournament_name 变量
+            const res = await fetch(
+                siteConfig.backend_url +
+                `/api/update-teams?tournament_name=${encodeURIComponent(tournament_name)}`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(teams),
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include'
                 }
-            } finally {
-                setIsSaving(false);
+            );
+
+            if (res.status != 200) {
+                alert(await res.text());
+            } else {
+                alert('更新成功');
             }
-        };
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     // 辅助函数：更新状态
     const updateTeams = (newTeams: any[]) => {
         setTournamentPlayers(prev => ({...prev, groups: newTeams}));
     };
 
-    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg" color="primary" /></div>;
+    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg"
+                                                                                                     color="primary"/>
+    </div>;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 animate-appearance-in pb-32">
@@ -111,7 +135,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                     <span>{tournament_name}</span>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                    <TeamIcon />
+                    <TeamIcon/>
                     队伍管理
                 </h1>
                 <p className="text-default-500">创建并管理参赛队伍，分配队长与队员。</p>
@@ -155,14 +179,15 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                     className="h-full min-h-[300px] border-2 border-dashed border-default-300 rounded-2xl flex flex-col items-center justify-center gap-4 text-default-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 group"
                 >
                     <div className="p-4 rounded-full bg-default-100 group-hover:bg-primary/10 transition-colors">
-                        <PlusIcon />
+                        <PlusIcon/>
                     </div>
                     <span className="font-bold text-lg">添加新队伍</span>
                 </button>
             </div>
 
             {/* Sticky Footer */}
-            <Card className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
+            <Card
+                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <CardBody className="flex flex-row justify-between items-center py-4 px-6">
                     <Button variant="light" onPress={() => router.back()}>取消</Button>
                     <Button
@@ -170,7 +195,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                         size="lg"
                         variant="shadow"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon />}
+                        startContent={!isSaving && <SaveIcon/>}
                         isLoading={isSaving}
                         onPress={handleSave}
                     >
@@ -183,7 +208,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
 }
 
 // --- 子组件：队伍编辑卡片 ---
-const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) => {
+const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) => {
 
     // 添加成员逻辑
     const addMember = (uid: number) => {
@@ -192,7 +217,7 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
             alert('该成员已在队伍中');
             return;
         }
-        onUpdate({ ...team, members: [...team.members, uid] });
+        onUpdate({...team, members: [...team.members, uid]});
     };
 
     // 移动成员 (队长 <-> 队员)
@@ -201,21 +226,21 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
             // 队长 -> 队员
             const newCaptains = team.captains.filter((id: number) => id !== uid);
             const newMembers = [...team.members, uid];
-            onUpdate({ ...team, captains: newCaptains, members: newMembers });
+            onUpdate({...team, captains: newCaptains, members: newMembers});
         } else {
             // 队员 -> 队长
             const newMembers = team.members.filter((id: number) => id !== uid);
             const newCaptains = [...team.captains, uid];
-            onUpdate({ ...team, captains: newCaptains, members: newMembers });
+            onUpdate({...team, captains: newCaptains, members: newMembers});
         }
     };
 
     // 移除成员
     const removeMember = (uid: number, isCaptain: boolean) => {
         if (isCaptain) {
-            onUpdate({ ...team, captains: team.captains.filter((id: number) => id !== uid) });
+            onUpdate({...team, captains: team.captains.filter((id: number) => id !== uid)});
         } else {
-            onUpdate({ ...team, members: team.members.filter((id: number) => id !== uid) });
+            onUpdate({...team, members: team.members.filter((id: number) => id !== uid)});
         }
     };
 
@@ -229,7 +254,8 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
     const errorMessage = isEmpty ? "名称不能为空" : (isDuplicate ? "队伍名称已存在" : "");
 
     return (
-        <Card className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 shadow-sm overflow-visible">
+        <Card
+            className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 shadow-sm overflow-visible">
             <CardHeader className="flex justify-between items-start gap-4 p-4 pb-0">
                 <div className="flex gap-4 w-full">
                     {/* 图标部分保持不变 */}
@@ -254,7 +280,8 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
                                 >
                                     <span className="text-xs">已审核</span>
                                 </Checkbox>
-                                <Button isIconOnly size="sm" color="danger" variant="light" onPress={onDelete}><TrashIcon /></Button>
+                                <Button isIconOnly size="sm" color="danger" variant="light"
+                                        onPress={onDelete}><TrashIcon/></Button>
                             </div>
                         </div>
 
@@ -281,7 +308,7 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
                 </div>
             </CardHeader>
 
-            <Divider className="my-4" />
+            <Divider className="my-4"/>
 
             <CardBody className="px-4 pb-4 pt-0 gap-6">
 
@@ -299,7 +326,7 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
                         {(player: any) => (
                             <AutocompleteItem key={player.uid} textValue={player.name}>
                                 <div className="flex gap-2 items-center">
-                                    <Avatar src={`https://a.ppy.sh/${player.uid}`} size="sm" />
+                                    <Avatar src={`https://a.ppy.sh/${player.uid}`} size="sm"/>
                                     <div className="flex flex-col">
                                         <span>{player.name}</span>
                                         <span className="text-tiny text-default-400">#{player.rank}</span>
@@ -313,10 +340,11 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
                 {/* 成员列表 */}
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                        <CrownIcon />
+                        <CrownIcon/>
                         <span className="text-xs font-bold text-warning uppercase">Captains (点击降级)</span>
                     </div>
-                    <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-warning/5 rounded-lg border border-warning/10">
+                    <div
+                        className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-warning/5 rounded-lg border border-warning/10">
                         {team.captains.map((uid: number) => {
                             const player = players.find((p: any) => p.uid == uid);
                             return (
@@ -330,13 +358,15 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
                                 />
                             )
                         })}
-                        {team.captains.length === 0 && <span className="text-xs text-default-400 self-center pl-2">暂无队长</span>}
+                        {team.captains.length === 0 &&
+                            <span className="text-xs text-default-400 self-center pl-2">暂无队长</span>}
                     </div>
 
                     <div className="flex items-center gap-2 mt-2">
                         <span className="text-xs font-bold text-default-500 uppercase">Members (点击晋升)</span>
                     </div>
-                    <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-default-100 dark:bg-zinc-800/50 rounded-lg border border-default-200 dark:border-white/5">
+                    <div
+                        className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-default-100 dark:bg-zinc-800/50 rounded-lg border border-default-200 dark:border-white/5">
                         {team.members.map((uid: number) => {
                             const player = players.find((p: any) => p.uid == uid);
                             return (
@@ -350,7 +380,8 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
                                 />
                             )
                         })}
-                        {team.members.length === 0 && <span className="text-xs text-default-400 self-center pl-2">暂无队员</span>}
+                        {team.members.length === 0 &&
+                            <span className="text-xs text-default-400 self-center pl-2">暂无队员</span>}
                     </div>
                 </div>
             </CardBody>
@@ -359,7 +390,7 @@ const TeamEditCard = ({ index, team, players, teams, onUpdate, onDelete }: any) 
 }
 
 // --- 子组件：成员 Chip ---
-const MemberChip = ({ player, uid, isCaptain, onToggle, onDelete }: any) => {
+const MemberChip = ({player, uid, isCaptain, onToggle, onDelete}: any) => {
     return (
         <Chip
             variant={isCaptain ? "shadow" : "flat"}

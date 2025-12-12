@@ -1,39 +1,52 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import { Chip } from "@heroui/chip";
-import { Avatar } from "@heroui/avatar";
-import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
-import { Button } from "@heroui/button";
-import { useFilter } from "@react-aria/i18n";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@heroui/modal";
-import { RegistrationInfo } from "@/components/homepage";
-import { getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/table";
-import { siteConfig } from "@/config/site";
-import { Player, TournamentPlayers } from "@/app/tournaments/[tournament]/participants/page";
-import { Badge } from "@heroui/badge";
-import { Card, CardBody } from "@heroui/card";
-import { Tab, Tabs } from "@heroui/tabs";
+import {Chip} from "@heroui/chip";
+import {Avatar} from "@heroui/avatar";
+import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
+import {Button} from "@heroui/button";
+import {useFilter} from "@react-aria/i18n";
+import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure} from "@heroui/modal";
+import {RegistrationInfo} from "@/components/homepage";
+import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@heroui/table";
+import {siteConfig} from "@/config/site";
+import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {Badge} from "@heroui/badge";
+import {Card, CardBody} from "@heroui/card";
+import {Tab, Tabs} from "@heroui/tabs";
 
 // --- 配置 ---
 const ROLES = [
-    { key: "host", label: "主办 (Host)" },
-    { key: "player", label: "选手 (Player)" },
-    { key: "referee", label: "裁判 (Referee)" },
-    { key: "streamer", label: "直播 (Streamer)" },
-    { key: "commentator", label: "解说 (Commentator)" },
-    { key: "mappooler", label: "选图 (Mappooler)" },
-    { key: "custom_mapper", label: "作图 (Mapper)" },
-    { key: "graphic_designer", label: "设计 (Designer)" },
-    { key: "scheduler", label: "时间安排 (Scheduler)" },
-    { key: "map_tester", label: "测图 (Tester)" },
-    { key: "donator", label: "赞助 (Donator)" },
+    {key: "host", label: "主办 (Host)"},
+    {key: "player", label: "选手 (Player)"},
+    {key: "referee", label: "裁判 (Referee)"},
+    {key: "streamer", label: "直播 (Streamer)"},
+    {key: "commentator", label: "解说 (Commentator)"},
+    {key: "mappooler", label: "选图 (Mappooler)"},
+    {key: "custom_mapper", label: "作图 (Mapper)"},
+    {key: "graphic_designer", label: "设计 (Designer)"},
+    {key: "scheduler", label: "时间安排 (Scheduler)"},
+    {key: "map_tester", label: "测图 (Tester)"},
+    {key: "donator", label: "赞助 (Donator)"},
 ] as const;
 
 // --- 图标 ---
-const SaveIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>);
-const UserIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>);
+const SaveIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+    </svg>);
+const UserIcon = () => (
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>);
 
 const columns = [
     {name: "UID", key: "uid"},
@@ -48,12 +61,12 @@ const columns = [
 export default function EditMemberPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
     const currentUser = useContext(CurrentUserContext);
-    const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({ players: [] });
+    const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({players: []});
     const [registrationInfo, setRegistrationInfo] = useState<RegistrationInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    const { isOpen, onOpen, onOpenChange } = useDisclosure();
+    const {isOpen, onOpen, onOpenChange} = useDisclosure();
     const tournament_name = decodeURIComponent(params.tournament);
     const players = tournamentPlayers.players || [];
     const teams = tournamentPlayers.groups;
@@ -83,7 +96,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             const res = await fetch(siteConfig.backend_url + '/api/update-members', {
                 'method': 'POST',
                 'body': JSON.stringify(players),
-                'headers': { 'Content-Type': 'application/json' },
+                'headers': {'Content-Type': 'application/json'},
                 credentials: 'include'
             });
             if (res.status != 200) {
@@ -102,10 +115,11 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 animate-appearance-in pb-32">
 
             {/* Header: 修复文字颜色和边框 */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-default-200 dark:border-white/5 pb-6">
+            <div
+                className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-default-200 dark:border-white/5 pb-6">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                        <UserIcon /> 成员管理
+                        <UserIcon/> 成员管理
                     </h1>
                     <p className="text-default-500 mt-1">管理各职位成员权限及查看申请列表</p>
                 </div>
@@ -175,7 +189,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         <Tab key={role.key} title={role.label}>
                             {/* 修复：内容卡片背景色 */}
                             {/* 亮色: bg-content1 (白) border-default-200 */}
-                            <Card className="bg-content1 dark:bg-zinc-900/50 border border-default-200 dark:border-white/5 shadow-sm">
+                            <Card
+                                className="bg-content1 dark:bg-zinc-900/50 border border-default-200 dark:border-white/5 shadow-sm">
                                 <CardBody className="p-6 sm:p-8">
                                     <RoleManagementSection
                                         roleKey={role.key as keyof Player}
@@ -194,7 +209,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             </div>
 
             {/* Sticky Footer: 修复背景色 */}
-            <Card className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
+            <Card
+                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <CardBody className="flex flex-row justify-between items-center py-4 px-6">
                     <div className="text-default-500 text-sm">
                         * 修改后请务必点击保存
@@ -204,7 +220,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         size="lg"
                         variant="shadow"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon />}
+                        startContent={!isSaving && <SaveIcon/>}
                         isLoading={isSaving}
                         onPress={handleSave}
                     >
@@ -218,14 +234,14 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
 
 // --- 子组件：单个职位管理区块 ---
 const RoleManagementSection = ({
-    roleKey,
-    roleLabel,
-    players,
-    teams,
-    setTournamentPlayers,
-    currentUid,
-    tournamentName
-}: any) => {
+                                   roleKey,
+                                   roleLabel,
+                                   players,
+                                   teams,
+                                   setTournamentPlayers,
+                                   currentUid,
+                                   tournamentName
+                               }: any) => {
 
     const removeMember = (index: number) => {
         const member = players[index];
@@ -235,14 +251,18 @@ const RoleManagementSection = ({
         }
         const updatedMembers = [...players];
         updatedMembers[index][roleKey] = false;
-        setTournamentPlayers({ players: updatedMembers, groups: teams });
+        setTournamentPlayers({players: updatedMembers, groups: teams});
     };
 
-    const currentMembers = players.map((p: any, i: number) => ({...p, originalIndex: i})).filter((p: any) => p[roleKey]);
+    const currentMembers = players.map((p: any, i: number) => ({
+        ...p,
+        originalIndex: i
+    })).filter((p: any) => p[roleKey]);
 
     return (
         <div className="flex flex-col gap-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-default-100 dark:border-white/5">
+            <div
+                className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-default-100 dark:border-white/5">
                 <div>
                     {/* 修复：文字颜色改为 text-foreground (自动黑白) */}
                     <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -286,13 +306,15 @@ const RoleManagementSection = ({
                         >
                             <div className="flex flex-col justify-center h-full">
                                 <span className="leading-none">{member.name}</span>
-                                <span className="text-[10px] text-default-400 font-mono leading-tight mt-0.5">#{member.uid}</span>
+                                <span
+                                    className="text-[10px] text-default-400 font-mono leading-tight mt-0.5">#{member.uid}</span>
                             </div>
                         </Chip>
                     ))
                 ) : (
                     // 修复：空状态边框和颜色
-                    <div className="w-full flex flex-col items-center justify-center py-12 text-default-400 border-2 border-dashed border-default-200 dark:border-white/5 rounded-xl bg-default-50 dark:bg-white/5">
+                    <div
+                        className="w-full flex flex-col items-center justify-center py-12 text-default-400 border-2 border-dashed border-default-200 dark:border-white/5 rounded-xl bg-default-50 dark:bg-white/5">
                         <span className="text-4xl mb-2 opacity-50">∅</span>
                         <span>暂无 {roleLabel.split(' ')[0]}</span>
                     </div>
@@ -303,13 +325,13 @@ const RoleManagementSection = ({
 };
 
 // --- 子组件：添加成员 ---
-const AddMember = ({ members, teams, setMembers, tournamentName, position }: any) => {
-    const [fieldState, setFieldState] = useState<{selectedKey: string | null, inputValue: string, items: any[]}>({
+const AddMember = ({members, teams, setMembers, tournamentName, position}: any) => {
+    const [fieldState, setFieldState] = useState<{ selectedKey: string | null, inputValue: string, items: any[] }>({
         selectedKey: null,
         inputValue: "",
         items: members
     });
-    let { contains } = useFilter({ sensitivity: 'base' });
+    let {contains} = useFilter({sensitivity: 'base'});
 
     const onInputChange = (value: string) => {
         setFieldState((prev: any) => ({
@@ -355,8 +377,17 @@ const AddMember = ({ members, teams, setMembers, tournamentName, position }: any
                 uid: parseInt(fieldState.inputValue),
                 name: data.username,
                 tournament_name: tournamentName,
-                host: false, player: false, referee: false, streamer: false, commentator: false,
-                mappooler: false, custom_mapper: false, graphic_designer: false, scheduler: false, map_tester: false, donator: false,
+                host: false,
+                player: false,
+                referee: false,
+                streamer: false,
+                commentator: false,
+                mappooler: false,
+                custom_mapper: false,
+                graphic_designer: false,
+                scheduler: false,
+                map_tester: false,
+                donator: false,
                 [position]: true,
                 pp: data.statistics.pp,
                 rank: data.statistics.global_rank,
@@ -364,10 +395,10 @@ const AddMember = ({ members, teams, setMembers, tournamentName, position }: any
             };
             setMembers({players: [...members, newMember], groups: teams});
             setFieldState({
-                    selectedKey: null, // 清空选中键
-                    inputValue: "",    // 清空输入文字
-                    items: members     // 重置列表
-                });
+                selectedKey: null, // 清空选中键
+                inputValue: "",    // 清空输入文字
+                items: members     // 重置列表
+            });
         } catch (e) {
             alert('添加失败：用户不存在或网络错误');
         }
@@ -377,7 +408,8 @@ const AddMember = ({ members, teams, setMembers, tournamentName, position }: any
         // 修复：添加框背景色
         // 亮色: bg-default-100 border-default-200
         // 暗色: dark:bg-zinc-900/50 dark:border-white/5
-        <div className="flex gap-2 w-full md:w-auto items-center bg-default-100 dark:bg-zinc-900/50 p-1.5 rounded-lg border border-default-200 dark:border-white/5">
+        <div
+            className="flex gap-2 w-full md:w-auto items-center bg-default-100 dark:bg-zinc-900/50 p-1.5 rounded-lg border border-default-200 dark:border-white/5">
             <Autocomplete
                 aria-label="成员搜索框"
                 placeholder="输入 UID 添加..."
@@ -404,7 +436,7 @@ const AddMember = ({ members, teams, setMembers, tournamentName, position }: any
                 {(member: any) => (
                     <AutocompleteItem key={member.uid} textValue={member.uid.toString()}>
                         <div className="flex gap-2 items-center">
-                            <Avatar src={`https://a.ppy.sh/${member.uid}`} size="sm" />
+                            <Avatar src={`https://a.ppy.sh/${member.uid}`} size="sm"/>
                             <div className="flex flex-col">
                                 <span className="text-small">{member.name}</span>
                                 <span className="text-tiny text-default-400">{member.uid}</span>
@@ -429,6 +461,7 @@ async function getRegistrationInfo(tournament_name: string): Promise<Registratio
     const res = await fetch(siteConfig.backend_url + `/api/get-registration-info?tournament_name=${tournament_name}`, {next: {revalidate: 10}});
     return await res.json();
 }
+
 async function getPlayers(tournament_name: string): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name, {next: {revalidate: 0}});
     return await res.json();

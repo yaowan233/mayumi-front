@@ -11,10 +11,19 @@ import {Spinner} from "@heroui/spinner";
 
 // --- 图标 (继承 currentColor，无需修改) ---
 const SaveIcon = () => (
-    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+    </svg>
 );
 const EditIcon = () => (
-    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
 );
 
 export default function EditTournamentMetaPage(props: { params: Promise<{ tournament: string }> }) {
@@ -28,11 +37,32 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
     const [errMsg, setErrMsg] = useState('');
 
     const [formData, setFormData] = useState<TournamentInfo>({
-        name: '', abbreviation: '', pic_url: '', start_date: '', end_date: '', is_group: false, mode: 'osu',
-        rank_min: undefined, rank_max: undefined, description: '', rules_info: '', staff_registration_info: '',
-        tournament_schedule_info: '', registration_info: '', challonge_api_key: undefined, challonge_tournament_url: undefined,
-        referee: true, commentator: true, streamer: true, mappooler: true, custom_mapper: true, designer: true,
-        donator: true, scheduler: true, map_tester: true, links: [],
+        name: '',
+        abbreviation: '',
+        pic_url: '',
+        start_date: '',
+        end_date: '',
+        is_group: false,
+        mode: 'osu',
+        rank_min: undefined,
+        rank_max: undefined,
+        description: '',
+        rules_info: '',
+        staff_registration_info: '',
+        tournament_schedule_info: '',
+        registration_info: '',
+        challonge_api_key: undefined,
+        challonge_tournament_url: undefined,
+        referee: true,
+        commentator: true,
+        streamer: true,
+        mappooler: true,
+        custom_mapper: true,
+        designer: true,
+        donator: true,
+        scheduler: true,
+        map_tester: true,
+        links: [],
     });
 
     useEffect(() => {
@@ -55,7 +85,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
         setErrMsg('');
         if (!formData.name || !formData.abbreviation || !formData.mode || !formData.description || !formData.rules_info) {
             setErrMsg('请填写所有带 * 的必填字段');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({top: 0, behavior: 'smooth'});
             return;
         }
 
@@ -85,7 +115,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
     if (isLoadingData) {
         return (
             <div className="w-full h-[60vh] flex flex-col items-center justify-center gap-4">
-                <Spinner size="lg" color="primary" />
+                <Spinner size="lg" color="primary"/>
                 <p className="text-default-500">正在加载赛事信息...</p>
             </div>
         );
@@ -104,7 +134,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                 </div>
                 {/* text-white -> text-foreground (自动适配黑/白) */}
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                    <EditIcon />
+                    <EditIcon/>
                     编辑赛事信息
                 </h1>
                 <p className="text-default-500">修改比赛的基本设置、规则、介绍等元数据。</p>
@@ -114,7 +144,8 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
             <TournamentInfoForm formData={formData} setFormData={setFormData} errMsg={errMsg}/>
 
             {/* Sticky Footer Action Bar: 修复背景和边框 */}
-            <Card className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
+            <Card
+                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <CardBody className="flex flex-row justify-between items-center py-4 px-6">
 
                     {/* 左侧：取消按钮 + 错误信息 */}
@@ -139,7 +170,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                         size="lg"
                         variant="shadow"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon />}
+                        startContent={!isSaving && <SaveIcon/>}
                         isLoading={isSaving}
                         onPress={handleUpdateTournament}
                     >
