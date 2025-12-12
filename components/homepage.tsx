@@ -133,7 +133,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 <div className="absolute inset-0 z-0">
                     <Image
                         removeWrapper
-                        src={tournament_info.pic_url}
+                        src={tournament_info.pic_url || undefined}
                         alt="Background"
                         className="w-full h-full object-cover blur-[60px] opacity-50 scale-125"
                     />
@@ -150,7 +150,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 <div className="relative z-10 w-full aspect-video md:aspect-[21/9] flex items-center justify-center">
                     <Image
                         removeWrapper
-                        src={tournament_info.pic_url}
+                        src={tournament_info.pic_url || undefined}
                         alt={tournament_info.name}
                         // object-contain: 保证图片完整显示，绝对不裁剪文字
                         // w-full h-full: 填满容器

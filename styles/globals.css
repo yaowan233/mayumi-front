@@ -73,9 +73,7 @@
   --level-tier-rhodium: #d9f8d3, #a0cf96;
   --level-tier-radiant: #97dcff, #ed82ff;
   --level-tier-lustrous: #ffe600, #ed82ff;
-
-  /* 默认颜色 (hsl(var(--hsl-c2)), hsl(var(--hsl-c2))) - 假设您已经在其他地方定义了 --hsl-c2 */
-  --rank-value-default-colour: #333, #333;
+  --rank-value-default-colour: #66ccff, #0099ff;
 }
 
 /* Rank Value 基础样式，使用 @apply 结合 Tailwind 类和自定义 CSS */

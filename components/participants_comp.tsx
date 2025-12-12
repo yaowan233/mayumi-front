@@ -30,7 +30,6 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
     }, [players]);
 
     return (
-        // 优化点1: max-w-full 允许在 4K 屏上撑开宽度，但保留 px-4 防止贴边
         <div className="w-full flex flex-col gap-6">
             <Tabs
                 aria-label="Participants Options"
@@ -38,8 +37,8 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                     size="lg"
                     variant="underlined"
                     color="primary"
+                    defaultSelectedKey={teams.length>0 ? "teams" : "solo"}
                     classNames={{
-                        // 这里的 border-b 会跟随上面的 className="w-full" 撑满整个屏幕
                         tabList: "w-full relative rounded-none p-0 border-b border-divider overflow-x-auto scrollbar-hide flex justify-start md:justify-center",
                         cursor: "w-full bg-primary",
                         tab: "max-w-fit px-6 h-12",
@@ -47,11 +46,9 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                         panel: "pt-6 w-full max-w-7xl mx-auto"
                     }}
             >
-                {/* --- 队伍 Tab --- */}
                 {teams.length > 0 && (
                     <Tab key="teams" title={`队伍 (${teams.length})`}>
-                        {/* 同样应用大屏优化 */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {teams.map((team, idx) => (
                                 <TeamCard key={idx} team={team} allPlayers={players} />
                             ))}
@@ -63,10 +60,6 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                 <Tab key="solo" title="报名人员">
                     <div className="flex flex-col gap-6">
 
-                        {/*
-                           优化点2：统计栏改为左对齐的“标题式”布局，不再是突兀的中间卡片
-                           去除背景色，使其更像是一个 Section Header
-                        */}
                         <div className="flex items-center gap-3 px-1">
                             <div className="p-2 bg-primary/10 rounded-lg text-primary">
                                 <UserGroupIcon />
@@ -81,14 +74,6 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                             {/* 如果需要右侧放东西（比如导出按钮），可以加在这里，用 ml-auto 挤过去 */}
                         </div>
 
-                        {/*
-                           优化点3：4K 适配 Grid
-                           sm: 2列
-                           md: 3列
-                           lg: 4列
-                           xl: 5列 (2K屏)
-                           2xl: 6列 (4K屏)
-                        */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {sortedSoloPlayers.map((player) => (
                                 <SoloPlayerCard key={player.uid} player={player} />

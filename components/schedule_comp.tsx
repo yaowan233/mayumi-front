@@ -158,6 +158,7 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
     const score2 = match_info.team2_score ? match_info.team2_score : 0;
     const isTeam1Win = score1 > score2;
     const isTeam2Win = score2 > score1;
+    const notStarted = score1 === 0 && score2 === 0;
 
     // 时间处理
     const date = new Date(match_info.datetime);
@@ -166,14 +167,6 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
 
     return (
         <div className="w-full">
-            {/*
-                Grid 布局定义:
-                1. 100px: 左侧时间 (固定)
-                2. 1fr: 队伍1 (自动占满剩余空间的一半)
-                3. auto: 比分板 (根据内容或固定宽度)
-                4. 1fr: 队伍2 (自动占满剩余空间的一半)
-                5. 100px: 右侧操作区 (固定，与左侧保持一致以维持平衡)
-            */}
             <div className="grid grid-cols-1 md:grid-cols-[100px_1fr_auto_1fr_100px] items-center gap-y-2 md:gap-x-4 py-2 w-full">
 
                 {/* 1. 左侧：时间区域 (PC端显示，移动端隐藏或变样式) */}
@@ -203,17 +196,11 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 </div>
 
                 {/* 2. 队伍 1 (靠右对齐) */}
-                {/* min-w-0 非常重要，防止名字太长撑爆 Grid */}
-                <div className={`flex items-center justify-center md:justify-end gap-3 min-w-0 ${isTeam1Win ? "opacity-100 font-bold" : "opacity-30"}`}>
-                    {/* PC端名字 (保持不变) */}
+                <div className={`flex items-center justify-center md:justify-end gap-3 min-w-0 ${notStarted? "opacity-100" : isTeam1Win ? "opacity-100 font-bold" : "opacity-30"}`}>
                     <span className="text-lg truncate text-center md:text-right hidden  text-default-700 sm:block">
                         {match_info.team1.name}
                     </span>
 
-                    {/* 移动端名字：关键修改 */}
-                    {/* 修改前: max-w-[80px] */}
-                    {/* 修改后: max-w-[160px] (增加宽度) 或 flex-1 (自动撑开) */}
-                    {/* 推荐: max-w-[150px] 既能显示更长，又防止极端长名字把头像挤变形 */}
                     <span className="text-lg truncate text-center md:text-right sm:hidden  text-default-700 max-w-[150px]">
                         {match_info.team1.name}
                     </span>
@@ -240,7 +227,7 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 </div>
 
                 {/* 4. 队伍 2 (靠左对齐) */}
-                <div className={`flex items-center  justify-center md:justify-start gap-3 min-w-0 ${isTeam2Win ? "opacity-100 font-bold" : "opacity-30"}`}>
+                <div className={`flex items-center  justify-center md:justify-start gap-3 min-w-0 ${notStarted? "opacity-100" : isTeam2Win ? "opacity-100 font-bold" : "opacity-30"}`}>
                     <Image
                         radius="md"
                         alt={match_info.team2.name}
@@ -253,8 +240,6 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                     </span>
 
                     {/* 移动端名字：关键修改 */}
-                    {/* 修改前: max-w-[80px] */}
-                    {/* 修改后: max-w-[150px] */}
                     <span className="text-lg truncate text-center md:text-left text-default-700 sm:hidden max-w-[150px]">
                         {match_info.team2.name}
                     </span>
