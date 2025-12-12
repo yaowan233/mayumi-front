@@ -297,12 +297,36 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                 </div>
                             )}
                             <div className="flex gap-2 lg:col-span-2">
-                                <Input type="datetime-local" label="比赛时间" size="sm" isRequired
-                                       value={schedule.match_time ? new Date(schedule.match_time).toISOString().slice(0, 16) : ""}
-                                       onChange={e => {
-                                           const date = new Date(e.target.value);
-                                           onChange({...schedule, match_time: date.toISOString()});
-                                       }}/>
+                                    <Input
+                                    type="datetime-local"
+                                    label="比赛时间 (UTC)"
+                                    size="sm"
+                                    isRequired
+                                    value={(() => {
+                                        if (!schedule.match_time) return "";
+                                        const date = new Date(schedule.match_time);
+                                        if (isNaN(date.getTime())) return "";
+
+                                        const pad = (n: number) => n.toString().padStart(2, '0');
+                                        // 关键：全部使用 getUTC... 方法
+                                        return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
+                                    })()}
+                                    onChange={e => {
+                                        const val = e.target.value; // 格式: "2024-01-01T14:00"
+                                        if (!val) return;
+
+                                        const [datePart, timePart] = val.split('T');
+                                        const [year, month, day] = datePart.split('-').map(Number);
+                                        const [hours, minutes] = timePart.split(':').map(Number);
+
+                                        const utcDate = new Date();
+                                        // 关键：使用 setUTC... 方法，强行把输入的 "14:00" 设为 UTC 的 14:00
+                                        utcDate.setUTCFullYear(year, month - 1, day);
+                                        utcDate.setUTCHours(hours, minutes, 0, 0);
+
+                                        onChange({...schedule, match_time: utcDate.toISOString()});
+                                    }}
+                                />
                             </div>
                         </div>
 
