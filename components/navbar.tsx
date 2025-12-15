@@ -9,267 +9,125 @@ import {
     NavbarItem,
     NavbarMenuItem,
 } from "@heroui/navbar";
-import {Button} from "@heroui/button";
-import {Link} from "@heroui/link";
-
-import {link as linkStyles} from "@heroui/theme";
-
-import {siteConfig} from "@/config/site";
+import { Link } from "@heroui/link";
+import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import clsx from "clsx";
+import { ThemeSwitch } from "@/components/theme-switch";
+import { Logo } from "@/components/icons";
+import { useEffect, useState } from "react";
+import { Progress } from "@heroui/progress";
+import { usePathname } from "next/navigation";
+import { RightContent, UserStatus } from "@/components/navbar_common";
+import { Divider } from "@heroui/divider";
 
-import {ThemeSwitch} from "@/components/theme-switch";
-import {
-    GithubIcon,
-    HeartFilledIcon,
-} from "@/components/icons";
+// --- 提取公共组件 ---
 
-import {Logo} from "@/components/icons";
-import {useContext, useEffect, useState} from "react";
-import CurrentUserContext from "@/app/user_context";
-import {Avatar} from "@heroui/avatar";
-import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@heroui/dropdown";
-import {Progress} from "@heroui/progress";
-import {usePathname} from "next/navigation";
+// 1. Logo 区域
+const NavBrand = ({ onClick }: { onClick?: () => void }) => (
+    <NavbarBrand as="li" className="gap-3 max-w-fit pr-4">
+        <NextLink className="flex justify-start items-center gap-2" href="/" onClick={onClick}>
+            <Logo className="text-primary w-8 h-8" />
+            <p className="font-black text-inherit text-xl tracking-tight">Mayumi</p>
+        </NextLink>
+    </NavbarBrand>
+);
 
+// 2. 统一的导航链接样式 (核心修改)
+const NavLinkItem = ({ item, isActive, onClick }: { item: { href: string; label: string }, isActive: boolean, onClick: () => void }) => (
+    <NavbarItem isActive={isActive}>
+        <NextLink
+            className={clsx(
+                "px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 block", // 基础样式：有内边距和圆角
+                isActive
+                    ? "bg-primary/10 text-primary font-bold" // 选中：背景色 + 高亮字
+                    : "text-default-600 hover:text-foreground hover:bg-default-100 dark:hover:bg-white/5" // 未选中：悬停背景
+            )}
+            color="foreground"
+            href={item.href}
+            onClick={onClick}
+        >
+            {item.label}
+        </NextLink>
+    </NavbarItem>
+);
 
+// 3. 加载条
+const NavProgress = ({ isLoading }: { isLoading: boolean }) => (
+    isLoading ? (
+        <Progress
+            size="sm"
+            isIndeterminate
+            aria-label="Loading..."
+            classNames={{
+                base: "fixed top-0 left-0 right-0 z-[99999] h-1",
+                track: "bg-transparent",
+                indicator: "bg-primary shadow-[0_0_10px_#006FEE]"
+            }}
+        />
+    ) : null
+);
+
+// --- 主导航栏 ---
 export const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); // 控制加载状态
-    const pathname = usePathname();  // 路由变化时获取 pathname
+    const [isLoading, setIsLoading] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
-        // 在路径发生变化时，启动加载进度条
-        setIsLoading(true);
+        setIsLoading(false);
+        setIsMenuOpen(false);
+    }, [pathname]);
 
-        // 模拟加载结束（在路由切换完成后消失）
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 100);
+    const handleNavClick = (href: string) => {
+        if (href !== pathname) setIsLoading(true);
+    };
 
-        // 清理定时器
-        return () => clearTimeout(timer);
-    }, [pathname]);  // 依赖项为 pathname，当路径名变化时会触发 effect
     return (
-        <NextUINavbar maxWidth="full" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen} className="">
-            {isLoading && (
-                <div className="fixed top-0 left-0 w-full z-50 bg-white shadow-lg">
-                    <Progress size="sm" isIndeterminate aria-label="Loading..."/>
-                </div>
-            )}
+        <NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}
+            className="bg-background/70 backdrop-blur-md border-b border-default-100 dark:border-white/5"
+        >
+            <NavProgress isLoading={isLoading} />
+
             <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-                <NavbarMenuToggle className="flex sm:hidden"/>
-                <NavbarBrand as="li" className="hidden sm:flex gap-3 max-w-fit">
-                    <NextLink className="flex justify-start items-center gap-2" href="/">
-                        <Logo/>
-                        <p className="font-bold text-inherit">Mayumi</p>
-                    </NextLink>
-                </NavbarBrand>
-                <ul className="hidden sm:flex gap-4 justify-start ml-2">
+                <NavbarMenuToggle className="sm:hidden" />
+                <NavBrand onClick={() => handleNavClick("/")} />
+
+                {/* 桌面端导航：统一风格 */}
+                <ul className="hidden sm:flex gap-1 justify-start ml-2 items-center h-full">
+                    {/* 添加竖线分割 */}
+                    <li className="h-6 w-[1px] bg-default-300 dark:bg-white/20 mr-4"></li>
+
                     {siteConfig.navItems.map((item) => (
-                        <NavbarItem key={item.href}>
-                            <NextLink
-                                className={clsx(
-                                    linkStyles({color: "foreground"}),
-                                    "data-[active=true]:text-primary data-[active=true]:font-medium"
-                                )}
-                                color="foreground"
-                                href={item.href}
-                                onClick={() => {
-                                    setIsMenuOpen(false); // 点击菜单项后关闭菜单
-                                    setIsLoading(true); // 点击菜单项后开始加载
-                                }}
-                            >
-                                {item.label}
-                            </NextLink>
-                        </NavbarItem>
+                        <NavLinkItem
+                            key={item.href}
+                            item={item}
+                            isActive={pathname === item.href}
+                            onClick={() => handleNavClick(item.href)}
+                        />
                     ))}
                 </ul>
             </NavbarContent>
 
-            <NavbarContent
-                className="hidden sm:flex basis-1/5 sm:basis-full"
-                justify="end"
-            >
-                <NavbarItem className="hidden sm:flex gap-2">
-                    {/*<Link isExternal href={siteConfig.links.twitter} aria-label="Twitter">*/}
-                    {/*	<TwitterIcon className="text-default-500" />*/}
-                    {/*</Link>*/}
-                    {/*<Link isExternal href={siteConfig.links.discord} aria-label="Discord">*/}
-                    {/*	<DiscordIcon className="text-default-500" />*/}
-                    {/*</Link>*/}
-                    <Link isExternal href={siteConfig.links.github} aria-label="Github">
-                        <GithubIcon className="text-default-500"/>
-                    </Link>
-                    <ThemeSwitch/>
-                </NavbarItem>
-                {/*<NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>*/}
-                <NavbarItem className="hidden md:flex">
-                    <Button
-                        isExternal
-                        as={Link}
-                        className="text-sm font-normal text-default-600 bg-default-100"
-                        href={siteConfig.links.sponsor}
-                        startContent={<HeartFilledIcon className="text-danger"/>}
-                        variant="flat"
-                    >
-                        爱发电
-                    </Button>
-                </NavbarItem>
+            <NavbarContent className="hidden sm:flex basis-1/5 sm:basis-full" justify="end">
+                <RightContent />
             </NavbarContent>
 
             <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-                <Link isExternal href={siteConfig.links.github} aria-label="Github">
-                    <GithubIcon className="text-default-500"/>
-                </Link>
-                <ThemeSwitch/>
+                <ThemeSwitch />
+                <UserStatus />
             </NavbarContent>
-            <UserStatus/>
 
             <NavbarMenu>
-                {/*{searchInput}*/}
-                <div className="mx-4 mt-2 flex flex-col gap-2">
-                    <NavbarMenuItem>
-                        <Link href="/" size="lg" color="foreground" onPress={() => {
-                            setIsMenuOpen(false); // 点击菜单项后关闭菜单
-                            setIsLoading(true); // 点击菜单项后开始加载
-                        }}>
-                            主页
-                        </Link>
-                    </NavbarMenuItem>
-                    <NavbarMenuItem>
-                        <Link href={"/tournament-management"} size="lg" color="foreground" onPress={() => {
-                            setIsMenuOpen(false); // 点击菜单项后关闭菜单
-                            setIsLoading(true); // 点击菜单项后开始加载
-                        }}>
-                            赛事管理
-                        </Link>
-                    </NavbarMenuItem>
-                    <NavbarMenuItem>
-                        <Link href={"/user-info"} size="lg" color="foreground" onPress={() => {
-                            setIsMenuOpen(false); // 点击菜单项后关闭菜单
-                            setIsLoading(true); // 点击菜单项后开始加载
-                        }}>
-                            个人信息
-                        </Link>
-                    </NavbarMenuItem>
-                    <NavbarMenuItem>
-                        <Link href={"/about"} size="lg" color="foreground" onPress={() => {
-                            setIsMenuOpen(false); // 点击菜单项后关闭菜单
-                            setIsLoading(true); // 点击菜单项后开始加载
-                        }}>
-                            关于
-                        </Link>
-                    </NavbarMenuItem>
-                </div>
-            </NavbarMenu>
-        </NextUINavbar>
-    );
-};
-
-
-export const TournamentNavbar = ({tournament_name}: { tournament_name: string }) => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    let tournament_href_start = "/tournaments/" + tournament_name
-    const [isLoading, setIsLoading] = useState(false); // 控制加载状态
-    const pathname = usePathname(); // 获取当前路径名
-
-    useEffect(() => {
-        // 在路径发生变化时，启动加载进度条
-        setIsLoading(true);
-
-        // 模拟加载结束（在路由切换完成后消失）
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 100);
-
-        // 清理定时器
-        return () => clearTimeout(timer);
-    }, [pathname]);  // 依赖项为 pathname，当路径名变化时会触发 effect
-    return (
-        <NextUINavbar maxWidth="full" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
-            {isLoading && (
-                <div className="fixed top-0 left-0 w-full z-50 bg-white shadow-lg">
-                    <Progress size="sm" isIndeterminate aria-label="Loading..."/>
-                </div>
-            )}
-            <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-                <NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} className="md:hidden"/>
-                <NavbarBrand as="li" className="gap-3 max-w-fit">
-                    <NextLink className="hidden sm:flex justify-start items-center gap-2" href="/">
-                        <Logo/>
-                        <p className="font-bold text-inherit">Mayumi</p>
-                    </NextLink>
-                </NavbarBrand>
-                <ul className="hidden md:flex gap-4 justify-start ml-2">
-                    {siteConfig.tournamentNavItems.map((item) => (
-                        <NavbarItem key={`${tournament_href_start}${item.href}`}>
-                            <NextLink
-                                className={clsx(
-                                    linkStyles({color: "foreground"}),
-                                    "data-[active=true]:text-primary data-[active=true]:font-medium"
-                                )}
-                                color="foreground"
-                                href={`${tournament_href_start}${item.href}`}
-                                onClick={() => {
-                                    setIsLoading(true); // 点击菜单项后开始加载
-                                }}
-                            >
-                                {item.label}
-                            </NextLink>
-                        </NavbarItem>
-                    ))}
-                </ul>
-            </NavbarContent>
-
-            <NavbarContent
-                className="hidden sm:flex basis-1/5 sm:basis-full"
-                justify="end"
-            >
-                <NavbarItem className="hidden sm:flex gap-2">
-                    <Link isExternal href={siteConfig.links.github} aria-label="Github">
-                        <GithubIcon className="text-default-500"/>
-                    </Link>
-                    <ThemeSwitch/>
-                </NavbarItem>
-                <NavbarItem className="hidden lg:flex">
-                    <Button
-                        isExternal
-                        as={Link}
-                        className="text-sm font-normal text-default-600 bg-default-100"
-                        href={siteConfig.links.sponsor}
-                        startContent={<HeartFilledIcon className="text-danger"/>}
-                        variant="flat"
-                    >
-                        爱发电
-                    </Button>
-                </NavbarItem>
-            </NavbarContent>
-
-            <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-                <Link isExternal href={siteConfig.links.github} aria-label="Github">
-                    <GithubIcon className="text-default-500"/>
-                </Link>
-                <ThemeSwitch/>
-            </NavbarContent>
-            <UserStatus/>
-
-            <NavbarMenu>
-                <div className="mx-4 mt-2 flex flex-col gap-2">
-                    {siteConfig.navMenuItems.map((item, index) => (
-                        <NavbarMenuItem key={`${item}-${index}`}>
+                <div className="mx-4 mt-8 flex flex-col gap-4">
+                    {siteConfig.navItems.map((item, index) => (
+                        <NavbarMenuItem key={`${item.href}-${index}`}>
                             <Link
-                                color="foreground"
-                                href={
-                                    index === 0
-                                        ? "/"
-                                        : `${tournament_href_start}${item.href}`
-                                }
+                                className="w-full"
+                                color={pathname === item.href ? "primary" : "foreground"}
+                                href={item.href}
                                 size="lg"
-                                onPress={() => {
-                                    setIsMenuOpen(false); // 点击菜单项后关闭菜单
-                                    setIsLoading(true); // 点击菜单项后开始加载
-                                }}
+                                onPress={() => handleNavClick(item.href)}
                             >
                                 {item.label}
                             </Link>
@@ -281,40 +139,94 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
     );
 };
 
-export const UserStatus = () => {
-    const currentUser = useContext(CurrentUserContext);
-    return (
-        currentUser?.currentUser != null ?
-            <Dropdown>
-                <DropdownTrigger>
-                    <Avatar as="button" src={`https://a.ppy.sh/${currentUser.currentUser?.uid}`}/>
-                </DropdownTrigger>
-                <DropdownMenu aria-label="Static Actions">
-                    {/*<DropdownItem key="new">New file</DropdownItem>*/}
-                    <DropdownItem key="logout" className="text-danger" color="danger" onPress={async () => {
-                        await fetch(siteConfig.backend_url + "/api/logout", {method: "POST", credentials: "include"})
-                        currentUser?.setCurrentUser(null)
-                    }}>
-                        登出
-                    </DropdownItem>
-                </DropdownMenu>
-            </Dropdown>
-            : LoginButton()
-    )
-}
+// --- 赛事导航栏 ---
+export const TournamentNavbar = ({tournament_name}: { tournament_name: string }) => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const tournament_href_start = "/tournaments/" + tournament_name;
+    const [isLoading, setIsLoading] = useState(false);
+    const pathname = usePathname();
 
+    useEffect(() => {
+        setIsLoading(false);
+        setIsMenuOpen(false);
+    }, [pathname]);
 
-const LoginButton = () => {
+    const handleNavClick = (href: string) => {
+        if (href !== pathname) setIsLoading(true);
+    };
+
     return (
-        <NavbarItem>
-            <Button
-                as={Link}
-                className="text-sm font-normal"
-                href={`https://osu.ppy.sh/oauth/authorize?client_id=${siteConfig.client_id}&redirect_uri=${siteConfig.web_url}/oauth&response_type=code&scope=public`}
-                color="primary"
-            >
-                登录
-            </Button>
-        </NavbarItem>
-    )
-}
+        <NextUINavbar maxWidth="xl" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}
+            className="bg-background/70 backdrop-blur-md border-b border-default-100 dark:border-white/5"
+        >
+            <NavProgress isLoading={isLoading} />
+
+            <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
+                <NavbarMenuToggle className="lg:hidden" />
+                <NavBrand onClick={() => handleNavClick("/")} />
+
+                {/* 赛事导航项：统一风格 */}
+                <ul className="hidden lg:flex gap-1 justify-start ml-2 items-center h-full">
+                    {/* 添加竖线分割 */}
+                    <li className="h-6 w-[1px] bg-default-300 dark:bg-white/20 mr-4"></li>
+
+                    {siteConfig.tournamentNavItems.map((item) => {
+                        const targetUrl = `${tournament_href_start}${item.href}`;
+                        return (
+                            <NavLinkItem
+                                key={targetUrl}
+                                item={{...item, href: targetUrl}}
+                                isActive={pathname === targetUrl}
+                                onClick={() => handleNavClick(targetUrl)}
+                            />
+                        )
+                    })}
+                </ul>
+            </NavbarContent>
+
+            <NavbarContent className="hidden lg:flex basis-1/5 lg:basis-full" justify="end">
+                <RightContent />
+            </NavbarContent>
+
+            {/* ... 移动端菜单保持不变 ... */}
+             <NavbarContent className="lg:hidden basis-1 pl-4" justify="end">
+                <ThemeSwitch />
+                <UserStatus />
+            </NavbarContent>
+
+            <NavbarMenu>
+                <div className="mx-4 mt-8 flex flex-col gap-4">
+                    <NavbarMenuItem>
+                        <Link href="/" color="secondary" size="lg" onPress={() => setIsMenuOpen(false)}>
+                            ← 返回首页
+                        </Link>
+                    </NavbarMenuItem>
+                    <Divider className="my-2"/>
+                    <div className="text-xs font-bold text-default-400 uppercase tracking-widest px-2">
+                        {decodeURIComponent(tournament_name)}
+                    </div>
+                    {siteConfig.tournamentNavItems.map((item, index) => {
+                         const targetUrl = `${tournament_href_start}${item.href}`;
+                         const isActive = pathname === targetUrl;
+                         return (
+                            <NavbarMenuItem key={`${item}-${index}`}>
+                                <Link
+                                    color={isActive ? "primary" : "foreground"}
+                                    href={targetUrl}
+                                    size="lg"
+                                    className={clsx("w-full", isActive && "font-black bg-primary/10 pl-2 rounded-lg py-1")}
+                                    onPress={() => {
+                                        setIsMenuOpen(false);
+                                        handleNavClick(targetUrl);
+                                    }}
+                                >
+                                    {item.label}
+                                </Link>
+                            </NavbarMenuItem>
+                        )
+                    })}
+                </div>
+            </NavbarMenu>
+        </NextUINavbar>
+    );
+};
