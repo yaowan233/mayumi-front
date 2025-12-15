@@ -79,14 +79,15 @@ export default function TournamentHomePage() {
                                 className={`
                                     w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer transition-all duration-300
                                     ${isSelected 
-                                        ? 'bg-zinc-800 text-white shadow-md scale-110' // 选中态：深色块（在亮色下也保持深色以突出） 
-                                        : 'text-zinc-500 dark:text-zinc-400 hover:bg-black/10 dark:hover:bg-white/10'
+                                        ? 'bg-white dark:bg-zinc-800 shadow-md scale-110 ring-1 ring-black/5 dark:ring-white/10' // 选中态：亮色变白，暗色变黑，加一点微弱描边增加层次
+                                        : 'text-zinc-500 dark:text-zinc-400 hover:bg-black/5 dark:hover:bg-white/10' // 未选中态
                                     }
                                 `}
                             >
                                 <GameModeIcon
                                     mode={modeData.name}
                                     size={20}
+                                    // 选中时使用模式原本的颜色（粉/红/蓝/绿），未选中时跟随文字颜色
                                     color={isSelected ? modeData.color : "currentColor"}
                                 />
                             </div>
