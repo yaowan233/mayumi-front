@@ -56,8 +56,10 @@
     "echarts": "^6.0.0",
     "eslint": "^9.37.0",
     "eslint-config-next": "^16.0.8",
+    "file-saver": "^2.0.5",
     "framer-motion": "^11.18.2",
     "intl-messageformat": "^10.7.16",
+    "jszip": "^3.10.1",
     "next": "^16.0.8",
     "next-themes": "^0.4.6",
     "postcss": "^8.5.6",
@@ -74,6 +76,7 @@
     "typescript": "^5.7.2"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.7",
     "cross-env": "^10.1.0"
   }
 }
