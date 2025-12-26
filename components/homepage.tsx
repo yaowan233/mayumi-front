@@ -126,10 +126,8 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     return (
         <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10">
 
-            {/* 1. 顶部 Banner 区域 (完全重构) */}
             <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-zinc-950 group border border-white/10">
 
-                {/* A. 氛围背景层 (模糊放大的背景，填充空白区域) */}
                 <div className="absolute inset-0 z-0">
                     <Image
                         removeWrapper
@@ -140,13 +138,6 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     <div className="absolute inset-0 bg-black/40" />
                 </div>
 
-                {/* B. 核心 Banner 展示层 */}
-                {/*
-                   修改重点：
-                   1. aspect-video (手机): 16:9 比例，让图片在手机上够高，能看清字。
-                   2. md:aspect-[21/9] (电脑): 超宽比例，更有气势。
-                   3. p-0: 移除内边距，让图片撑满。
-                */}
                 <div className="relative z-10 w-full aspect-video md:aspect-[21/9] flex items-center justify-center">
                     <Image
                         removeWrapper
@@ -156,51 +147,63 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         // w-full h-full: 填满容器
                         className="w-full h-full object-contain drop-shadow-2xl z-10"
                     />
+                </div>
 
-                    {/*
-                       C. 底部信息控制栏 (玻璃拟态 + 渐变遮罩)
-                       位置：绝对定位在底部，覆盖在图片下方
-                    */}
-                    <div className="absolute bottom-0 left-0 right-0 z-20 w-full bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-16 pb-4 px-4 sm:px-8 flex flex-col md:flex-row items-end md:items-center justify-between gap-4">
+                <div className="
+                    relative z-30 flex flex-col justify-between gap-4
+                    p-5 md:p-8
 
-                        {/* 左侧：标题与状态 */}
-                        <div className="flex flex-col gap-2 text-left flex-1 min-w-0 w-full md:w-auto">
-                            {/*
-                               既然 Banner 上已经有字了，这里的 H1 主要起到 SEO 和结构作用。
-                               在手机上如果 Banner 字太小，这个 H1 还是有用的。
-                            */}
-                            <h1 className="text-xl sm:text-3xl font-black text-white drop-shadow-lg truncate tracking-tight">
-                                {tournament_info.name}
-                            </h1>
+                    /* === 手机端样式 === */
+                    bg-zinc-900 border-t border-white/5  /* 纯色背景，有顶部分割线 */
 
-                            <div className="flex flex-wrap gap-2 items-center">
-                                    <Chip color="primary" size="sm" variant="shadow" className="font-bold uppercase">
-                                    {tournament_info.mode}
-                                </Chip>
-                                <Chip startContent={<CalendarIcon/>} size="sm" variant="flat" className="text-white/90 bg-white/10 border border-white/10 backdrop-blur-md">
-                                    {formatDate(tournament_info.start_date)} - {formatDate(tournament_info.end_date)}
-                                </Chip>
-                            </div>
+                    /* === 电脑端样式 (覆盖手机端) === */
+                    md:border-t-0                        /* 移除分割线 */
+                    md:bg-transparent md:bg-gradient-to-t md:from-black/95 md:via-black/70 md:to-transparent /* 渐变背景 */
+                    md:absolute md:bottom-0 md:left-0 md:right-0 /* 绝对定位到底部 */
+                    md:flex-row md:items-end             /* 左右布局，底部对齐 */
+                ">
+
+                    {/* 左侧：标题与信息 */}
+                    <div className="flex flex-col gap-2 w-full md:w-auto flex-1 min-w-0">
+                        {/* 标题 */}
+                        <h1 className="text-xl md:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                            {tournament_info.name}
+                        </h1>
+
+                        {/* 标签组 */}
+                        <div className="flex flex-wrap gap-2 items-center mt-1">
+                            <Chip color="primary" size="sm" variant="shadow" className="font-bold uppercase md:text-md">
+                                {tournament_info.mode}
+                            </Chip>
+                            <Chip startContent={<CalendarIcon/>} size="sm" variant="flat" className="text-zinc-300 bg-white/5 border border-white/10 md:text-white/90 md:bg-white/10 md:backdrop-blur-md">
+                                {formatDate(tournament_info.start_date)} - {formatDate(tournament_info.end_date)}
+                            </Chip>
                         </div>
+                    </div>
 
-                        {/* 右侧：操作按钮 */}
-                        {/* 手机端 Grid 布局 (更易点击)，桌面端 Flex */}
-                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 shrink-0 w-full md:w-auto mt-2 md:mt-0">
-                            {tournament_info.links.map((link) => (
-                                <Button
-                                    key={link.name}
-                                    as={Link}
-                                    href={link.url}
-                                    isExternal
-                                    size="md"
-                                    variant="bordered"
-                                    className="border-white/20 bg-black/40 text-white hover:bg-white/10 hover:border-white transition-colors font-medium backdrop-blur-md w-full sm:w-auto"
-                                    startContent={<LinkIcon />}
-                                >
-                                    {link.name}
-                                </Button>
-                            ))}
-                        </div>
+                    {/* 右侧：按钮组 */}
+                    {/* 手机端 Grid (两列)，电脑端 Flex */}
+                    <div className="grid grid-cols-2 gap-3 w-full md:w-auto md:flex md:flex-wrap shrink-0 mt-2 md:mt-0">
+                        {tournament_info.links.map((link) => (
+                            <Button
+                                key={link.name}
+                                as={Link}
+                                href={link.url}
+                                isExternal
+                                size="md"
+                                className="
+                                    w-full md:w-auto sm:h-10 md:h-11
+                                    border-white/10 bg-white/5 text-white
+                                    hover:bg-white/10 hover:border-white/50
+                                    font-medium backdrop-blur-md
+                                    md:text-base
+                                "
+                                variant="bordered"
+                                startContent={<LinkIcon />}
+                            >
+                                {link.name}
+                            </Button>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -229,8 +232,6 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     </CardFooter>
                 )}
             </Card>
-
-            {/* ... 其他卡片 (选手报名、赛程、奖金) 保持不变 ... */}
 
             {/* 4. 赛程 */}
             <Card className="border border-white/5 bg-content1 shadow-md">

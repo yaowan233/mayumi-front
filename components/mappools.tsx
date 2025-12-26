@@ -297,9 +297,19 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
 const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string }) => {
     const modStyle = getModColor(mod);
     const modCode = `${mod}${index + 1}`;
+    const [showOverlay, setShowOverlay] = useState(false);
+
+    // 3. 处理点击逻辑：手机上点击切换显示状态
+    const toggleOverlay = () => {
+        setShowOverlay(!showOverlay);
+    };
+
 
     return (
         <Card
+            onPress={toggleOverlay}
+            onMouseEnter={() => setShowOverlay(true)}
+            onMouseLeave={() => setShowOverlay(false)}
             className="w-full sm:w-[380px] h-[210px] group border-none bg-zinc-900 overflow-hidden relative shadow-md hover:shadow-2xl transition-all duration-500"
             radius="lg"
         >
@@ -307,19 +317,18 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
             <Image
                 removeWrapper
                 alt={map.map_name}
-                // group-hover: 放大并增加模糊，制造景深感
-                className="z-0 w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 group-hover:scale-110 group-hover:blur-md"
+                className={`z-0 w-full h-full object-cover absolute top-0 left-0 transition-all duration-500 ${showOverlay ? 'scale-110 blur-md' : 'scale-100 blur-0'}`}
                 src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
             />
 
             {/* 2. 默认遮罩 (正常状态下稍微压暗底部) */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-0" />
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10 transition-opacity duration-300 ${showOverlay ? 'opacity-0' : 'opacity-100'}`} />
 
             {/* 3. 强力遮罩 (悬停状态下大幅压暗全图，突出按钮) */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm z-10 transition-opacity duration-300 ${showOverlay ? 'opacity-100' : 'opacity-0'}`} />
 
             {/* 4. [正常状态] 信息层 */}
-            <div className="absolute inset-0 z-20 flex flex-col justify-between p-4 transition-all duration-300 group-hover:opacity-0 group-hover:translate-y-4">
+            <div className={`absolute inset-0 z-20 flex flex-col justify-between p-4 transition-all duration-300 ${showOverlay ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
                 {/* 顶部信息 */}
                 <div className="flex justify-between items-start">
                     <Chip
@@ -358,7 +367,7 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
             </div>
 
             {/* 5. [悬停状态] 交互层 */}
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-y-0 translate-y-4">
+            <div className={`absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 transition-all duration-300 ${showOverlay ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
 
                 {/* 巨大的 Mod 文字，使用对应颜色 */}
                 <div
