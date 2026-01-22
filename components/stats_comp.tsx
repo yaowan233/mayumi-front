@@ -184,7 +184,7 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
 
     // 获取样式函数
     const getCellStyle = (columnKey: string, value: any) => {
-        // --- 修复点 2: 如果是 NAME 列，直接返回空样式，保持原样 ---
+
         if (columnKey === 'NAME' || columnKey === '#') return "";
 
         const numericVal = parseFloat(value);
@@ -192,14 +192,18 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
 
         const rankIndex = top3Data[columnKey].indexOf(numericVal);
 
-        // 金牌
-        if (rankIndex === 0) return "text-yellow-400 font-black drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]";
-        // 银牌 (使用亮白色)
-        if (rankIndex === 1) return "text-white font-extrabold drop-shadow-[0_0_3px_rgba(255,255,255,0.3)]";
-        // 铜牌 (使用橙色)
-        if (rankIndex === 2) return "text-orange-400 font-bold";
+        if (rankIndex === 0) {
+            return "text-yellow-600 dark:text-yellow-400 font-black dark:drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]";
+        }
 
-        // --- 修复点 3: 其他分数不再变灰，返回空字符串使用默认颜色 ---
+        if (rankIndex === 1) {
+            return "text-zinc-500 dark:text-white font-extrabold dark:drop-shadow-[0_0_3px_rgba(255,255,255,0.3)]";
+        }
+
+        if (rankIndex === 2) {
+            return "text-orange-600 dark:text-orange-400 font-bold";
+        }
+
         return "";
     };
 

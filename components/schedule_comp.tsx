@@ -446,89 +446,99 @@ const WithDeletePersonInfo = ({tournament_name, stage_name, info, lobbyInfo, rol
     role: string,
     setSchedule: Dispatch<SetStateAction<ScheduleStage[]>>
 }) => {
+    const handleSignOut = async () => {
+        if(!confirm("确定要取消报名吗？")) return;
+
+        const res = await fetch(siteConfig.backend_url + `/api/sign-out-match?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${lobbyInfo.match_id}&role=${role}`, {credentials: 'include'})
+        if (res.status != 200) {
+            alert(await res.text());
+        } else {
+            setSchedule((prev) => {
+                if (prev.find((stage) => stage.stage_name === stage_name)?.is_lobby) {
+                    return prev.map((stage) => {
+                        if (stage.stage_name == stage_name) {
+                            return {
+                                ...stage,
+                                lobby_info: stage.lobby_info?.map((lobby) => {
+                                    if (lobby.match_id == lobbyInfo.match_id) {
+                                        if (role === "player") {
+                                            return {
+                                                ...lobby,
+                                                participants: lobby.participants?.filter((participant) => participant.uid.some((uid) => uid != info.uid[0])) || [],
+                                            }
+                                        }
+                                        if (role === "referee") {
+                                            return {
+                                                ...lobby,
+                                                referee: lobby.referee?.filter((referee) => referee.uid.some((uid) => uid != info.uid[0])) || [],
+                                            }
+                                        }
+                                    }
+                                    return lobby
+                                })
+                            }
+                        }
+                        return stage
+                    })
+                }
+                if (!prev.find((stage) => stage.stage_name === stage_name)?.is_lobby) {
+                    return prev.map((stage) => {
+                        if (stage.stage_name == stage_name) {
+                            return {
+                                ...stage,
+                                match_info: stage.match_info?.map((match) => {
+                                    if (match.match_id == lobbyInfo.match_id) {
+                                        if (role === "referee") {
+                                            return {
+                                                ...match,
+                                                referee: match.referee?.filter((referee) => referee.uid.some((uid) => uid != info.uid[0])) || [],
+                                            }
+                                        }
+                                        if (role === "streamer") {
+                                            return {
+                                                ...match,
+                                                streamer: match.streamer?.filter((streamer) => streamer.uid.some((uid) => uid != info.uid[0])) || [],
+                                            }
+                                        }
+                                        if (role === "commentator") {
+                                            return {
+                                                ...match,
+                                                commentators: match.commentators?.filter((commentator) => commentator.uid.some((uid) => uid != info.uid[0])) || [],
+                                            }
+                                        }
+                                    }
+                                    return match
+                                })
+                            }
+                        }
+                        return stage
+                    })
+                }
+                return prev
+            })
+        }
+    };
+
     return (
-        <Link color={"foreground"}
-              className={"flex flex-row justify-start items-center border-2 p-0.5 gap-2 max-w-lg cursor-pointer"}>
-            <Image radius={"none"} alt="icon" className={"h-[40px] w-[40px] min-w-[40px]"}
-                   src={info.avatar_url || "https://a.ppy.sh"}/>
-            <div className={"truncate"}>
-                {info.name}
-            </div>
-            <div className={"h-[40px] w-[40px] min-w-[40px] flex items-center justify-center text-3xl absolute right-0"}
-                 onClick={async () => {
-                     const res = await fetch(siteConfig.backend_url + `/api/sign-out-match?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${lobbyInfo.match_id}&role=${role}`, {credentials: 'include'})
-                     if (res.status != 200) {
-                         alert(await res.text());
-                     } else {
-                         setSchedule((prev) => {
-                             if (prev.find((stage) => stage.stage_name === stage_name)?.is_lobby) {
-                                 return prev.map((stage) => {
-                                     if (stage.stage_name == stage_name) {
-                                         return {
-                                             ...stage,
-                                             lobby_info: stage.lobby_info?.map((lobby) => {
-                                                 if (lobby.match_id == lobbyInfo.match_id) {
-                                                     if (role === "player") {
-                                                         return {
-                                                             ...lobby,
-                                                             participants: lobby.participants?.filter((participant) => participant.uid.some((uid) => uid != info.uid[0])) || [],
-                                                         }
-                                                     }
-                                                     if (role === "referee") {
-                                                         return {
-                                                             ...lobby,
-                                                             referee: lobby.referee?.filter((referee) => referee.uid.some((uid) => uid != info.uid[0])) || [],
-                                                         }
-                                                     }
-                                                 }
-                                                 return lobby
-                                             })
-                                         }
-                                     }
-                                     return stage
-                                 })
-                             }
-                             if (!prev.find((stage) => stage.stage_name === stage_name)?.is_lobby) {
-                                 return prev.map((stage) => {
-                                     if (stage.stage_name == stage_name) {
-                                         return {
-                                             ...stage,
-                                             match_info: stage.match_info?.map((match) => {
-                                                 if (match.match_id == lobbyInfo.match_id) {
-                                                     if (role === "referee") {
-                                                         return {
-                                                             ...match,
-                                                             referee: match.referee?.filter((referee) => referee.uid.some((uid) => uid != info.uid[0])) || [],
-                                                         }
-                                                     }
-                                                     if (role === "streamer") {
-                                                         return {
-                                                             ...match,
-                                                             streamer: match.streamer?.filter((streamer) => streamer.uid.some((uid) => uid != info.uid[0])) || [],
-                                                         }
-                                                     }
-                                                     if (role === "commentator") {
-                                                         return {
-                                                             ...match,
-                                                             commentators: match.commentators?.filter((commentator) => commentator.uid.some((uid) => uid != info.uid[0])) || [],
-                                                         }
-                                                     }
-                                                 }
-                                                 return match
-                                             })
-                                         }
-                                     }
-                                     return stage
-                                 })
-                             }
-                             return prev
-                         })
-                         alert("取消报名成功")
-                     }
-                 }}>
-                {"×"}
-            </div>
-        </Link>
+        <Chip
+            variant="flat"
+            color="primary" // 使用高亮颜色表示"这是我自己"
+            onClose={handleSignOut} // HeroUI Chip 自带的关闭按钮功能
+            avatar={
+                <Image
+                    src={info.avatar_url || "https://a.ppy.sh"}
+                    alt={info.name}
+                    className="rounded-full w-full h-full object-cover"
+                />
+            }
+            classNames={{
+                base: "pl-1 pr-1 h-auto py-1 gap-2 hover:bg-primary/20 transition-colors", // 调整内边距让它看起来不像默认那么挤
+                content: "font-bold text-small",
+                closeButton: "hover:bg-black/10 rounded-full text-lg p-0.5 active:bg-black/20 transition-colors ml-1"
+            }}
+        >
+            {info.name}
+        </Chip>
     )
 }
 
