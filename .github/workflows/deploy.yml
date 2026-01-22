@@ -1,0 +1,42 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '21'
+
+    - name: Install and Build
+      run: |
+        npm install
+        npm run build 
+
+    - name: Copy files via SSH
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        source: "package.json,package-lock.json,.next,public"
+        target: "/home/ubuntu/meow"
+
+    - name: Restart PM2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        script: |
+          cd /home/ubuntu/meow
+          npm install --production
+          pm2 restart all
