@@ -14,12 +14,24 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '21'
+        node-version: '20'
+
+    - name: Create .env file
+      run: |
+        echo "${{ secrets.ENV_FILE }}" > .env
 
     - name: Install and Build
       run: |
         npm install
         npm run build 
+    - name: Fix Permissions
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        script: |
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/meow
 
     - name: Copy files via SSH
       uses: appleboy/scp-action@master
