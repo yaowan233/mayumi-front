@@ -42,7 +42,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
-        source: "package.json,package-lock.json,.next,public"
+        source: "package.json,package-lock.json,.next,next.config.js,public"
         target: "/home/ubuntu/meow"
 
     - name: Restart PM2
