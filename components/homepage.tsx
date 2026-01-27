@@ -16,6 +16,7 @@ import {Tooltip} from "@heroui/tooltip";
 import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {Image} from "@heroui/image";
+import NextImage from "next/image";
 import {Chip} from "@heroui/chip";
 import {Snippet} from "@heroui/snippet";
 
@@ -122,7 +123,8 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
     const isRegistered = members.some((member) => member.player && member.uid === currentUser?.currentUser?.uid);
-
+    const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
+    const bgSrc = tournament_info.pic_url || fallbackImage;
     return (
         <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10">
 
@@ -130,22 +132,31 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
                 <div className="absolute inset-0 z-0">
                     <Image
+                        as={NextImage}
                         removeWrapper
-                        src={tournament_info.pic_url || undefined}
+                        src={bgSrc}
                         alt="Background"
-                        className="w-full h-full object-cover blur-[60px] opacity-50 scale-125"
+                        fill
+                        className="object-cover blur-[60px] opacity-50 scale-125"
+                        quality={10}
+                        priority
                     />
-                    <div className="absolute inset-0 bg-black/40" />
+                    {/* 黑色遮罩，增强文字对比度 */}
+                    <div className="absolute inset-0 bg-black/20" />
                 </div>
 
+                {/* --- 主体层 --- */}
                 <div className="relative z-10 w-full aspect-video md:aspect-[21/9] flex items-center justify-center">
                     <Image
+                        as={NextImage}
                         removeWrapper
-                        src={tournament_info.pic_url || undefined}
+                        src={bgSrc}
                         alt={tournament_info.name}
-                        // object-contain: 保证图片完整显示，绝对不裁剪文字
-                        // w-full h-full: 填满容器
+                        width={1200}
+                        height={600}
+                        style={{ width: '100%', height: '100%' }}
                         className="w-full h-full object-contain drop-shadow-2xl z-10"
+                        priority
                     />
                 </div>
 

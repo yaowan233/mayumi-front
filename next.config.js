@@ -2,18 +2,16 @@ const {withSentryConfig} = require("@sentry/nextjs");
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
+        qualities: [10, 25, 50, 75, 80, 90, 100],
+
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: 't.mwm.moe',
-                port: '',
-                pathname: '/moe',
+                hostname: '**',
             },
             {
-                protocol: 'https',
-                hostname: 'assets.ppy.sh',
-                port: '',
-                pathname: '/',
+                protocol: 'http',
+                hostname: '**',
             },
         ],
     },

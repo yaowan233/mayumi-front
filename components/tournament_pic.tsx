@@ -1,7 +1,9 @@
+'use client'
 import { Link } from "@heroui/link";
 import { Image } from "@heroui/image";
 import { Card, CardFooter } from "@heroui/card";
-import { Chip } from "@heroui/chip"; // 1. 引入 Chip
+import { Chip } from "@heroui/chip";
+import NextImage from "next/image";
 
 export interface Tournament {
     name: string;
@@ -10,16 +12,15 @@ export interface Tournament {
     start_date: string;
     end_date: string;
     pic_url: string;
-    mode: string; // 2. 添加 mode 字段
+    mode: string;
 }
 
-// 辅助函数：根据模式返回对应的 HeroUI 颜色
 const getModeColor = (mode: string) => {
     switch (mode.toLowerCase()) {
-        case 'mania': return "primary";   // 蓝色
-        case 'osu': return "secondary";   // 粉紫色 (Standard)
-        case 'taiko': return "danger";    // 红色
-        case 'fruits': return "success";  // 绿色 (Catch)
+        case 'mania': return "primary";
+        case 'osu': return "secondary";
+        case 'taiko': return "danger";
+        case 'fruits': return "success";
         default: return "default";
     }
 };
@@ -28,6 +29,9 @@ export const TournamentComponent = ({ tournament }: { tournament: Tournament }) 
     let tournament_href = "/tournaments/" + tournament.abbreviation + "/home";
     const modeColor = getModeColor(tournament.mode || "");
 
+    const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
+    const imgSrc = tournament.pic_url || fallbackImage;
+
     return (
         <Card
             as={Link}
@@ -35,12 +39,6 @@ export const TournamentComponent = ({ tournament }: { tournament: Tournament }) 
             isPressable
             className="group relative w-full aspect-video border-none overflow-hidden bg-zinc-900 shadow-lg"
         >
-            {/*
-               3. 模式标签 (Mode Chip)
-               - absolute top-3 right-3: 固定在右上角
-               - z-30: 确保在所有图层最上面
-               - shadow: 增加投影，防止背景太亮看不清
-            */}
             <Chip
                 color={modeColor}
                 variant="shadow"
@@ -53,25 +51,32 @@ export const TournamentComponent = ({ tournament }: { tournament: Tournament }) 
             {/* Layer 1: 氛围背景层 */}
             <div className="absolute inset-0 z-0">
                 <Image
+                    as={NextImage}
                     removeWrapper
                     className="w-full h-full object-cover blur-2xl opacity-50 scale-125 saturate-200"
-                    src={tournament.pic_url || "https://nextui.org/images/card-example-4.jpeg"}
+                    src={imgSrc}
                     alt="background"
+                    width={400}
+                    height={300}
+                    style={{ width: '100%', height: '100%' }}
+                    priority
                 />
             </div>
 
             {/* Layer 2: 核心展示层 */}
             <div className="relative z-10 w-full h-full flex items-center justify-center">
                 <Image
+                    as={NextImage}
                     className="w-full h-full object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-105"
-                    src={tournament.pic_url || "https://nextui.org/images/card-example-4.jpeg"}
+                    src={imgSrc}
                     alt={tournament.name}
                     width={600}
                     height={338}
+                    style={{ width: '100%', height: '100%' }}
+                    priority
                 />
             </div>
 
-            {/* Layer 3: 底部渐变遮罩 + 文字信息 */}
             <div className="absolute inset-x-0 bottom-0 z-20 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
 
             <CardFooter className="absolute z-20 bottom-0 flex flex-col items-start justify-end w-full pb-3 px-4 gap-1">
