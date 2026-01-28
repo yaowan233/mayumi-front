@@ -1,7 +1,16 @@
 "use client"
 
 import {Tab, Tabs} from "@heroui/tabs";
-import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@heroui/table";
+import {
+    getKeyValue,
+    SortDescriptor,
+    Table,
+    TableBody,
+    TableCell,
+    TableColumn,
+    TableHeader,
+    TableRow
+} from "@heroui/table";
 import {Card, CardBody, CardHeader} from "@heroui/card";
 import {Link} from "@heroui/link";
 import {Image} from "@heroui/image";
@@ -135,7 +144,14 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // 默认初始状态：按 "平均排名" 升序
+    const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
+        column: "平均排名",
+        direction: "ascending",
+    });
+
     useEffect(() => {
+        // ... (fetchData 逻辑保持不变)
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -153,89 +169,138 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
         fetchData();
     }, [round]);
 
-    // 计算每一列的前三名数值
+    const handleSortChange = (descriptor: SortDescriptor) => {
+        // 复制一个新的 descriptor
+        const newDescriptor = { ...descriptor };
+        const column = newDescriptor.column as string;
+
+        if (column !== sortDescriptor.column) {
+            if (column === "平均排名" || column === "#") {
+                newDescriptor.direction = "ascending";
+            }
+            else if (
+                column === "Rating" ||
+                column.includes("%") ||
+                column.includes("Max") ||
+                column.includes("分") ||
+                column.includes("成绩") ||
+                column.includes("Score")
+            ) {
+                newDescriptor.direction = "descending";
+            }
+        }
+
+        setSortDescriptor(newDescriptor);
+    };
+    const sortedItems = useMemo(() => {
+        return [...leaderboard].sort((a, b) => {
+            const first = a[sortDescriptor.column as keyof typeof a];
+            const second = b[sortDescriptor.column as keyof typeof b];
+
+            const firstNum = parseFloat(first);
+            const secondNum = parseFloat(second);
+
+            let cmp = 0;
+            if (!isNaN(firstNum) && !isNaN(secondNum)) {
+                cmp = firstNum < secondNum ? -1 : 1;
+            } else {
+                cmp = (first || "").toString().localeCompare(second || "");
+            }
+
+            // 这里依然需要保留，因为虽然我们强制了方向，但排序函数本身需要知道现在是什么方向
+            if (sortDescriptor.direction === "descending") {
+                cmp *= -1;
+            }
+
+            return cmp;
+        });
+    }, [sortDescriptor, leaderboard]);
+
     const top3Data = useMemo(() => {
         if (leaderboard.length === 0) return {};
         const columns = Object.keys(leaderboard[0]);
         const result: Record<string, number[]> = {};
 
         columns.forEach(col => {
-
             if (col === 'name' || col === '#') return;
-
-            // 提取该列所有数值 (过滤掉非数字)
             const values = leaderboard.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
-
             if (values.length === 0) return;
-
-            // 去重
             const uniqueValues = Array.from(new Set(values));
 
-            const isScore = col.includes('分') || col.includes('成绩') || col.includes('Score') || col.includes('Acc');
+            // --- 修改处：将 'Rating' 加入判断列表 ---
+            const isScore =
+                col.includes('分') ||
+                col.includes('成绩') ||
+                col.includes('Score') ||
+                col.includes('Acc') ||
+                col.includes('%') ||
+                col === 'Rating'; // <--- 新增这一行
 
+            // 如果是 Score/Rating，按 b-a (降序) 排列，取前三名作为金银铜
+            // 如果是 Rank，按 a-b (升序) 排列，取前三名（最小的）作为金银铜
             uniqueValues.sort((a, b) => isScore ? b - a : a - b);
 
-            // 取前三名
             result[col] = uniqueValues.slice(0, 3);
         });
-
         return result;
     }, [leaderboard]);
 
-    // 获取样式函数
     const getCellStyle = (columnKey: string, value: any) => {
-
         if (columnKey === 'NAME' || columnKey === '#') return "";
-
         const numericVal = parseFloat(value);
         if (isNaN(numericVal) || !top3Data[columnKey]) return "";
-
         const rankIndex = top3Data[columnKey].indexOf(numericVal);
 
-        if (rankIndex === 0) {
-            return "text-yellow-600 dark:text-yellow-400 font-black dark:drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]";
-        }
-
-        if (rankIndex === 1) {
-            return "text-zinc-500 dark:text-white font-extrabold dark:drop-shadow-[0_0_3px_rgba(255,255,255,0.3)]";
-        }
-
-        if (rankIndex === 2) {
-            return "text-orange-600 dark:text-orange-400 font-bold";
-        }
-
+        if (rankIndex === 0) return "text-yellow-600 dark:text-yellow-400 font-black dark:drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]";
+        if (rankIndex === 1) return "text-zinc-500 dark:text-white font-extrabold dark:drop-shadow-[0_0_3px_rgba(255,255,255,0.3)]";
+        if (rankIndex === 2) return "text-orange-600 dark:text-orange-400 font-bold";
         return "";
+    };
+
+    const formatValue = (key: string, val: any) => {
+        if (val === null || val === undefined) return '-';
+        return val;
     };
 
     if (loading) return <div className="w-full h-40 flex justify-center items-center"><Spinner label="加载排行榜..." /></div>;
     if (leaderboard.length === 0) return <div className="text-default-400 p-4">暂无排行数据</div>;
-
     const columns = Object.keys(leaderboard[0] || {});
 
     return (
         <Table
             aria-label="Leaderboard"
+            sortDescriptor={sortDescriptor}
+            onSortChange={handleSortChange} // 使用自定义的 handleSortChange
             classNames={{
                 wrapper: "min-h-[200px] shadow-sm border border-white/5 bg-content1 overflow-x-auto",
-                th: "bg-default-100 text-default-600 font-bold uppercase text-xs whitespace-nowrap",
+                th: "bg-default-100 text-default-600 font-bold uppercase text-xs whitespace-nowrap hover:text-default-900 cursor-pointer", // 加上 cursor-pointer 提示可点击
                 td: "whitespace-nowrap"
             }}
             isStriped
         >
             <TableHeader>
                 {columns.map((column) => (
-                    <TableColumn key={column} className="uppercase">{column}</TableColumn>
+                    <TableColumn
+                        key={column}
+                        className="uppercase"
+                        allowsSorting={column !== '#'} // 只有 # 这一列不允许排序（如果想让它可以排，去掉这个条件即可）
+                    >
+                        {column}
+                    </TableColumn>
                 ))}
             </TableHeader>
-            <TableBody items={leaderboard.map((row, i) => ({...row, key: i}))}>
+            <TableBody items={sortedItems.map((row, i) => ({...row, key: i}))}>
                 {(item) => (
                     <TableRow key={item.key}>
                         {(columnKey) => {
-                            const val = getKeyValue(item, columnKey);
-                            const style = getCellStyle(columnKey.toString(), val);
+                            const keyStr = columnKey.toString();
+                            const rawVal = getKeyValue(item, columnKey);
+                            const style = getCellStyle(keyStr, rawVal);
+                            const displayVal = formatValue(keyStr, rawVal);
+
                             return (
                                 <TableCell>
-                                    <span className={style}>{val ?? '-'}</span>
+                                    <span className={style}>{displayVal}</span>
                                 </TableCell>
                             );
                         }}
@@ -426,7 +491,6 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
     )
 }
 
-// 类型定义保持不变
 interface Stats {
     stage_name: string;
     mod_name: string;

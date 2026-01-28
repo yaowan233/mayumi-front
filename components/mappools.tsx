@@ -12,6 +12,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver"
 import {Modal, ModalBody, ModalContent, ModalHeader} from "@heroui/modal";
 import {Progress} from "@heroui/progress";
+import {Dropdown, DropdownItem, DropdownMenu, DropdownTrigger} from "@heroui/dropdown";
 
 // --- 1. 统一风格的图标组件 ---
 const IconWrapper = ({children, className}: {children: React.ReactNode, className?: string}) => (
@@ -44,6 +45,11 @@ export const MultiDownloadIcon = ({className}: {className?: string}) => (
     </IconWrapper>
 );
 
+const ChevronDownIcon = ({className}: {className?: string}) => (
+    <IconWrapper className={className}>
+        <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </IconWrapper>
+);
 
 const getModColor = (mod: string) => {
     // 提取 Mod 前缀 (比如 RC1 -> RC)
@@ -85,101 +91,136 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
     // 延时函数 (依然保留，用于让出主线程给 UI 渲染)
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    const handleDownloadAll = async (stage: Stage) => {
-        // 1. 收集任务
-        const tasks: { url: string; filename: string }[] = [];
+    const handleDownloadAll = async (stage: Stage, source: "sayobot" | "beatconnect" | "osu-direct" | "official-txt") => {
+
+        // 1. 准备任务列表
+        const mapsToDownload: { map_set_id: string; filename: string }[] = [];
         stage.mod_bracket.forEach(bracket => {
             bracket.maps.forEach((map, index) => {
                 if (!map.map_set_id || map.map_set_id === "0") return;
                 const modCode = `${bracket.mod} ${index + 1}`;
                 const safeTitle = sanitizeFilename(map.map_name || `Map_${map.map_id}`);
                 const filename = `[${modCode}] ${safeTitle}.osz`;
-                tasks.push({
-                    url: `https://dl.sayobot.cn/beatmaps/download/novideo/${map.map_set_id}`,
+                mapsToDownload.push({
+                    map_set_id: map.map_set_id,
                     filename: filename
                 });
             });
         });
 
-        if (tasks.length === 0) {
+        if (mapsToDownload.length === 0) {
             alert("没有可下载的地图");
             return;
         }
 
-        // 2. 打开弹窗，初始化状态
+        // --- TXT 导出逻辑 (保持不变) ---
+        if (source === "official-txt") {
+            let content = `Type: ${tournamentAbbr} - ${stage.stage_name} Mappool\n`;
+            content += `Generated at: ${new Date().toLocaleString()}\n\n`;
+            mapsToDownload.forEach(task => {
+                content += `${task.filename}\n`;
+                content += `https://osu.ppy.sh/beatmapsets/${task.map_set_id}/download\n\n`;
+            });
+            const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+            saveAs(blob, `[${tournamentAbbr}] ${stage.stage_name} Official_Links.txt`);
+            return;
+        }
+
+        // --- 并发下载池逻辑 ---
+
+        let sourceName = "Sayobot";
+        if (source === "osu-direct") sourceName = "osu.direct";
+        if (source === "beatconnect") sourceName = "Beatconnect";
+
         setDownloadState({
             isOpen: true,
             progress: 0,
-            text: "正在准备下载队列...",
+            text: `准备开始下载... (源: ${sourceName})`,
             currentCount: 0,
-            totalCount: tasks.length
+            totalCount: mapsToDownload.length
         });
 
         const zip = new JSZip();
-        let completed = 0;
-        const CONCURRENCY = 3;
+
+        // --- 核心变化：并发控制变量 ---
+        const MAX_CONCURRENCY = 5;
+        let currentIndex = 0;      // 当前取到了第几个任务
+        let completedCount = 0;    // 已完成数量
+
+        // 定义单个工人的工作逻辑
+        const worker = async () => {
+            while (currentIndex < mapsToDownload.length) {
+                // 1. 领取任务（原子操作：取值并自增）
+                const taskIndex = currentIndex++;
+                const task = mapsToDownload[taskIndex];
+
+                if (!task) break; // 防止越界
+
+                // 更新状态文本 (不频繁更新 React 状态以免卡顿，只更新文字提示)
+                // 注意：这里如果多个线程同时更新，文字可能会跳动，但在高速下载时是可以接受的
+                // 也可以选择不显示具体的“正在下载哪一张”，只显示进度
+
+                let url = "";
+                if (source === "sayobot") {
+                    url = `https://dl.sayobot.cn/beatmaps/download/novideo/${task.map_set_id}`;
+                } else if (source === "osu-direct") {
+                    url = `https://osu.direct/api/d/${task.map_set_id}`;
+                } else if (source === "beatconnect") {
+                    url = `https://beatconnect.io/b/${task.map_set_id}/${task.map_set_id}/`;
+                }
+
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error(`Status ${res.status}`);
+                    const blob = await res.blob();
+                    zip.file(task.filename, blob);
+                } catch (err) {
+                    console.error(`Download failed: ${task.filename}`, err);
+                    zip.file(`ERROR_${task.filename}.txt`, `Failed to download from ${sourceName}.\nTry: https://osu.ppy.sh/beatmapsets/${task.map_set_id}/download`);
+                } finally {
+                    completedCount++;
+                    // 计算进度 (下载阶段占 80%)
+                    const percent = Math.round((completedCount / mapsToDownload.length) * 80);
+
+                    setDownloadState(prev => ({
+                        ...prev,
+                        progress: percent,
+                        currentCount: completedCount,
+                        text: `正在下载... (${completedCount}/${mapsToDownload.length})`
+                    }));
+                }
+            }
+        };
 
         try {
-            // 给 UI 一点时间弹出
+            await delay(100); // 等待 UI 渲染弹窗
+
+            // 2. 启动并发池
+            // 创建 4 个 Worker Promise，它们会并行运行，直到任务队列被抢光
+            const workers = Array(Math.min(MAX_CONCURRENCY, mapsToDownload.length))
+                .fill(null)
+                .map(() => worker());
+
+            await Promise.all(workers);
+
+            // 3. 打包阶段 (保持不变)
+            setDownloadState(prev => ({ ...prev, text: "所有文件下载完毕，正在压缩打包...", progress: 85 }));
+            // 给 UI 一点时间喘息
             await delay(100);
 
-            // 3. 分批下载
-            for (let i = 0; i < tasks.length; i += CONCURRENCY) {
-                const chunk = tasks.slice(i, i + CONCURRENCY);
-
-                // 更新状态：正在下载
-                setDownloadState(prev => ({
-                    ...prev,
-                    text: `正在下载第 ${i + 1} - ${Math.min(i + CONCURRENCY, tasks.length)} 张地图...`
-                }));
-
-                await Promise.all(chunk.map(async (task) => {
-                    try {
-                        const res = await fetch(task.url);
-                        if (!res.ok) throw new Error("Network error");
-                        const blob = await res.blob();
-                        zip.file(task.filename, blob);
-                    } catch (err) {
-                        console.error("Download failed", task.filename);
-                        // 生成错误日志代替文件
-                        zip.file(`ERROR_${task.filename}.txt`, "Download Failed");
-                    } finally {
-                        completed++;
-                        // 计算百分比
-                        const percent = Math.round((completed / tasks.length) * 80); // 下载占 80% 进度
-
-                        setDownloadState(prev => ({
-                            ...prev,
-                            progress: percent,
-                            currentCount: completed
-                        }));
-                    }
-                }));
-
-                // 强制 UI 刷新
-                await delay(10);
-            }
-
-            // 4. 打包阶段
-            setDownloadState(prev => ({ ...prev, text: "文件下载完毕，正在打包压缩 (请稍候)...", progress: 90 }));
-            await delay(50); // 等待渲染文字
-
             const content = await zip.generateAsync({ type: "blob" }, (metadata) => {
-                // 压缩进度占剩下的 20%
                 setDownloadState(prev => ({
                     ...prev,
                     progress: 80 + (metadata.percent * 0.2)
                 }));
             });
 
-            const zipFileName = `[${tournamentAbbr}] ${stage.stage_name} 图池.zip`;
-
+            const zipFileName = `[${tournamentAbbr}] ${stage.stage_name} Pack_${source}.zip`;
             saveAs(content, zipFileName);
 
-            // 5. 完成
             setDownloadState(prev => ({ ...prev, text: "下载完成！", progress: 100 }));
-            await delay(500);
-            setDownloadState(prev => ({ ...prev, isOpen: false })); // 关闭弹窗
+            await delay(1000);
+            setDownloadState(prev => ({ ...prev, isOpen: false }));
 
         } catch (e) {
             console.error(e);
@@ -203,17 +244,18 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between text-small text-default-500">
                                 <span>{downloadState.text}</span>
-                                <span>{downloadState.currentCount} / {downloadState.totalCount}</span>
+                                <span>{downloadState.progress.toFixed(2)}%</span>
                             </div>
                             <Progress
                                 size="md"
                                 value={downloadState.progress}
-                                color="secondary"
+                                color={downloadState.progress === 100 ? "success" : "secondary"}
                                 showValueLabel={true}
                                 className="max-w-full"
+                                aria-label="progress"
                             />
                             <p className="text-xs text-default-400 text-center">
-                                请不要关闭当前页面，打包完成后浏览器将自动开始下载。
+                                当前并发下载数: 5 | 请不要关闭此页面
                             </p>
                         </div>
                     </ModalBody>
@@ -245,16 +287,40 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
                 {(stage) => (
                     <Tab key={stage.stage_name} title={stage.stage_name}>
                         <div className="flex justify-end w-full mb-6">
-                            <Button
-                                color="secondary"
-                                variant="shadow"
-                                className="font-bold text-white min-w-[200px]"
-                                isDisabled={downloadState.isOpen} // 下载时禁用点击
-                                onPress={() => handleDownloadAll(stage)}
-                                startContent={<MultiDownloadIcon className="text-xl" />}
-                            >
-                                一键打包下载 ({stage.mod_bracket.reduce((acc, cur) => acc + cur.maps.length, 0)})
-                            </Button>
+                            <Dropdown>
+                                <DropdownTrigger>
+                                    <Button
+                                        color="secondary"
+                                        variant="shadow"
+                                        className="font-bold text-white min-w-[200px]"
+                                        isDisabled={downloadState.isOpen}
+                                        startContent={<MultiDownloadIcon className="text-xl" />}
+                                        endContent={<ChevronDownIcon className="text-small" />}
+                                    >
+                                        下载图池 ({stage.mod_bracket.reduce((acc, cur) => acc + cur.maps.length, 0)})
+                                    </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu
+                                    aria-label="Download Options"
+                                    onAction={(key) => handleDownloadAll(stage, key as any)}
+                                >
+                                    <DropdownItem key="sayobot" description="国内首选，速度极快">
+                                        Sayobot 镜像 (推荐)
+                                    </DropdownItem>
+
+                                    <DropdownItem key="osu-direct" description="覆盖率高，速度较快">
+                                        osu.direct 镜像
+                                    </DropdownItem>
+
+                                    <DropdownItem key="beatconnect" description="老牌镜像，缺图时尝试">
+                                        Beatconnect 镜像
+                                    </DropdownItem>
+
+                                    <DropdownItem key="official-txt" description="生成链接列表，手动下载">
+                                        导出官网链接 (.txt)
+                                    </DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
                         </div>
 
                         <div className="flex flex-col gap-12 w-full">
@@ -304,7 +370,6 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
         setShowOverlay(!showOverlay);
     };
 
-
     return (
         <Card
             onPress={toggleOverlay}
@@ -321,10 +386,10 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
                 src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
             />
 
-            {/* 2. 默认遮罩 (正常状态下稍微压暗底部) */}
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10 transition-opacity duration-300 ${showOverlay ? 'opacity-0' : 'opacity-100'}`} />
+            {/* 2. 默认遮罩 */}
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10 transition-opacity duration-300 ${showOverlay ? 'opacity-0' : 'opacity-100'}`} />
 
-            {/* 3. 强力遮罩 (悬停状态下大幅压暗全图，突出按钮) */}
+            {/* 3. 强力遮罩 */}
             <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm z-10 transition-opacity duration-300 ${showOverlay ? 'opacity-100' : 'opacity-0'}`} />
 
             {/* 4. [正常状态] 信息层 */}
@@ -352,12 +417,26 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
                     <div className="text-white font-black leading-tight line-clamp-1 text-xl drop-shadow-md" title={map.map_name}>
                         {map.map_name}
                     </div>
-                    <div className="flex justify-between items-center text-sm">
-                        <span className="truncate max-w-[60%] text-primary-500 font-medium">[{map.diff_name}]</span>
-                        <span className="truncate max-w-[35%] text-zinc-200 text-xs">{map.mapper}</span>
+                    <div className="flex justify-between items-center text-sm mb-1">
+                        <span className="truncate max-w-[60%] text-white font-bold drop-shadow-sm">[{map.diff_name}]</span>
+                        <span className="truncate max-w-[35%] text-zinc-300 text-xs text-right">{map.mapper}</span>
                     </div>
+
+                    {map.extra && map.extra.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-1">
+                            {map.extra.map((tag, i) => (
+                                <span
+                                    key={i}
+                                    className="px-2 py-[2px] rounded text-[10px] font-bold uppercase tracking-wide bg-white/10 text-zinc-100 border border-white/10 shadow-sm backdrop-blur-md"
+                                >
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
                     {/* 维数面板 */}
-                    <div className="grid grid-cols-4 gap-1 mt-2 text-[11px] text-zinc-200 font-mono bg-black/40 rounded-md py-1 px-1 backdrop-blur-md border border-white/5">
+                    <div className="grid grid-cols-4 gap-1 mt-auto text-[11px] text-zinc-200 font-mono bg-black/40 rounded-md py-1 px-1 backdrop-blur-md border border-white/5">
                         <span className="text-center">CS {map.cs}</span>
                         <span className="text-center">AR {map.ar}</span>
                         <span className="text-center">OD {map.od}</span>
@@ -366,10 +445,8 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
                 </div>
             </div>
 
-            {/* 5. [悬停状态] 交互层 */}
+            {/* 5. [悬停状态] 交互层 (保持不变) */}
             <div className={`absolute inset-0 z-30 flex flex-col items-center justify-center gap-5 transition-all duration-300 ${showOverlay ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-
-                {/* 巨大的 Mod 文字，使用对应颜色 */}
                 <div
                     className="text-5xl font-black tracking-widest drop-shadow-[0_0_15px_rgba(0,0,0,0.8)]"
                     style={{ color: modStyle.hex }}
@@ -377,7 +454,6 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
                     {modCode}
                 </div>
 
-                {/* 按钮组 - 使用玻璃拟态 */}
                 <div className="flex items-center gap-4">
                     <Tooltip content="Copy ID" closeDelay={0} offset={10}>
                         <Button isIconOnly radius="full" className="bg-white/10 hover:bg-white/30 text-white backdrop-blur-md w-12 h-12 border border-white/20 shadow-lg"
@@ -401,7 +477,6 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
                     </Tooltip>
                 </div>
 
-                {/* 底部跳转链接 */}
                 <Link isExternal href={`https://osu.ppy.sh/b/${map.map_id}`} className="group/link">
                     <div className="text-xs font-bold tracking-widest text-white/50 group-hover/link:text-white transition-colors border-b border-transparent group-hover/link:border-white/50 pb-0.5 uppercase">
                         View on osu! website
@@ -409,7 +484,6 @@ const MapComponent = ({map, index, mod}: { map: Map, index: number, mod: string 
                 </Link>
             </div>
 
-            {/* 左侧颜色条 (点缀) */}
             <div className="absolute left-0 top-0 bottom-0 w-1 z-20 transition-all duration-300 group-hover:w-1.5" style={{ backgroundColor: modStyle.hex }}></div>
         </Card>
     )
