@@ -84,7 +84,7 @@ export const Navbar = () => {
         >
             <NavProgress isLoading={isLoading} />
 
-            <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
+            <NavbarContent className="basis-1/5 sm:basis-full gap-2" justify="start">
                 <NavbarMenuToggle className="sm:hidden" />
                 <NavBrand onClick={() => handleNavClick("/")} />
 
@@ -101,7 +101,7 @@ export const Navbar = () => {
                 </ul>
             </NavbarContent>
 
-            <NavbarContent className="basis-1 pl-4" justify="end">
+            <NavbarContent className="basis-1 gap-2" justify="end">
                  <Link isExternal href={siteConfig.links.github} aria-label="Github">
                     <GithubIcon className="text-default-500 hover:text-foreground transition-colors"/>
                 </Link>
@@ -110,7 +110,7 @@ export const Navbar = () => {
             </NavbarContent>
 
             <NavbarMenu>
-                <div className="mx-4 mt-8 flex flex-col gap-4">
+                <div className="mx-2 mt-2 flex flex-col gap-2">
                     {siteConfig.navItems.map((item, index) => (
                         <NavbarMenuItem key={`${item.href}-${index}`}>
                             <Link
@@ -151,7 +151,7 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
         >
             <NavProgress isLoading={isLoading} />
 
-            <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
+            <NavbarContent className="basis-1/5 sm:basis-full gap-2" justify="start">
                 <NavbarMenuToggle className="lg:hidden" />
                 <NavBrand onClick={() => handleNavClick("/")} />
 
@@ -170,7 +170,7 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                     })}
                 </ul>
             </NavbarContent>
-            <NavbarContent className="basis-1 pl-4" justify="end">
+            <NavbarContent className="basis-1 gap-2" justify="end">
                  <Link isExternal href={siteConfig.links.github} aria-label="Github">
                     <GithubIcon className="text-default-500 hover:text-foreground transition-colors"/>
                 </Link>
@@ -179,7 +179,7 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
             </NavbarContent>
 
             <NavbarMenu>
-                <div className="mx-4 mt-8 flex flex-col gap-4">
+                <div className="mx-2 mt-2 flex flex-col gap-2">
                     <NavbarMenuItem>
                         <Link href="/" color="secondary" size="lg" onPress={() => setIsMenuOpen(false)}>
                             ← 返回首页
