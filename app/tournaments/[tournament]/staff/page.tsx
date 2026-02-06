@@ -128,7 +128,7 @@ const StaffCard = ({member, color, bgClass}: {member: {name: string, uid: string
 async function GetStaff(tournament: string): Promise<Staff> {
     const res = await fetch(siteConfig.backend_url + '/api/staff' +
         '?tournament_name=' + tournament,
-        {next: {revalidate: 60}})
+        {next: {revalidate: 0}})
     if (!res.ok) {
         throw new Error('Failed to fetch data')
     }

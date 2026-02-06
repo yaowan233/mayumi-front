@@ -1,7 +1,7 @@
 "use client"
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {TournamentInfo} from "@/components/homepage";
+import {TournamentInfo, TournamentStatus} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {Button} from "@heroui/button";
 import {useRouter} from "next/navigation";
@@ -63,6 +63,8 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
         scheduler: true,
         map_tester: true,
         links: [],
+        status: 'pending',
+        reject_reason: ''
     });
 
     useEffect(() => {
@@ -91,17 +93,20 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
 
         setIsSaving(true);
         try {
-            const res = await fetch(siteConfig.backend_url + '/api/update-tournament', {
+            // 【关键修正】在 URL 参数中带上 original_name
+            const url = `${siteConfig.backend_url}/api/update-tournament?original_name=${encodeURIComponent(tournament_name)}`;
+
+            const res = await fetch(url, {
                 'method': 'POST',
-                'body': JSON.stringify(formData),
+                'body': JSON.stringify(formData), // formData 里包含的是新名字
                 'headers': {'Content-Type': 'application/json'},
                 credentials: 'include'
             });
 
             if (res.status != 200) {
-                setErrMsg(await res.text());
             } else {
                 alert('修改成功');
+
                 router.push(`/tournament-management/${formData.abbreviation}`);
                 router.refresh();
             }
@@ -185,7 +190,10 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
 // 获取数据 API
 async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
     const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        {next: {revalidate: 0}})
+        {next: {revalidate: 0}, credentials: 'include'})
+    if (res.status === 403) {
+        throw new Error("权限不足：比赛审核中，且您不是举办者或未登录");
+    }
     if (!res.ok) throw new Error("Failed to fetch");
     return await res.json()
 }

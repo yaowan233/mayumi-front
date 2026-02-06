@@ -63,28 +63,3 @@ export const UserStatus = () => {
         </Dropdown>
     );
 }
-
-// --- 右侧通用操作栏 ---
-export const RightContent = () => (
-    <>
-        <NavbarItem className="hidden sm:flex gap-2">
-            <Link isExternal href={siteConfig.links.github} aria-label="Github">
-                <GithubIcon className="text-default-500 hover:text-foreground transition-colors"/>
-            </Link>
-            <ThemeSwitch/>
-        </NavbarItem>
-        <NavbarItem className="hidden md:flex">
-            <Button
-                isExternal
-                as={Link}
-                className="text-sm font-medium text-default-600 bg-default-100 hover:bg-default-200"
-                href={siteConfig.links.sponsor}
-                startContent={<HeartFilledIcon className="text-danger"/>}
-                variant="flat"
-            >
-                爱发电
-            </Button>
-        </NavbarItem>
-        <UserStatus/>
-    </>
-);

@@ -82,7 +82,6 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
         <div className="w-full flex flex-col gap-6">
 
             {/* 1. Tabs 区域 */}
-            {/* 修复：移除了外层的 flex justify-center，让它自然占满全宽 */}
             <div className="w-full">
                 <Tabs
                     aria-label="Round Selection"
@@ -110,8 +109,6 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
 
             {/* 2. 内容区域 */}
             {currentRound && (
-                // 优化：虽然 Tab 线撑满了，但下方内容建议加一个 max-w 限制 (如 1400px)，
-                // 防止表格在 4K 屏幕上拉得过长难以阅读。同时用 mx-auto 居中。
                 <div className="flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4">
                     {currentRound.is_lobby && (
                         <div className="flex flex-col gap-4">
@@ -144,14 +141,12 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // 默认初始状态：按 "平均排名" 升序
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
         column: "平均排名",
         direction: "ascending",
     });
 
     useEffect(() => {
-        // ... (fetchData 逻辑保持不变)
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -170,12 +165,13 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
     }, [round]);
 
     const handleSortChange = (descriptor: SortDescriptor) => {
-        // 复制一个新的 descriptor
         const newDescriptor = { ...descriptor };
         const column = newDescriptor.column as string;
 
+        if (column === '#') return;
+
         if (column !== sortDescriptor.column) {
-            if (column === "平均排名" || column === "#") {
+            if (column === "平均排名") {
                 newDescriptor.direction = "ascending";
             }
             else if (
@@ -189,9 +185,9 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
                 newDescriptor.direction = "descending";
             }
         }
-
         setSortDescriptor(newDescriptor);
     };
+
     const sortedItems = useMemo(() => {
         return [...leaderboard].sort((a, b) => {
             const first = a[sortDescriptor.column as keyof typeof a];
@@ -207,7 +203,6 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
                 cmp = (first || "").toString().localeCompare(second || "");
             }
 
-            // 这里依然需要保留，因为虽然我们强制了方向，但排序函数本身需要知道现在是什么方向
             if (sortDescriptor.direction === "descending") {
                 cmp *= -1;
             }
@@ -227,22 +222,25 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
             if (values.length === 0) return;
             const uniqueValues = Array.from(new Set(values));
 
-            // --- 修改处：将 'Rating' 加入判断列表 ---
             const isScore =
                 col.includes('分') ||
                 col.includes('成绩') ||
                 col.includes('Score') ||
                 col.includes('Acc') ||
                 col.includes('%') ||
-                col === 'Rating'; // <--- 新增这一行
+                col === 'Rating';
 
-            // 如果是 Score/Rating，按 b-a (降序) 排列，取前三名作为金银铜
-            // 如果是 Rank，按 a-b (升序) 排列，取前三名（最小的）作为金银铜
             uniqueValues.sort((a, b) => isScore ? b - a : a - b);
-
             result[col] = uniqueValues.slice(0, 3);
         });
         return result;
+    }, [leaderboard]);
+
+    const columns = useMemo(() => {
+        if (leaderboard.length === 0) return [];
+        // 获取所有键，排除原始数据可能存在的 '#'（为了避免冲突或重复），然后手动把 '#' 加到最前面
+        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#');
+        return ['#', ...rawKeys];
     }, [leaderboard]);
 
     const getCellStyle = (columnKey: string, value: any) => {
@@ -257,46 +255,49 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
         return "";
     };
 
-    const formatValue = (key: string, val: any) => {
-        if (val === null || val === undefined) return '-';
-        return val;
-    };
-
     if (loading) return <div className="w-full h-40 flex justify-center items-center"><Spinner label="加载排行榜..." /></div>;
     if (leaderboard.length === 0) return <div className="text-default-400 p-4">暂无排行数据</div>;
-    const columns = Object.keys(leaderboard[0] || {});
 
     return (
         <Table
             aria-label="Leaderboard"
             sortDescriptor={sortDescriptor}
-            onSortChange={handleSortChange} // 使用自定义的 handleSortChange
+            onSortChange={handleSortChange}
             classNames={{
                 wrapper: "min-h-[200px] shadow-sm border border-white/5 bg-content1 overflow-x-auto",
-                th: "bg-default-100 text-default-600 font-bold uppercase text-xs whitespace-nowrap hover:text-default-900 cursor-pointer", // 加上 cursor-pointer 提示可点击
+                th: "bg-default-100 text-default-600 font-bold uppercase text-xs whitespace-nowrap hover:text-default-900 cursor-pointer",
                 td: "whitespace-nowrap"
             }}
             isStriped
         >
-            <TableHeader>
-                {columns.map((column) => (
+            <TableHeader columns={columns.map(c => ({uid: c, name: c}))}>
+                {(column) => (
                     <TableColumn
-                        key={column}
+                        key={column.uid}
                         className="uppercase"
-                        allowsSorting={column !== '#'} // 只有 # 这一列不允许排序（如果想让它可以排，去掉这个条件即可）
+                        allowsSorting={column.uid !== '#'}
                     >
-                        {column}
+                        {column.name}
                     </TableColumn>
-                ))}
+                )}
             </TableHeader>
-            <TableBody items={sortedItems.map((row, i) => ({...row, key: i}))}>
+            <TableBody items={sortedItems.map((item, idx) => ({ ...item, virtual_rank: idx + 1, key: idx }))}>
                 {(item) => (
                     <TableRow key={item.key}>
                         {(columnKey) => {
                             const keyStr = columnKey.toString();
                             const rawVal = getKeyValue(item, columnKey);
+                            const displayVal = rawVal ?? '-';
                             const style = getCellStyle(keyStr, rawVal);
-                            const displayVal = formatValue(keyStr, rawVal);
+                            if (keyStr === '#') {
+                                return (
+                                    <TableCell>
+                                        <span className={style}>
+                                            {item.virtual_rank}
+                                        </span>
+                                    </TableCell>
+                                );
+                            }
 
                             return (
                                 <TableCell>
@@ -310,7 +311,6 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
         </Table>
     );
 };
-
 // --- 子组件 2: 统计表格 ---
 const StatsTable = ({ stats, stageName }: { stats: Stats[], stageName: string }) => {
     const currentStats = useMemo(() => stats.filter(s => s.stage_name === stageName), [stats, stageName]);

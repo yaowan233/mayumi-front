@@ -22,7 +22,7 @@ export default function CreateTournamentPage() {
         rank_min: undefined, rank_max: undefined, description: '', rules_info: '', staff_registration_info: '',
         tournament_schedule_info: '', registration_info: '', challonge_api_key: undefined, challonge_tournament_url: undefined,
         referee: true, commentator: true, streamer: true, mappooler: true, custom_mapper: true, designer: true,
-        donator: true, scheduler: true, map_tester: true, links: [],
+        donator: true, scheduler: true, map_tester: true, links: [], status: 'pending', reject_reason: undefined
     });
     const [errMsg, setErrMsg] = useState('');
 
@@ -47,7 +47,7 @@ export default function CreateTournamentPage() {
                 const msg = await res.json();
                 setErrMsg(msg['detail'] || "创建失败，请重试");
             } else {
-                alert('创建成功！即将跳转...');
+                alert('创建成功！\n您的比赛已进入审核队列，请耐心等待管理员审核。');
                 router.push('/');
             }
         } catch (e) {

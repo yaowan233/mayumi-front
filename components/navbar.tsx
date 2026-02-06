@@ -14,16 +14,14 @@ import { siteConfig } from "@/config/site";
 import NextLink from "next/link";
 import clsx from "clsx";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { Logo } from "@/components/icons";
+import {GithubIcon, Logo} from "@/components/icons";
 import { useEffect, useState } from "react";
 import { Progress } from "@heroui/progress";
 import { usePathname } from "next/navigation";
-import { RightContent, UserStatus } from "@/components/navbar_common";
+import { UserStatus } from "@/components/navbar_common";
 import { Divider } from "@heroui/divider";
 
-// --- 提取公共组件 ---
 
-// 1. Logo 区域
 const NavBrand = ({ onClick }: { onClick?: () => void }) => (
     <NavbarBrand as="li" className="gap-3 max-w-fit pr-4">
         <NextLink className="flex justify-start items-center gap-2" href="/" onClick={onClick}>
@@ -33,7 +31,6 @@ const NavBrand = ({ onClick }: { onClick?: () => void }) => (
     </NavbarBrand>
 );
 
-// 2. 统一的导航链接样式 (核心修改)
 const NavLinkItem = ({ item, isActive, onClick }: { item: { href: string; label: string }, isActive: boolean, onClick: () => void }) => (
     <NavbarItem isActive={isActive}>
         <NextLink
@@ -52,7 +49,6 @@ const NavLinkItem = ({ item, isActive, onClick }: { item: { href: string; label:
     </NavbarItem>
 );
 
-// 3. 加载条
 const NavProgress = ({ isLoading }: { isLoading: boolean }) => (
     isLoading ? (
         <Progress
@@ -68,7 +64,6 @@ const NavProgress = ({ isLoading }: { isLoading: boolean }) => (
     ) : null
 );
 
-// --- 主导航栏 ---
 export const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -93,11 +88,8 @@ export const Navbar = () => {
                 <NavbarMenuToggle className="sm:hidden" />
                 <NavBrand onClick={() => handleNavClick("/")} />
 
-                {/* 桌面端导航：统一风格 */}
                 <ul className="hidden sm:flex gap-1 justify-start ml-2 items-center h-full">
-                    {/* 添加竖线分割 */}
                     <li className="h-6 w-[1px] bg-default-300 dark:bg-white/20 mr-4"></li>
-
                     {siteConfig.navItems.map((item) => (
                         <NavLinkItem
                             key={item.href}
@@ -109,11 +101,10 @@ export const Navbar = () => {
                 </ul>
             </NavbarContent>
 
-            <NavbarContent className="hidden sm:flex basis-1/5 sm:basis-full" justify="end">
-                <RightContent />
-            </NavbarContent>
-
-            <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
+            <NavbarContent className="basis-1 pl-4" justify="end">
+                 <Link isExternal href={siteConfig.links.github} aria-label="Github">
+                    <GithubIcon className="text-default-500 hover:text-foreground transition-colors"/>
+                </Link>
                 <ThemeSwitch />
                 <UserStatus />
             </NavbarContent>
@@ -139,7 +130,6 @@ export const Navbar = () => {
     );
 };
 
-// --- 赛事导航栏 ---
 export const TournamentNavbar = ({tournament_name}: { tournament_name: string }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const tournament_href_start = "/tournaments/" + tournament_name;
@@ -165,11 +155,8 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                 <NavbarMenuToggle className="lg:hidden" />
                 <NavBrand onClick={() => handleNavClick("/")} />
 
-                {/* 赛事导航项：统一风格 */}
                 <ul className="hidden lg:flex gap-1 justify-start ml-2 items-center h-full">
-                    {/* 添加竖线分割 */}
                     <li className="h-6 w-[1px] bg-default-300 dark:bg-white/20 mr-4"></li>
-
                     {siteConfig.tournamentNavItems.map((item) => {
                         const targetUrl = `${tournament_href_start}${item.href}`;
                         return (
@@ -183,13 +170,10 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                     })}
                 </ul>
             </NavbarContent>
-
-            <NavbarContent className="hidden lg:flex basis-1/5 lg:basis-full" justify="end">
-                <RightContent />
-            </NavbarContent>
-
-            {/* ... 移动端菜单保持不变 ... */}
-             <NavbarContent className="lg:hidden basis-1 pl-4" justify="end">
+            <NavbarContent className="basis-1 pl-4" justify="end">
+                 <Link isExternal href={siteConfig.links.github} aria-label="Github">
+                    <GithubIcon className="text-default-500 hover:text-foreground transition-colors"/>
+                </Link>
                 <ThemeSwitch />
                 <UserStatus />
             </NavbarContent>

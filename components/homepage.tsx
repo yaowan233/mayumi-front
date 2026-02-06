@@ -21,7 +21,6 @@ import {Chip} from "@heroui/chip";
 import {Snippet} from "@heroui/snippet";
 
 
-// --- 图标组件 ---
 const CalendarIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
          strokeLinecap="round" strokeLinejoin="round">
@@ -38,6 +37,22 @@ const LinkIcon = () => (
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
     </svg>
 );
+
+const statusColorMap: Record<string, "warning" | "success" | "danger" | "default"> = {
+    pending: "warning",
+    approved: "success",
+    rejected: "danger",
+    draft: "default",
+    hidden: "default",
+};
+
+const statusLabelMap: Record<string, string> = {
+    pending: "待审核",
+    approved: "已发布",
+    rejected: "审核被驳回",
+    draft: "草稿",
+    hidden: "已隐藏",
+};
 
 
 export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
@@ -127,6 +142,46 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     const bgSrc = tournament_info.pic_url || fallbackImage;
     return (
         <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10">
+            {tournament_info.status !== 'approved' && (
+                <div className={`
+                    w-full p-4 rounded-xl border flex flex-col gap-3 shadow-sm transition-all
+                    ${tournament_info.status === 'rejected' 
+                        ? 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-900 text-danger' 
+                        : 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-900 text-warning-600'}
+                `}>
+                    {/* 第一行：状态标签 + 提示文字 */}
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Chip
+                            color={statusColorMap[tournament_info.status]}
+                            variant="solid"
+                            className="text-white font-bold border-none"
+                            size="sm"
+                        >
+                            {statusLabelMap[tournament_info.status]}
+                        </Chip>
+                        <span className="font-bold text-sm sm:text-base opacity-90">
+                            当前页面未对外公开，仅管理员与主办方可见。
+                        </span>
+                    </div>
+
+                    {/* 第二行：驳回理由详情 (仅在被驳回且有理由时显示) */}
+                    {tournament_info.status === 'rejected' && tournament_info.reject_reason && (
+                        <div className="flex items-start gap-2 bg-white/60 dark:bg-black/20 p-3 rounded-lg text-sm border border-danger-200/50 dark:border-danger-900/50">
+                            <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div className="flex flex-col gap-1">
+                                <span className="font-bold opacity-80 text-xs uppercase tracking-wider">
+                                    驳回理由
+                                </span>
+                                <span className="font-medium leading-relaxed">
+                                    {tournament_info.reject_reason}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-zinc-950 group border border-white/10">
 
@@ -422,7 +477,9 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     );
 }
 
-// Interface 定义保持不变...
+export type TournamentStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'hidden';
+
+
 export interface TournamentInfo {
     name: string;
     abbreviation: string;
@@ -453,6 +510,8 @@ export interface TournamentInfo {
     challonge_tournament_url?: string;
     is_verified?: boolean;
     qq_group?: number;
+    status: TournamentStatus;
+    reject_reason?: string;
 }
 
 type Link = {

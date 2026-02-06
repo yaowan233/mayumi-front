@@ -3,7 +3,7 @@ import {siteConfig} from "@/config/site";
 
 export default async function ParticipantsPage(props: { params: Promise<{ tournament: string }> }) {
     const params = await props.params
-    const tournament_players = await getPlayers(params.tournament, 60)
+    const tournament_players = await getPlayers(params.tournament, 0)
     tournament_players.groups = tournament_players.groups?.filter(group => group.is_verified)
     return (
         <ParticipantsComp tournament_players={tournament_players}/>

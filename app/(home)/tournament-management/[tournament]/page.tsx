@@ -73,34 +73,48 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     const [isLoading, setIsLoading] = useState(true);
 
     const params = React.use(props.params);
-    const tournament_name = decodeURIComponent(params.tournament);
-    const link_prefix = `/tournament-management/${tournament_name}`;
+    const tournament_abbr = decodeURIComponent(params.tournament);
+
+    const link_prefix = `/tournament-management/${tournament_abbr}`;
 
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    // 并行加载数据
-                    const [manageData, playersData] = await Promise.all([
-                        getTournamentManagementInfo(currentUser.currentUser.uid),
-                        getPlayers(tournament_name, 120)
-                    ]);
+                    // 1. 先获取所有管理权限信息 (包含简称和全称的对应关系)
+                    const manageData = await getTournamentManagementInfo(currentUser.currentUser.uid);
 
-                    // 提取当前比赛的权限
-                    const currentTournament = manageData.find(info => info.tournament_name === tournament_name);
-                    setMyRoles(currentTournament?.roles || []);
-                    setTournamentPlayers(playersData);
+                    // 2. 在本地查找当前比赛 (通过 URL 参数的简称匹配)
+                    const currentTournament = manageData.find(
+                        info => info.abbreviation === tournament_abbr
+                    );
+
+                    if (currentTournament) {
+                        // 找到比赛了，设置权限
+                        setMyRoles(currentTournament.roles || []);
+
+                        // 3. 【关键修改】拿到全称 (tournament_name) 后，再去请求 getPlayers
+                        try {
+                            const playersData = await getPlayers(currentTournament.tournament_name, 120);
+                            setTournamentPlayers(playersData);
+                        } catch (err) {
+                            console.error("Failed to load players:", err);
+                        }
+                    } else {
+                        console.warn("未找到匹配的比赛权限:", tournament_abbr);
+                        setMyRoles([]);
+                    }
                 } catch (e) {
                     console.error("Failed to load dashboard data", e);
                 } finally {
                     setIsLoading(false);
                 }
-            } else {
+            } else if (currentUser?.currentUser === null) {
                 setIsLoading(false);
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_abbr]);
 
     // 定义菜单配置
     const menuItems = [
@@ -171,7 +185,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
                 </h1>
                 <div className="flex items-center gap-3 text-default-500">
                     {/* 修复：text-foreground */}
-                    <span>当前赛事: <span className="text-foreground font-bold">{tournament_name}</span></span>
+                    <span>当前赛事: <span className="text-foreground font-bold">{tournament_abbr}</span></span>
                     {myRoles.map(role => (
                         <Chip key={role} size="sm" color="primary" variant="flat">{role}</Chip>
                     ))}

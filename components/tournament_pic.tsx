@@ -13,6 +13,7 @@ export interface Tournament {
     end_date: string;
     pic_url: string;
     mode: string;
+    status: string;
 }
 
 const getModeColor = (mode: string) => {
@@ -39,6 +40,13 @@ export const TournamentComponent = ({ tournament }: { tournament: Tournament }) 
             isPressable
             className="group relative w-full aspect-video border-none overflow-hidden bg-zinc-900 shadow-lg"
         >
+            {tournament.status && tournament.status !== 'approved' && (
+                 <div className="absolute top-3 left-3 z-20">
+                     <Chip color="warning" variant="solid" size="sm">
+                         {tournament.status === 'pending' ? '审核中' : '已驳回'}
+                     </Chip>
+                 </div>
+            )}
             <Chip
                 color={modeColor}
                 variant="shadow"

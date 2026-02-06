@@ -19,14 +19,14 @@ export default async function StatsPage(props: { params: Promise<{ tournament: s
 
 async function getStats(tournament_name: string): Promise<Stats[]> {
     const res = await fetch(siteConfig.backend_url + '/api/stats?tournament_name=' + tournament_name,
-        {next: {revalidate: 60}});
+        {next: {revalidate: 0}});
     return await res.json();
 }
 
 
 async function getScores(tournament_name: string): Promise<Score[]> {
     const res = await fetch(siteConfig.backend_url + '/api/scores?tournament_name=' + tournament_name,
-        {next: {revalidate: 60}});
+        {next: {revalidate: 0}});
     return await res.json();
 }
 
@@ -57,7 +57,7 @@ interface Score {
 
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 60}});
+        {next: {revalidate: 0}});
     return await data.json();
 }
 
@@ -71,7 +71,7 @@ interface TournamentRoundInfo {
 
 async function getStages(tournament_name: string): Promise<Stage[]> {
     const res = await fetch(siteConfig.backend_url + '/api/map_pools?tournament_name=' + tournament_name,
-        {next: {revalidate: 60}})
+        {next: {revalidate: 0}})
     return await res.json()
 }
 
