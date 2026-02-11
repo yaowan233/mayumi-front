@@ -263,7 +263,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 animate-appearance-in">
+        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8">
 
             {/* Header */}
             <div className="flex flex-col gap-2 border-b border-default-200 dark:border-white/5 pb-6">

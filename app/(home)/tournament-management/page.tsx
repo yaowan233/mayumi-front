@@ -90,7 +90,7 @@ export default function TournamentManagementPage() {
     }, [currentUser]);
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 animate-appearance-in">
+        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8">
             {/* 标题区保持不变 */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>

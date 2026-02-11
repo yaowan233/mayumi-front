@@ -112,7 +112,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
     };
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 animate-appearance-in pb-32">
+        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">
 
             {/* Header: 修复文字颜色和边框 */}
             <div

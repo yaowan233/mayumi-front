@@ -65,7 +65,7 @@ const ContributorCard = ({
 
 export default function AboutPage() {
     return (
-        <div className="w-full max-w-4xl mx-auto px-6 py-12 flex flex-col gap-16 animate-appearance-in">
+        <div className="w-full max-w-4xl mx-auto px-6 py-12 flex flex-col gap-16">
 
             {/* 1. 标题区 */}
             <div className="flex flex-col items-center gap-4 text-center">

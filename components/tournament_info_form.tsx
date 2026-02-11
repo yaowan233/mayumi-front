@@ -163,7 +163,7 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {
 
                     <div className="flex flex-col gap-3">
                         {formData.links.map((link, index) => (
-                            <div key={index} className="flex gap-3 items-center animate-appearance-in">
+                            <div key={index} className="flex gap-3 items-center">
                                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <Input size="sm" label="链接名称" placeholder="例如：QQ群 / Discord" value={link.name} onChange={e => updateLink(index, 'name', e.target.value)}/>
                                     <Input size="sm" label="URL 地址" placeholder="https://..." value={link.url} onChange={e => updateLink(index, 'url', e.target.value)}/>

@@ -176,7 +176,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 animate-appearance-in">
+        <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8">
             {/* Header: 修复文字颜色 */}
             <div className="flex flex-col gap-2">
                 {/* 修复：text-white -> text-foreground */}

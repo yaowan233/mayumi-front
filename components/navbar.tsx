@@ -23,7 +23,7 @@ import { Divider } from "@heroui/divider";
 
 
 const NavBrand = ({ onClick }: { onClick?: () => void }) => (
-    <NavbarBrand as="li" className="gap-3 max-w-fit pr-4">
+    <NavbarBrand as="li" className="gap-4 max-w-fit">
         <NextLink className="flex justify-start items-center gap-2" href="/" onClick={onClick}>
             <Logo className="text-primary w-8 h-8" />
             <p className="font-black text-inherit text-xl tracking-tight">Mayumi</p>
@@ -84,7 +84,7 @@ export const Navbar = () => {
         >
             <NavProgress isLoading={isLoading} />
 
-            <NavbarContent className="basis-1/5 sm:basis-full gap-2" justify="start">
+            <NavbarContent className="basis-1/5 sm:basis-full gap-4" justify="start">
                 <NavbarMenuToggle className="sm:hidden" />
                 <NavBrand onClick={() => handleNavClick("/")} />
 
@@ -101,7 +101,7 @@ export const Navbar = () => {
                 </ul>
             </NavbarContent>
 
-            <NavbarContent className="basis-1 gap-2" justify="end">
+            <NavbarContent className="basis-1 gap-4" justify="end">
                  <Link isExternal href={siteConfig.links.github} aria-label="Github">
                     <GithubIcon className="text-default-500 hover:text-foreground transition-colors"/>
                 </Link>
@@ -114,7 +114,12 @@ export const Navbar = () => {
                     {siteConfig.navItems.map((item, index) => (
                         <NavbarMenuItem key={`${item.href}-${index}`}>
                             <Link
-                                className="w-full"
+                                className={clsx(
+                        "w-full justify-start px-2 py-1 rounded-lg",
+                        pathname === item.href
+                            ? "font-black bg-primary/10" // 选中样式
+                            : "font-medium hover:bg-default-100" // 未选中样式（可选：加个hover背景）
+                    )}
                                 color={pathname === item.href ? "primary" : "foreground"}
                                 href={item.href}
                                 size="lg"
@@ -151,12 +156,11 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
         >
             <NavProgress isLoading={isLoading} />
 
-            <NavbarContent className="basis-1/5 sm:basis-full gap-2" justify="start">
+            <NavbarContent className="basis-1/5 sm:basis-full gap-4" justify="start">
                 <NavbarMenuToggle className="lg:hidden" />
                 <NavBrand onClick={() => handleNavClick("/")} />
 
                 <ul className="hidden lg:flex gap-1 justify-start ml-2 items-center h-full">
-                    <li className="h-6 w-[1px] bg-default-300 dark:bg-white/20 mr-4"></li>
                     {siteConfig.tournamentNavItems.map((item) => {
                         const targetUrl = `${tournament_href_start}${item.href}`;
                         return (
@@ -170,7 +174,7 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                     })}
                 </ul>
             </NavbarContent>
-            <NavbarContent className="basis-1 gap-2" justify="end">
+            <NavbarContent className="basis-1 gap-4" justify="end">
                  <Link isExternal href={siteConfig.links.github} aria-label="Github">
                     <GithubIcon className="text-default-500 hover:text-foreground transition-colors"/>
                 </Link>
@@ -186,7 +190,7 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                         </Link>
                     </NavbarMenuItem>
                     <Divider className="my-2"/>
-                    <div className="text-xs font-bold text-default-400 uppercase tracking-widest px-2">
+                    <div className="text-xs font-bold text-default-400 uppercase tracking-widest px-4">
                         {decodeURIComponent(tournament_name)}
                     </div>
                     {siteConfig.tournamentNavItems.map((item, index) => {
@@ -198,7 +202,12 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                                     color={isActive ? "primary" : "foreground"}
                                     href={targetUrl}
                                     size="lg"
-                                    className={clsx("w-full", isActive && "font-black bg-primary/10 pl-2 rounded-lg py-1")}
+                                    className={clsx(
+                            "w-full justify-start px-2 py-1 rounded-lg",
+                            isActive
+                                ? "font-black bg-primary/10"
+                                : "font-medium"
+                        )}
                                     onPress={() => {
                                         setIsMenuOpen(false);
                                         handleNavClick(targetUrl);

@@ -127,7 +127,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
     }
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-4 py-10 flex flex-col gap-8 animate-appearance-in">
+        <div className="w-full max-w-5xl mx-auto px-4 py-10 flex flex-col gap-8">
 
             {/* Header: 修复边框和文字颜色 */}
             {/* border-white/5 -> border-default-200 dark:border-white/5 */}

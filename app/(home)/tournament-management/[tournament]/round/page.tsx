@@ -124,7 +124,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     }
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-4 py-8 flex flex-col gap-8 animate-appearance-in pb-32">
+        <div className="w-full max-w-5xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">
 
             {/* Header: 修复边框颜色 */}
             <div className="flex flex-col gap-2 border-b border-default-200 dark:border-white/5 pb-6">
