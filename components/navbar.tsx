@@ -15,7 +15,7 @@ import NextLink from "next/link";
 import clsx from "clsx";
 import { ThemeSwitch } from "@/components/theme-switch";
 import {GithubIcon, Logo} from "@/components/icons";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Progress } from "@heroui/progress";
 import { usePathname } from "next/navigation";
 import { UserStatus } from "@/components/navbar_common";
@@ -66,16 +66,14 @@ const NavProgress = ({ isLoading }: { isLoading: boolean }) => (
 
 export const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [pendingPath, setPendingPath] = useState<string | null>(null);
     const pathname = usePathname();
-
-    useEffect(() => {
-        setIsLoading(false);
-        setIsMenuOpen(false);
-    }, [pathname]);
+    const isLoading = pendingPath !== null && pendingPath !== pathname;
 
     const handleNavClick = (href: string) => {
-        if (href !== pathname) setIsLoading(true);
+        setIsMenuOpen(false);
+        if (href !== pathname) setPendingPath(href);
+        else setPendingPath(null);
     };
 
     return (
@@ -138,16 +136,14 @@ export const Navbar = () => {
 export const TournamentNavbar = ({tournament_name}: { tournament_name: string }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const tournament_href_start = "/tournaments/" + tournament_name;
-    const [isLoading, setIsLoading] = useState(false);
+    const [pendingPath, setPendingPath] = useState<string | null>(null);
     const pathname = usePathname();
-
-    useEffect(() => {
-        setIsLoading(false);
-        setIsMenuOpen(false);
-    }, [pathname]);
+    const isLoading = pendingPath !== null && pendingPath !== pathname;
 
     const handleNavClick = (href: string) => {
-        if (href !== pathname) setIsLoading(true);
+        setIsMenuOpen(false);
+        if (href !== pathname) setPendingPath(href);
+        else setPendingPath(null);
     };
 
     return (

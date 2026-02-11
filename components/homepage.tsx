@@ -10,7 +10,7 @@ import {Link} from "@heroui/link";
 import {Input, Textarea} from "@heroui/input";
 import {Radio, RadioGroup} from "@heroui/radio";
 import {Checkbox, CheckboxGroup} from "@heroui/checkbox";
-import {useContext, useEffect, useState} from "react";
+import {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Tooltip} from "@heroui/tooltip";
 import {siteConfig} from "@/config/site";
@@ -82,6 +82,32 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         fetchData();
     }, [currentUser, tournament_info.abbreviation]);
 
+    const resetRegistrationForm = useCallback(() => {
+        setErrMsg('');
+        setFormData({
+            tournament: tournament_info.abbreviation,
+            uid: currentUser?.currentUser?.uid,
+            qqNumber: '',
+            isFirstTimeStaff: false,
+            tournamentExperience: '',
+            selectedPositions: [],
+            otherDetails: '',
+            additionalComments: ''
+        });
+    }, [currentUser?.currentUser?.uid, tournament_info.abbreviation]);
+
+    const handleOpenStaffModal = useCallback(() => {
+        resetRegistrationForm();
+        onOpen();
+    }, [onOpen, resetRegistrationForm]);
+
+    const handleOpenChange = useCallback((open: boolean) => {
+        onOpenChange();
+        if (!open) {
+            resetRegistrationForm();
+        }
+    }, [onOpenChange, resetRegistrationForm]);
+
     const handleRegistration = async (onClose: () => void) => {
         if (formData.qqNumber === '' || formData.isFirstTimeStaff === undefined || formData.selectedPositions.length === 0) {
             setErrMsg('请填写所有必填字段')
@@ -119,22 +145,6 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             (tournament_info.rank_max && userRank > tournament_info.rank_max) ||
             (new Date(tournament_info.start_date) < new Date())
         );
-
-    useEffect(() => {
-        if (!isOpen) {
-            setErrMsg('');
-            setFormData({
-                tournament: tournament_info.abbreviation,
-                uid: currentUser?.currentUser?.uid,
-                qqNumber: '',
-                isFirstTimeStaff: false,
-                tournamentExperience: '',
-                selectedPositions: [],
-                otherDetails: '',
-                additionalComments: ''
-            })
-        }
-    }, [isOpen, currentUser?.currentUser?.uid, tournament_info.abbreviation]);
 
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
     const isRegistered = members.some((member) => member.player && member.uid === currentUser?.currentUser?.uid);
@@ -288,7 +298,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
                 {currentUser?.currentUser ? (
                     <CardFooter className="px-6 pb-6 pt-2 flex justify-start">
-                        <Button onPress={onOpen} color="secondary" variant="shadow" className="font-bold w-full sm:w-auto" size="lg">
+                                                <Button onPress={handleOpenStaffModal} color="secondary" variant="shadow" className="font-bold w-full sm:w-auto" size="lg">
                             立即报名 Staff
                         </Button>
                     </CardFooter>
@@ -373,10 +383,10 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                                 className="font-bold w-full sm:w-auto"
                                                 isDisabled={regNotAvailable || isRegistered}
                                                 onPress={async () => {
-                                                    const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${tournament_info.abbreviation}`, {
-                                                        'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'
+                                                    const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${encodeURIComponent(tournament_info.abbreviation)}`, {
+                                                        method: 'POST', credentials: 'include'
                                                     })
-                                                    if (res.status != 200) alert(await res.text());
+                                                    if (!res.ok) alert(await res.text());
                                                     else { alert('报名成功'); setMembers(await res.json()) }
                                                 }}
                                             >
@@ -391,10 +401,10 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                                 size="lg"
                                                 className="w-full sm:w-auto"
                                                 onPress={async () => {
-                                                    const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${tournament_info.abbreviation}`, {
-                                                        'method': 'GET', 'headers': {'Content-Type': 'application/json'}, credentials: 'include'
+                                                    const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${encodeURIComponent(tournament_info.abbreviation)}`, {
+                                                        method: 'DELETE', credentials: 'include'
                                                     })
-                                                    if (res.status != 200) alert(await res.text());
+                                                    if (!res.ok) alert(await res.text());
                                                     else { alert('取消报名成功'); setMembers(await res.json()) }
                                                 }}
                                             >
@@ -415,7 +425,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
 
             {/* Staff 模态框保持不变 */}
-             <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="2xl" scrollBehavior="inside" backdrop="blur">
+             <Modal isOpen={isOpen} onOpenChange={handleOpenChange} size="2xl" scrollBehavior="inside" backdrop="blur">
                  <ModalContent>
                     {(onClose) => (
                         <>

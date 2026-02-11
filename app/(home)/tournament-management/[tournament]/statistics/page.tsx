@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { TournamentRoundInfo } from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
 import { Button } from "@heroui/button";
@@ -142,7 +142,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
     }, [currentUser, tournament_name]);
 
     // Fetch ALL scores for the tournament (Cache)
-    const fetchAllScores = async () => {
+    const fetchAllScores = useCallback(async () => {
         setIsScoresLoading(true);
         try {
             const res = await fetch(siteConfig.backend_url + `/api/scores?tournament_name=${tournament_name}`);
@@ -158,12 +158,12 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         } finally {
             setIsScoresLoading(false);
         }
-    };
+    }, [tournament_name]);
 
     // Initial fetch of scores
     useEffect(() => {
         fetchAllScores();
-    }, [tournament_name]);
+    }, [fetchAllScores]);
 
     // Filter scores when selectedRound or allScores changes
     useEffect(() => {
@@ -181,10 +181,12 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
         setIsUpdating(true);
         try {
-            const res = await fetch(siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${tournament_name}&stage_name=${selectedRound}`,
-                { next: { revalidate: 0 } })
+            const res = await fetch(
+                siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(selectedRound)}`,
+                { method: 'POST', credentials: 'include', next: { revalidate: 0 } }
+            )
 
-            if (res.status != 200) {
+            if (!res.ok) {
                 alert(`更新失败: ${await res.text()}`);
             } else {
                 alert('数据更新成功！排行榜和统计数据已刷新。');

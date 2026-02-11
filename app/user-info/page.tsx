@@ -4,7 +4,7 @@ import { ScoreRankA, ScoreRankS, ScoreRankSS, ScoreRankX, ScoreRankXH } from "@/
 import { Progress } from "@heroui/progress";
 import UserLevel from "@/components/user_level";
 import { User } from "@/app/user-info/types";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import CurrentUserContext from "@/app/user_context";
 import GameModeIcon, { GameMode } from "@/components/gamemode_icon";
 import { Input } from "@heroui/input";
@@ -38,17 +38,7 @@ export default function TournamentHomePage() {
     const [searchName, setSearchName] = useState("");
     const [isSearching, setIsSearching] = useState(false);
 
-    useEffect(() => {
-        if (currentUser?.currentUser?.uid && !searchName) {
-            handleSearch(currentUser.currentUser.name);
-        }
-    }, [currentUser]);
-
-    useEffect(() => {
-        if (userInfo?.username) handleSearch(userInfo.username);
-    }, [selectedMode]);
-
-    const handleSearch = async (name: string) => {
+    const handleSearch = useCallback(async (name: string) => {
         if (!name) return;
         setIsSearching(true);
         try {
@@ -59,7 +49,17 @@ export default function TournamentHomePage() {
         } finally {
             setIsSearching(false);
         }
-    };
+    }, [selectedMode]);
+
+    useEffect(() => {
+        if (currentUser?.currentUser?.uid && !searchName && !userInfo?.username) {
+            handleSearch(currentUser.currentUser.name);
+        }
+    }, [currentUser, searchName, userInfo?.username, handleSearch]);
+
+    useEffect(() => {
+        if (userInfo?.username) handleSearch(userInfo.username);
+    }, [selectedMode, userInfo?.username, handleSearch]);
 
     const hasBadges = userInfo?.badges && userInfo.badges.length > 0;
 

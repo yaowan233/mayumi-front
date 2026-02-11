@@ -19,8 +19,8 @@ const UserGroupIcon = () => (
 );
 
 export const ParticipantsComp = ({tournament_players}: { tournament_players: TournamentPlayers }) => {
-    const players = tournament_players.players || [];
-    const teams = tournament_players.groups || [];
+    const players = useMemo(() => tournament_players.players ?? [], [tournament_players.players]);
+    const teams = useMemo(() => tournament_players.groups ?? [], [tournament_players.groups]);
 
     // 排序逻辑
     const sortedSoloPlayers = useMemo(() => {

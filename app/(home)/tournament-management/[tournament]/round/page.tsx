@@ -1,5 +1,5 @@
 "use client";
-import React, {useContext, useEffect, useState} from "react";
+import React, {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {Button} from "@heroui/button";
@@ -50,20 +50,20 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     const [isSaving, setIsSaving] = useState(false);
     const [errMsg, setErrMsg] = useState('');
 
-    const initialFormData: TournamentRoundInfo = {
+    const createInitialFormData = useCallback((): TournamentRoundInfo => ({
         tournament_name: tournament_name,
         stage_name: '',
         start_time: undefined,
         end_time: undefined,
         is_lobby: false
-    };
+    }), [tournament_name]);
 
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
                     const data = await getRoundInfo(tournament_name);
-                    setFormData(data.length > 0 ? data : [initialFormData]);
+                    setFormData(data.length > 0 ? data : [createInitialFormData()]);
                 } catch (e) {
                     setErrMsg("加载失败，请刷新重试");
                 } finally {
@@ -72,7 +72,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_name, createInitialFormData]);
 
     const handleUpdateTournament = async () => {
         setErrMsg('');
@@ -155,7 +155,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
 
                 {/* Add Button: 修复 hover 效果和边框颜色 */}
                 <button
-                    onClick={() => setFormData([...formData, initialFormData])}
+                    onClick={() => setFormData((prev) => [...prev, createInitialFormData()])}
                     className="w-full h-16 border-2 border-dashed border-default-300 rounded-2xl flex items-center justify-center gap-2 text-default-500 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 group"
                 >
                     <PlusIcon/>

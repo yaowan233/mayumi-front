@@ -89,7 +89,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
     if (schedule.match_info == undefined) return null;
 
     // 提取公共的 Section Title 组件
-    const BracketHeader = ({ title, color }: { title: string, color: "success" | "danger" | "primary" }) => (
+    const renderBracketHeader = (title: string, color: "success" | "danger" | "primary") => (
         <div className="flex items-center gap-4 my-4">
             <Chip color={color} variant="flat" size="lg" className="font-bold min-w-fit">
                 {title}
@@ -111,7 +111,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
     return (
         <div className="flex flex-col gap-6">
             <div>
-                <BracketHeader title="胜者组 / Winner Bracket" color="success" />
+                {renderBracketHeader("胜者组 / Winner Bracket", "success")}
                 <Accordion
                     variant="splitted"
                     itemClasses={accordionStyle}
@@ -132,7 +132,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
 
             {schedule.match_info?.some((match) => !match.is_winner_bracket) && (
                 <div>
-                    <BracketHeader title="败者组 / Loser Bracket" color="danger" />
+                    {renderBracketHeader("败者组 / Loser Bracket", "danger")}
                     <Accordion variant="splitted" itemClasses={accordionStyle}>
                         {(schedule.match_info || []).filter((match) => !match.is_winner_bracket).map((match_info, index) => (
                             <AccordionItem
@@ -278,7 +278,7 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_play
     const info = tournament_players.players.find(player => player.uid === playerUID);
 
     // 封装一个简单的 Section 组件
-    const InfoSection = ({ title, role, list, canJoin }: any) => (
+    const renderInfoSection = ({ title, role, list, canJoin }: any) => (
         <div className="flex flex-col gap-2 p-3 bg-default-50 rounded-lg border border-transparent hover:border-default-200 transition-colors">
             <h4 className="text-small font-bold uppercase text-default-500 mb-1">{title}</h4>
             <div className="flex flex-wrap gap-2">
@@ -297,9 +297,9 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_play
     return (
         <div className="flex flex-col gap-4 w-full">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <InfoSection title="裁判" role="referee" list={match_info.referee} canJoin={info?.referee} />
-                <InfoSection title="直播" role="streamer" list={match_info.streamer} canJoin={info?.streamer} />
-                <InfoSection title="解说" role="commentator" list={match_info.commentators} canJoin={info?.commentator} />
+                {renderInfoSection({ title: "裁判", role: "referee", list: match_info.referee, canJoin: info?.referee })}
+                {renderInfoSection({ title: "直播", role: "streamer", list: match_info.streamer, canJoin: info?.streamer })}
+                {renderInfoSection({ title: "解说", role: "commentator", list: match_info.commentators, canJoin: info?.commentator })}
             </div>
 
             <Divider />
@@ -449,8 +449,11 @@ const WithDeletePersonInfo = ({tournament_name, stage_name, info, lobbyInfo, rol
     const handleSignOut = async () => {
         if(!confirm("确定要取消报名吗？")) return;
 
-        const res = await fetch(siteConfig.backend_url + `/api/sign-out-match?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${lobbyInfo.match_id}&role=${role}`, {credentials: 'include'})
-        if (res.status != 200) {
+        const res = await fetch(
+            siteConfig.backend_url + `/api/sign-out-match?tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(stage_name)}&match_id=${lobbyInfo.match_id}&role=${encodeURIComponent(role)}`,
+            { method: "DELETE", credentials: "include" }
+        )
+        if (!res.ok) {
             alert(await res.text());
         } else {
             setSchedule((prev) => {
@@ -557,8 +560,11 @@ const ParticipantJoinHere = ({tournament_name, stage_name, lobbyInfo, role, setS
             color="primary"
             className="h-6 min-h-6 px-2 border-1"
             onPress={async () => {
-                  const res = await fetch(siteConfig.backend_url + `/api/signup-match?tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${lobbyInfo.match_id}&role=${role}`, {credentials: 'include'})
-                   if (res.status != 200) {
+                  const res = await fetch(
+                      siteConfig.backend_url + `/api/signup-match?tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(stage_name)}&match_id=${lobbyInfo.match_id}&role=${encodeURIComponent(role)}`,
+                      { method: "POST", credentials: "include" }
+                  )
+                   if (!res.ok) {
                       alert(await res.text());
                   } else {
                       const simpleInfo = await res.json()
@@ -706,8 +712,11 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
                  if (map_id == "" || isNaN(parseInt(map_id))) {
                     alert("请输入正确的map id")
                 }
-                const res = await fetch(siteConfig.backend_url + `/api/update-warmup?map_id=${map_id}&team=${team}&tournament_name=${tournament_name}&stage_name=${stage_name}&match_id=${match_id}`, {credentials: 'include'})
-                if (res.status != 200) {
+                const res = await fetch(
+                    siteConfig.backend_url + `/api/update-warmup?map_id=${encodeURIComponent(map_id)}&team=${encodeURIComponent(team)}&tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(stage_name)}&match_id=${match_id}`,
+                    { method: "PATCH", credentials: "include" }
+                )
+                if (!res.ok) {
                     alert(await res.text());
                     return;
                 }
