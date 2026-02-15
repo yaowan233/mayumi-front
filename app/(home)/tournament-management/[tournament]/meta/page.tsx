@@ -1,7 +1,7 @@
 "use client"
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {TournamentInfo, TournamentStatus} from "@/components/homepage";
+import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {Button} from "@heroui/button";
 import {useRouter} from "next/navigation";
@@ -9,7 +9,6 @@ import {siteConfig} from "@/config/site";
 import {Card, CardBody} from "@heroui/card";
 import {Spinner} from "@heroui/spinner";
 
-// --- 图标 (继承 currentColor，无需修改) ---
 const SaveIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
          strokeLinecap="round" strokeLinejoin="round">
@@ -93,7 +92,6 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
 
         setIsSaving(true);
         try {
-            // 【关键修正】在 URL 参数中带上 original_name
             const url = `${siteConfig.backend_url}/api/update-tournament?original_name=${encodeURIComponent(tournament_name)}`;
 
             const res = await fetch(url, {
@@ -103,13 +101,27 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                 credentials: 'include'
             });
 
-            if (res.status != 200) {
-            } else {
-                alert('修改成功');
+            if (!res.ok) {
+                let errorDetail = `保存失败 (Code: ${res.status})`;
+                try {
+                    const errorData = await res.json();
+                    if (errorData.detail) {
+                        errorDetail = typeof errorData.detail === 'string'
+                            ? errorData.detail
+                            : JSON.stringify(errorData.detail);
+                    }
+                } catch (jsonError) {
+                }
 
-                router.push(`/tournament-management/${formData.abbreviation}`);
-                router.refresh();
+                setErrMsg(errorDetail);
+                window.scrollTo({top: 0, behavior: 'smooth'});
+                return;
             }
+
+            alert('修改成功');
+            const targetAbbr = formData.abbreviation || tournament_name;
+            router.push(`/tournament-management/${targetAbbr}`);
+            router.refresh();
         } catch (e) {
             setErrMsg("保存失败，请检查网络连接");
         } finally {
@@ -129,15 +141,12 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-10 flex flex-col gap-8">
 
-            {/* Header: 修复边框和文字颜色 */}
-            {/* border-white/5 -> border-default-200 dark:border-white/5 */}
             <div className="flex flex-col gap-2 border-b border-default-200 dark:border-white/5 pb-6">
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
                     <span>管理控制台</span>
                     <span>/</span>
                     <span>{tournament_name}</span>
                 </div>
-                {/* text-white -> text-foreground (自动适配黑/白) */}
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                     <EditIcon/>
                     编辑赛事信息
@@ -145,21 +154,17 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                 <p className="text-default-500">修改比赛的基本设置、规则、介绍等元数据。</p>
             </div>
 
-            {/* Form */}
             <TournamentInfoForm formData={formData} setFormData={setFormData} errMsg={errMsg}/>
 
-            {/* Sticky Footer Action Bar: 修复背景和边框 */}
             <Card
                 className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <CardBody className="flex flex-row justify-between items-center py-4 px-6">
 
-                    {/* 左侧：取消按钮 + 错误信息 */}
                     <div className="flex items-center gap-4">
                         <Button
                             variant="light"
                             color="default"
                             onPress={() => router.back()}
-                            // hover:text-white -> hover:text-foreground (防止亮色模式下 hover 变白看不见)
                             className="font-medium text-default-500 hover:text-foreground"
                         >
                             取消
@@ -169,7 +174,6 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                         </div>
                     </div>
 
-                    {/* 右侧：提交按钮 */}
                     <Button
                         color="primary"
                         size="lg"
