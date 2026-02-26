@@ -641,53 +641,86 @@ const ParticipantJoinHere = ({tournament_name, stage_name, lobbyInfo, role, setS
 
 // ---------------------- 地图卡片美化 MapComp ----------------------
 const MapComp = ({map}: { map: map }) => {
-    return (
-        <Card className="w-full h-[120px] shadow-sm group">
-            <Image
-                removeWrapper
-                alt="Beatmap Cover"
-                className="z-0 w-full h-full object-cover absolute top-0 left-0 brightness-[0.6] group-hover:scale-105 transition-transform duration-500" // 稍微调亮一点 brightness，因为我们要加渐变层了；增加 scale 动效
-                src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
-            />
+  return (
+    <Card className="w-full h-[110px] sm:h-[120px] shadow-sm group border-none">
 
-            {/* 渐变遮罩层：从底部黑色渐变到顶部透明 */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 pointer-events-none" />
+      <Image
+        removeWrapper
+        alt="Beatmap Cover"
+        className="z-0 w-full h-full object-cover absolute top-0 left-0 brightness-[0.55] group-hover:scale-105 transition-transform duration-500"
+        src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
+      />
 
-            {/* 内容层 z-20 确保在渐变之上 */}
-            <div className="z-20 relative h-full flex flex-col justify-between p-3 text-white">
-                <div className="flex flex-col gap-0.5">
-                    <Link isExternal href={`https://osu.ppy.sh/b/${map.map_id}`} className="text-white hover:text-primary transition-colors">
-                        <h4 className="font-bold text-lg line-clamp-1 leading-tight" title={map.map_name}>
-                            {map.map_name}
-                        </h4>
-                    </Link>
-                    <div className="flex gap-2 items-center text-xs text-white/80">
-                        <span className="bg-white/20 px-1 rounded">[{map.diff_name}]</span>
-                        <span>by {map.mapper}</span>
-                    </div>
-                </div>
+      {/* 渐变层 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 pointer-events-none" />
 
-                <div className="flex justify-between items-end">
-                    <div className="grid grid-cols-4 gap-x-3 gap-y-0 text-xs font-mono text-white/90">
-                        <span>CS: {map.cs}</span>
-                        <span>AR: {map.ar}</span>
-                        <span>OD: {map.od}</span>
-                        <span>HP: {map.hp}</span>
-                    </div>
+      {/* 内容层 */}
+      <div className="z-20 relative h-full flex flex-col justify-between p-3 text-white">
 
-                    <div className="flex flex-col items-end gap-0">
-                        <div className="flex items-center gap-1 text-yellow-400 font-bold">
-                            <span>★</span> {map.star_rating}
-                        </div>
-                        <div className="text-xs text-white/60">
-                            {map.bpm} BPM
-                        </div>
-                    </div>
-                </div>
+        {/* --- 上半部分：标题与作者 --- */}
+        <div className="flex flex-col gap-0 min-w-0">
+          <Link
+            isExternal
+            href={`https://osu.ppy.sh/b/${map.map_id}`}
+            className="text-white hover:text-primary transition-colors block"
+          >
+            <h4
+              className="font-bold text-base sm:text-lg leading-tight truncate w-full drop-shadow-sm"
+              title={map.map_name}
+            >
+              {map.map_name}
+            </h4>
+          </Link>
+
+          <div className="flex items-center gap-2 text-xs text-white/80 overflow-hidden mt-0.5">
+             {/* 难度名 */}
+            <span
+                className="bg-white/10 px-1.5 py-[1px] rounded text-white/90 truncate max-w-[55%] shrink-0 border border-white/10"
+                title={map.diff_name}
+            >
+              [{map.diff_name}]
+            </span>
+            <span className="truncate shrink min-w-0 opacity-80">
+              by {map.mapper}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-end gap-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 sm:gap-x-4 gap-y-0.5">
+             <StatItem label="CS" value={map.cs} />
+             <StatItem label="AR" value={map.ar} />
+             <StatItem label="OD" value={map.od} />
+             <StatItem label="HP" value={map.hp} />
+          </div>
+
+          {/* 右侧：星数 */}
+          <div className="flex flex-col items-end shrink-0">
+            <div className="flex items-center gap-1 text-yellow-400 font-bold text-lg leading-none">
+              <span className="text-xs mt-0.5">★</span> {map.star_rating}
             </div>
-        </Card>
-    )
-}
+            <div className="text-[10px] sm:text-xs text-white/60 font-mono mt-0.5">
+              {map.bpm} BPM
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+
+const StatItem = ({ label, value }: { label: string, value: string | number }) => (
+  <div className="flex items-baseline gap-1">
+    {/* 标签：小、半透明、大写 */}
+    <span className="text-[10px] text-white/60 font-semibold uppercase tracking-wide">
+      {label}
+    </span>
+    <span className="text-sm font-bold text-white leading-none">
+      {value}
+    </span>
+  </div>
+);
 
 
 const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_time}: any) => {
