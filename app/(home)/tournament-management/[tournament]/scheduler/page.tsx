@@ -55,7 +55,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
     const [tournamentPlayers, setMembers] = useState<TournamentPlayers>({players: []});
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
 
-    const [selectedRound, setSelectedRound] = useState<string | null>(null);
+    const [selectedRound, setSelectedRound] = useState<string | undefined>();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [errMsg, setErrMsg] = useState('');

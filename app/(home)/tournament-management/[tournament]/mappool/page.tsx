@@ -49,7 +49,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
     const [tournamentMaps, setTournamentMaps] = useState<TournamentMap[]>([]);
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
-    const [selectedRound, setSelectedRound] = useState<string | null>(null);
+    const [selectedRound, setSelectedRound] = useState<string | undefined>();
 
     // 获取数据
     useEffect(() => {

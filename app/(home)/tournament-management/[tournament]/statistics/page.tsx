@@ -104,7 +104,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
     // Round Info State
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
-    const [selectedRound, setSelectedRound] = useState<string | null>(null);
+    const [selectedRound, setSelectedRound] = useState<string | undefined>();
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
 
