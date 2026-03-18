@@ -1,7 +1,28 @@
 'use client'
 
 import React, {useEffect, useRef} from 'react'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { LineChart, BarChart } from 'echarts/charts'
+import {
+    TitleComponent,
+    LegendComponent,
+    GridComponent,
+    MarkPointComponent,
+    MarkLineComponent,
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
+import type { EChartsOption } from 'echarts'
+
+echarts.use([
+    LineChart,
+    BarChart,
+    TitleComponent,
+    LegendComponent,
+    GridComponent,
+    MarkPointComponent,
+    MarkLineComponent,
+    CanvasRenderer,
+])
 
 // 比赛排名图表
 export default function TournamentChart() {
@@ -20,8 +41,7 @@ export default function TournamentChart() {
         const pp = [14500, 14700, 14900, 15200, 15500]
         const rank = [230, 210, 190, 175, 160]
 
-        // @ts-ignore
-        const option: echarts.EChartsOption = {
+        const option: EChartsOption = {
             backgroundColor: 'transparent',
             title: [
                 {

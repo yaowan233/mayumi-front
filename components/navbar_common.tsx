@@ -40,6 +40,7 @@ export const UserStatus = () => {
                     name={currentUser.currentUser.name}
                     size="sm"
                     src={`https://a.ppy.sh/${currentUser.currentUser.uid}`}
+                    aria-label={`用户菜单 - ${currentUser.currentUser.name}`}
                 />
             </DropdownTrigger>
             <DropdownMenu aria-label="Profile Actions" variant="flat">

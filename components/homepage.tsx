@@ -200,11 +200,11 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         as={NextImage}
                         removeWrapper
                         src={bgSrc}
-                        alt="Background"
+                        alt=""
                         fill
+                        sizes="100vw"
                         className="object-cover blur-[60px] opacity-50 scale-125"
                         quality={10}
-                        priority
                     />
                     {/* 黑色遮罩，增强文字对比度 */}
                     <div className="absolute inset-0 bg-black/20" />
@@ -219,6 +219,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         alt={tournament_info.name}
                         width={1200}
                         height={600}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) calc(100vw - 3rem), 1280px"
                         style={{ width: '100%', height: '100%' }}
                         className="w-full h-full object-contain drop-shadow-2xl z-10"
                         priority
@@ -287,7 +288,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             {/* 2. Staff 报名卡片 (保持之前修复的左对齐样式) */}
             <Card className="border border-white/5 bg-content1 shadow-md">
                 <CardHeader className="flex justify-between items-center px-6 py-4 bg-default-50/50">
-                    <div className="font-bold text-lg">Staff 报名</div>
+                    <h2 className="font-bold text-lg">Staff 报名</h2>
                 </CardHeader>
 
                 <CardBody className="px-6 pt-4 pb-2 gap-4">
@@ -312,7 +313,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             {/* 4. 赛程 */}
             <Card className="border border-white/5 bg-content1 shadow-md">
                 <CardHeader className="px-6 py-4 bg-default-50/50">
-                    <div className="font-bold text-lg">赛程</div>
+                    <h2 className="font-bold text-lg">赛程</h2>
                 </CardHeader>
                 <CardBody className="px-6 py-4">
                     <div className="whitespace-pre-wrap text-default-600 leading-relaxed font-mono">
@@ -324,7 +325,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             {/* 5. 奖金 */}
             <Card className="border border-white/5 bg-content1 shadow-md">
                 <CardHeader className="px-6 py-4 bg-default-50/50">
-                    <div className="font-bold text-lg">奖金</div>
+                    <h2 className="font-bold text-lg">奖金</h2>
                 </CardHeader>
                 <CardBody className="px-6 py-4">
                     <div className="whitespace-pre-wrap text-default-600 leading-relaxed">
@@ -335,7 +336,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
             <Card className="border border-white/5 bg-content1 shadow-md">
                 <CardHeader className="px-6 py-4 bg-default-50/50">
-                    <div className="font-bold text-lg">选手报名</div>
+                    <h2 className="font-bold text-lg">选手报名</h2>
                 </CardHeader>
                 {/* 移除 Divider */}
 
@@ -441,8 +442,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                            onChange={(e) => setFormData({...formData, qqNumber: e.target.value})}/>
 
                                     <div className="flex flex-col gap-2">
-                                        <p className="text-small text-foreground-500">是否第一次担任 Staff？ <span className="text-danger">*</span></p>
-                                        <RadioGroup orientation="horizontal" isRequired className="ml-1"
+                                        <RadioGroup label="是否第一次担任 Staff？" orientation="horizontal" isRequired className="ml-1"
                                             onChange={(e) => setFormData({...formData, isFirstTimeStaff: (e.target.value !== "")})}>
                                             <Radio value="1">是</Radio>
                                             <Radio value="">否</Radio>
@@ -452,8 +452,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                 <Textarea minRows={3} label="赛事经验" placeholder="请简述您参与过的比赛及担任的职位..." variant="bordered" labelPlacement="outside"
                                     onChange={(e) => setFormData({...formData, tournamentExperience: e.target.value})} />
                                 <div>
-                                    <p className="text-small text-foreground-500 mb-3">选择意向职位 <span className="text-danger">*</span></p>
-                                    <CheckboxGroup orientation="horizontal" className="gap-4"
+                                    <CheckboxGroup label="选择意向职位" isRequired orientation="horizontal" className="gap-4"
                                         //@ts-ignore
                                         onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}>
                                         {tournament_info.streamer && <Checkbox value="直播">直播</Checkbox>}

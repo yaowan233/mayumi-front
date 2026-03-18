@@ -26,7 +26,7 @@ const getModeColor = (mode: string) => {
     }
 };
 
-export const TournamentComponent = ({ tournament }: { tournament: Tournament }) => {
+export const TournamentComponent = ({ tournament, priority = false }: { tournament: Tournament; priority?: boolean }) => {
     let tournament_href = "/tournaments/" + tournament.abbreviation + "/home";
     const modeColor = getModeColor(tournament.mode || "");
 
@@ -58,30 +58,24 @@ export const TournamentComponent = ({ tournament }: { tournament: Tournament }) 
 
             {/* Layer 1: 氛围背景层 */}
             <div className="absolute inset-0 z-0">
-                <Image
-                    as={NextImage}
-                    removeWrapper
-                    className="w-full h-full object-cover blur-2xl opacity-50 scale-125 saturate-200"
+                <NextImage
+                    className="object-cover blur-2xl opacity-50 scale-125 saturate-200"
                     src={imgSrc}
-                    alt="background"
-                    width={400}
-                    height={300}
-                    style={{ width: '100%', height: '100%' }}
-                    priority
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
             </div>
 
             {/* Layer 2: 核心展示层 */}
-            <div className="relative z-10 w-full h-full flex items-center justify-center">
-                <Image
-                    as={NextImage}
-                    className="w-full h-full object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-105"
+            <div className="absolute inset-0 z-10">
+                <NextImage
+                    className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-105"
                     src={imgSrc}
                     alt={tournament.name}
-                    width={600}
-                    height={338}
-                    style={{ width: '100%', height: '100%' }}
-                    priority
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    priority={priority}
                 />
             </div>
 
