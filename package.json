@@ -35,7 +35,7 @@
     "@heroui/switch": "^2.2.15",
     "@heroui/system": "^2.4.13",
     "@heroui/table": "^2.2.16",
-    "@heroui/tabs": "^2.2.14",
+    "@heroui/tabs": "^2.2.29",
     "@heroui/theme": "^2.4.13",
     "@heroui/user": "^2.2.22",
     "@react-aria/i18n": "^3.12.8",
