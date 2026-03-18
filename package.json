@@ -70,7 +70,7 @@
     "react-markdown": "^10.1.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
-    "swr": "^2.3.0",
+    "swr": "^2.4.1",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.7.2"
