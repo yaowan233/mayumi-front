@@ -6,6 +6,7 @@ import { Providers } from "./providers";
 import { Link } from "@heroui/link";
 import clsx from "clsx";
 import { UserProvider } from "@/app/user_context";
+import { getMe } from "@/app/actions";
 import React from "react";
 
 // 1. 配置 Metadata (SEO & 社交分享)
@@ -68,11 +69,12 @@ export const viewport: Viewport = {
     userScalable: false, // 禁止缩放，体验更像 Native App
 };
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const initialUser = await getMe();
     return (
         <html lang="zh" suppressHydrationWarning>
             <body
@@ -82,7 +84,7 @@ export default function RootLayout({
                 )}
             >
                 <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-                    <UserProvider>
+                    <UserProvider initialUser={initialUser}>
                         <div className="w-full relative flex flex-col min-h-dvh">
                             <main className="flex-grow w-full">
                                 {children}

@@ -1,6 +1,6 @@
 "use client"
-import React, {createContext, useEffect, useState} from 'react';
-import {getMe, Me} from "@/app/actions";
+import React, { createContext, useState } from 'react';
+import { Me } from "@/app/actions";
 
 const CurrentUserContext = createContext<CurrentUserContextType | null>(null);
 
@@ -9,35 +9,20 @@ interface CurrentUserContextType {
     setCurrentUser: React.Dispatch<React.SetStateAction<Me | null>>;
 }
 
-export const UserProvider = ({children}: { children: React.ReactNode }) => {
-    const [currentUser, setCurrentUser] = useState<Me | null>(null);
-
-    useEffect(() => {
-        const fetchCurrentUser = () => {
-            getMe()
-                .then((me) => {
-                    setCurrentUser(me);
-                })
-                .catch((error) => {
-                    console.error(error);
-                });
-        };
-
-        fetchCurrentUser();
-    }, []); // 空数组作为依赖项
-
+export const UserProvider = ({
+    children,
+    initialUser,
+}: {
+    children: React.ReactNode;
+    initialUser: Me | null;
+}) => {
+    const [currentUser, setCurrentUser] = useState<Me | null>(initialUser);
 
     return (
-        <CurrentUserContext.Provider
-            value={{
-                currentUser,
-                setCurrentUser
-            }}
-        >
+        <CurrentUserContext.Provider value={{ currentUser, setCurrentUser }}>
             {children}
         </CurrentUserContext.Provider>
     );
 };
 
 export default CurrentUserContext;
-
