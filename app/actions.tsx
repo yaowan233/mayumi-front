@@ -8,13 +8,6 @@ export async function getMe(): Promise<Me | null> {
     if (!uuid) {
         return null
     }
-    cookieStore.set('uuid', uuid, {
-        path: '/',
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-    })
     try {
         const res = await fetch(siteConfig.backend_url + '/api/me', {
             headers: {
