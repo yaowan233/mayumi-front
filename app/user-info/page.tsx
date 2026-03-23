@@ -19,7 +19,7 @@ interface ModeData {
     name: GameMode;
     color: string;
 }
-const MODE_DEFAULTS: Record<GameMode, ModeData> = {
+const MODE_DEFAULTS: Record<Exclude<GameMode, 'all'>, ModeData> = {
     osu: { name: 'osu', color: '#ff66aa' },
     taiko: { name: 'taiko', color: '#f33' },
     fruits: { name: 'fruits', color: '#ffa500' },
