@@ -22,6 +22,7 @@ const getModeColor = (mode: string) => {
         case 'osu': return "secondary";
         case 'taiko': return "danger";
         case 'fruits': return "success";
+        case 'all': return "warning";
         default: return "default";
     }
 };

@@ -386,7 +386,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
 
     // 检查是否有特定 Mod 要求 (Logic from original code)
     const isContainMods = useMemo(() => {
-        return mapScores.some(score => score.mod.some(m => m !== 'NF' && m !== map.mod));
+        return mapScores.some(score => (score.mod ?? []).some(m => m !== 'NF' && m !== map.mod));
     }, [mapScores, map.mod]);
 
     return (
@@ -466,7 +466,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
 
                                     {isContainMods && (
                                         <div className="text-center text-xs text-warning">
-                                            {score.mod.filter((m) => m !== 'NF' && m !== map.mod).join('')}
+                                            {(score.mod ?? []).filter((m) => m !== 'NF' && m !== map.mod).join('')}
                                         </div>
                                     )}
 

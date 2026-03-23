@@ -136,6 +136,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             case 'osu': userRank = currentUserStats.osu?.global_rank ?? 0; break;
             case 'taiko': userRank = currentUserStats.taiko?.global_rank ?? 0; break;
             case 'mania': userRank = currentUserStats.mania?.global_rank ?? 0; break;
+            case 'all': userRank = currentUserStats.osu?.global_rank ?? 0; break;
         }
     }
 

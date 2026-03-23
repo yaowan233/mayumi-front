@@ -1,6 +1,6 @@
 import React from "react";
 
-export type GameMode = "osu" | "fruits" | "mania" | "taiko";
+export type GameMode = "osu" | "fruits" | "mania" | "taiko" | "all";
 
 interface GameModeIconProps {
     mode: GameMode;
@@ -15,6 +15,24 @@ export const GameModeIcon: React.FC<GameModeIconProps> = ({
                                                               color = "white",
                                                               className = "",
                                                           }) => {
+    if (mode === "all") {
+        return (
+            <span
+                className={className}
+                style={{
+                    fontSize: size,
+                    color,
+                    display: "inline-block",
+                    verticalAlign: "middle",
+                    fontWeight: "bold",
+                    lineHeight: 1,
+                }}
+                aria-label="all"
+            >
+                ∞
+            </span>
+        );
+    }
     return (
         <i
             className={`fa-extra-mode-${mode} ${className}`}

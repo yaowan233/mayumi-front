@@ -13,7 +13,7 @@ export default async function StatsPage(props: { params: Promise<{ tournament: s
     const players = await getPlayers(params.tournament, 60);
 
     return (
-        <StatsComp stats={stats} roundInfo={roundInfo} stage={stage} scores={scores} players={players.players}/>
+        <StatsComp stats={stats ?? []} roundInfo={roundInfo ?? []} stage={stage ?? []} scores={scores ?? []} players={players?.players ?? []}/>
     );
 }
 

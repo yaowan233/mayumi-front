@@ -79,6 +79,7 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {
                         <SelectItem key='taiko'>Taiko</SelectItem>
                         <SelectItem key='mania'>Mania</SelectItem>
                         <SelectItem key='fruits'>Catch (Fruits)</SelectItem>
+                        <SelectItem key='all'>多模式 (All Modes)</SelectItem>
                     </Select>
 
                     <Select label="赛制类型" isRequired defaultSelectedKeys={formData.is_group ? ['1'] : ['0']} onChange={(e) => setFormData({...formData, is_group: e.target.value === '1'})}>
