@@ -90,9 +90,12 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
     const staffMembers = tournamentPlayers.players || [];
 
     // 2. 获取参赛单位 (队伍 或 个人)
-    const participantsSource = tournamentInfo?.is_group
+    // 当前轮次是否为单人预选赛（团队赛中的特殊轮次）
+    const currentRoundInfo = roundInfo.find(r => r.stage_name === selectedRound);
+    const isSoloRound = currentRoundInfo?.is_solo_qualifier ?? false;
+    const participantsSource = (tournamentInfo?.is_group && !isSoloRound)
         ? (tournamentPlayers.groups?.filter(group => group.is_verified) || []) // 团队赛：只显示已审核队伍
-        : (tournamentPlayers.players?.filter(p => p.player) || []); // 个人赛：只显示选手
+        : (tournamentPlayers.players?.filter(p => p.player) || []); // 个人赛 / 单人预选赛：显示选手
 
     const handleSave = async () => {
         setErrMsg('');
@@ -177,7 +180,10 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     赛程管理
                 </h1>
                 <p className="text-default-500">
-                    {tournamentInfo?.is_group ? "当前为团队赛模式" : "当前为个人赛模式"} - 安排对阵表、时间及相关人员配置。
+                    {tournamentInfo?.is_group
+                        ? isSoloRound ? "当前轮次：单人预选赛（团队赛）" : "当前为团队赛模式"
+                        : "当前为个人赛模式"
+                    } - 安排对阵表、时间及相关人员配置。
                 </p>
             </div>
 
@@ -209,7 +215,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                                 participants={participantsSource} // 传筛选后的参赛单位用于选队伍/选手
                                 onChange={(newData: Schedule) => updateSchedule(index, newData)}
                                 onDelete={() => removeSchedule(index)}
-                                isTeamMode={tournamentInfo?.is_group} // 传入模式信息
+                                isTeamMode={tournamentInfo?.is_group && !isSoloRound} // 团队赛且非单人预选赛
                             />
                         );
                     })}

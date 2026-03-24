@@ -278,12 +278,17 @@ const RoundCard = ({index, roundData, onChange, onDelete}: RoundCardProps) => {
                                 isSelected={roundData.is_lobby}
                                 size="sm"
                                 color="success"
-                                classNames={{
-                                    wrapper: "group-data-[selected=true]:bg-success",
-                                }}
                                 onChange={e => onChange({...roundData, is_lobby: e.target.checked})}
                             >
                                 <span className="text-small text-foreground">小组赛 (Lobby)</span>
+                            </Switch>
+                            <Switch
+                                isSelected={roundData.is_solo_qualifier ?? false}
+                                size="sm"
+                                color="warning"
+                                onChange={e => onChange({...roundData, is_solo_qualifier: e.target.checked})}
+                            >
+                                <span className="text-small text-foreground">单人预选赛</span>
                             </Switch>
                         </div>
                     </div>
@@ -299,6 +304,7 @@ export interface TournamentRoundInfo {
     start_time?: string;
     end_time?: string;
     is_lobby: boolean;
+    is_solo_qualifier?: boolean;
 }
 
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {

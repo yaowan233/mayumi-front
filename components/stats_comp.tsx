@@ -110,7 +110,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
             {/* 2. 内容区域 */}
             {currentRound && (
                 <div className="flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4">
-                    {currentRound.is_lobby && (
+                    {(currentRound.is_lobby || currentRound.is_solo_qualifier) && (
                         <div className="flex flex-col gap-4">
                             <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">总排行榜</h2>
                             <LeaderboardPanel round={currentRound} />
