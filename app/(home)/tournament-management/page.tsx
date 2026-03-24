@@ -75,6 +75,7 @@ export default function TournamentManagementPage() {
             if (currentUser?.currentUser?.uid) {
                 try {
                     const data = await getTournamentManagementInfo(currentUser.currentUser.uid);
+                    data.sort((a, b) => new Date(b.start_date ?? 0).getTime() - new Date(a.start_date ?? 0).getTime());
                     setTournamentManagementInfo(data);
                 } catch (e) {
                     console.error("Failed to load management info", e);
@@ -248,4 +249,5 @@ export interface TournamentManagementInfo {
     roles: string[];
     status: TournamentStatus;
     reject_reason?: string;
+    start_date?: string;
 }
