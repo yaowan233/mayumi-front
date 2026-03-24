@@ -65,6 +65,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
     const [registrationInfo, setRegistrationInfo] = useState<RegistrationInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
     const tournament_name = decodeURIComponent(params.tournament);
@@ -89,6 +90,28 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
         };
         fetchData();
     }, [currentUser, tournament_name]);
+
+    const handleRefreshStats = async () => {
+        setIsRefreshing(true);
+        try {
+            const res = await fetch(
+                `${siteConfig.backend_url}/api/refresh-members-stats?tournament_name=${encodeURIComponent(tournament_name)}`,
+                {method: 'POST', credentials: 'include'}
+            );
+            if (res.ok) {
+                const data = await res.json();
+                alert(`刷新成功：已更新 ${data.updated} / ${data.total} 名选手数据`);
+                const updated = await getPlayers(tournament_name);
+                setTournamentPlayers(updated);
+            } else {
+                alert(await res.text());
+            }
+        } catch (e) {
+            alert('刷新失败，请检查网络');
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -124,7 +147,15 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                     <p className="text-default-500 mt-1">管理各职位成员权限及查看申请列表</p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                    <Button
+                        color="success"
+                        variant="flat"
+                        isLoading={isRefreshing}
+                        onPress={handleRefreshStats}
+                    >
+                        {isRefreshing ? "刷新中..." : "刷新选手数据"}
+                    </Button>
                     <Badge content={registrationInfo.length} color="danger" isInvisible={registrationInfo.length === 0}>
                         <Button color="secondary" variant="flat" onPress={onOpen}>
                             查看申请列表

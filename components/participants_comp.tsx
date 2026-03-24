@@ -9,6 +9,7 @@ import {Tooltip} from "@heroui/tooltip";
 import {Chip} from "@heroui/chip";
 import {User} from "@heroui/user";
 import {useMemo} from "react";
+import GameModeIcon, {GameMode} from "@/components/gamemode_icon";
 
 // --- 图标组件 ---
 const CrownIcon = () => (
@@ -141,7 +142,7 @@ const PlayerRow = ({player, isCaptain}: {player: any, isCaptain: boolean}) => {
                         size: "sm",
                         isBordered: isCaptain,
                         color: isCaptain ? "warning" : "default",
-                        className: "w-5 h-5 text-tiny" // 稍微调小一点，让队伍列表更紧凑
+                        className: "w-5 h-5 text-tiny"
                     }}
                     classNames={{
                         name: `truncate text-small ${isCaptain ? 'font-bold' : ''}`,
@@ -152,7 +153,15 @@ const PlayerRow = ({player, isCaptain}: {player: any, isCaptain: boolean}) => {
                 />
                 {isCaptain && <CrownIcon />}
             </div>
-            <span className="text-[10px] font-mono opacity-70">#{player.rank}</span>
+            
+            <div className="flex items-center gap-1.5 shrink-0">
+                {player.default_mode && (
+                    <GameModeIcon mode={player.default_mode as GameMode} size={12} color="var(--heroui-default-400)" />
+                )}
+                <span className="text-[11px] font-mono opacity-80 text-default-500">
+                    #{player.rank?.toLocaleString() || 0}
+                </span>
+            </div>
         </div>
     )
 }
@@ -161,13 +170,15 @@ const PlayerRow = ({player, isCaptain}: {player: any, isCaptain: boolean}) => {
 const SoloPlayerCard = ({player}: {player: any}) => {
     return (
         <Card className="border border-white/5 bg-content1 hover:bg-content2 transition-all group">
-            {/* 减少 padding，让卡片更紧凑，适合大量展示 */}
             <CardBody className="flex flex-row items-center justify-between p-3 gap-3 overflow-hidden">
                 <User
                     name={player.name}
                     description={
-                        <div className="flex gap-2 text-xs text-default-400">
-                            <span>PP: {Math.round(player.pp)}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-default-400 mt-0.5">
+                            {player.default_mode && (
+                                <GameModeIcon mode={player.default_mode as GameMode} size={12} color="currentColor" />
+                            )}
+                            <span>PP: {Math.round(player.pp).toLocaleString()}</span>
                         </div>
                     }
                     avatarProps={{
@@ -184,7 +195,6 @@ const SoloPlayerCard = ({player}: {player: any}) => {
                     }}
                 />
 
-                {/* Rank Chip */}
                 <div className="shrink-0">
                     <Chip
                         size="sm"
@@ -192,7 +202,7 @@ const SoloPlayerCard = ({player}: {player: any}) => {
                         color="default"
                         classNames={{content: "font-mono font-bold text-default-500"}}
                     >
-                        #{player.rank}
+                        #{player.rank?.toLocaleString() || 0}
                     </Chip>
                 </div>
             </CardBody>

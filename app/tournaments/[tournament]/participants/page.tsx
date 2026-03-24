@@ -38,6 +38,7 @@ export type Player = {
     pp: number;
     rank: number;
     country: string;
+    default_mode?: string;
     group?: string;
     timezone?: string;
     player?: boolean;
