@@ -8,6 +8,7 @@ import {Switch} from "@heroui/switch";
 import {Card, CardBody, CardHeader} from "@heroui/card";
 import {Spinner} from "@heroui/spinner";
 import {useRouter} from "next/navigation";
+import {TournamentInfo} from "@/components/homepage";
 
 const SaveIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -46,6 +47,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     const router = useRouter();
 
     const [formData, setFormData] = useState<TournamentRoundInfo[]>([]);
+    const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [errMsg, setErrMsg] = useState('');
@@ -62,8 +64,12 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const data = await getRoundInfo(tournament_name);
+                    const [data, info] = await Promise.all([
+                        getRoundInfo(tournament_name),
+                        getTournamentInfo(tournament_name),
+                    ]);
                     setFormData(data.length > 0 ? data : [createInitialFormData()]);
+                    setTournamentInfo(info);
                 } catch (e) {
                     setErrMsg("加载失败，请刷新重试");
                 } finally {
@@ -148,6 +154,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                         key={index}
                         index={index}
                         roundData={round}
+                        isGroup={tournamentInfo?.is_group ?? false}
                         onChange={(newData) => updateRound(index, newData)}
                         onDelete={() => removeRound(index)}
                     />
@@ -194,11 +201,12 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
 interface RoundCardProps {
     index: number;
     roundData: TournamentRoundInfo;
+    isGroup: boolean;
     onChange: (data: TournamentRoundInfo) => void;
     onDelete: () => void;
 }
 
-const RoundCard = ({index, roundData, onChange, onDelete}: RoundCardProps) => {
+const RoundCard = ({index, roundData, isGroup, onChange, onDelete}: RoundCardProps) => {
     return (
         <Card
             // 修复：
@@ -282,14 +290,16 @@ const RoundCard = ({index, roundData, onChange, onDelete}: RoundCardProps) => {
                             >
                                 <span className="text-small text-foreground">小组赛 (Lobby)</span>
                             </Switch>
-                            <Switch
-                                isSelected={roundData.is_solo_qualifier ?? false}
-                                size="sm"
-                                color="warning"
-                                onChange={e => onChange({...roundData, is_solo_qualifier: e.target.checked})}
-                            >
-                                <span className="text-small text-foreground">单人预选赛</span>
-                            </Switch>
+                            {isGroup && (
+                                <Switch
+                                    isSelected={roundData.is_solo_qualifier ?? false}
+                                    size="sm"
+                                    color="warning"
+                                    onChange={e => onChange({...roundData, is_solo_qualifier: e.target.checked})}
+                                >
+                                    <span className="text-small text-foreground">单人预选赛</span>
+                                </Switch>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -311,4 +321,10 @@ async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInf
     const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
         {next: {revalidate: 10}});
     return await data.json();
+}
+
+async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
+    const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
+        {next: {revalidate: 0}});
+    return await res.json();
 }
