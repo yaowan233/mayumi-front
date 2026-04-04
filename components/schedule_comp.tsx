@@ -120,7 +120,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                         <AccordionItem
                             key={index}
                             title={<VSInfoComp match_info={match_info}/>}
-                            textValue={`${match_info.team1.name} vs ${match_info.team2.name}`}
+                            textValue={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
                         >
                             <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
                                            tournament_name={tournament_name} tournament_players={tournament_players}
@@ -138,7 +138,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                             <AccordionItem
                                 key={index}
                                 title={<VSInfoComp match_info={match_info}/>}
-                                textValue={`${match_info.team1.name} vs ${match_info.team2.name}`}
+                                textValue={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
                             >
                                 <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
                                                tournament_name={tournament_name} tournament_players={tournament_players}
