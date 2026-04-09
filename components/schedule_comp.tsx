@@ -353,26 +353,18 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
     key={lobby.lobby_name}
     className="border border-default-200/50 bg-content1/50 hover:bg-content1 hover:border-primary/50 transition-all duration-300"
 >
-                        <CardHeader className="flex justify-between items-center pb-3 pt-4 px-4">
-                            <div className="flex gap-4 items-center">
-                                <div className="flex flex-col items-center justify-center min-w-[60px]">
-                                    <Chip size="sm" variant="flat" color="primary" className="mb-1 border-none">
-                                        {dateStr}
-                                    </Chip>
-                                    <span className="text-xl font-mono text-default-600 leading-none">
-                                        {timeStr}
-                                    </span>
-                                </div>
-                                <div className="flex flex-col justify-center">
-                                    <h3 className="font-bold text-lg leading-none">{lobby.lobby_name}</h3>
-                                    <span className="text-xs text-default-400 mt-1">Lobby ID: {lobby.match_id}</span>
-                                </div>
+                        <CardHeader className="flex justify-between items-center py-3 px-4">
+                            <h3 className="font-bold text-lg">{lobby.lobby_name}</h3>
+                            <div className="flex items-center gap-2">
+                                <Chip size="sm" variant="flat" color="primary" className="border-none font-mono">
+                                    {dateStr} · {timeStr}
+                                </Chip>
+                                {lobby.match_url && lobby.match_url.filter(u => u !== "").length > 0 && (
+                                    <Button className="bg-primary/20 text-primary" isExternal isIconOnly size="sm" variant="light" as={Link} href={lobby.match_url.filter(u => u !== "")[0]}>
+                                        <LinkIcon className="text-primary w-4 h-4" />
+                                    </Button>
+                                )}
                             </div>
-                            {lobby.match_url && lobby.match_url.length > 0 && (
-                                <Button className="bg-primary/20 text-primary" isExternal isIconOnly size="sm" variant="light" as={Link} href={lobby.match_url[0]}>
-                                    <LinkIcon className="text-primary w-4 h-4" />
-                                </Button>
-                            )}
                         </CardHeader>
                         <Divider />
                         <CardBody className="flex flex-col gap-4">

@@ -288,7 +288,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                     <Tabs
                         aria-label="Rounds"
                         items={roundInfo}
-                        selectedKey={selectedRound}
+                        selectedKey={selectedRound ?? undefined}
                         onSelectionChange={(key) => setSelectedRound(key as string)}
                         variant="underlined"
                         color="primary"

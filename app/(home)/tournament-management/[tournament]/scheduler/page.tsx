@@ -13,7 +13,7 @@ import {Switch} from "@heroui/switch";
 import {Chip} from "@heroui/chip";
 import {Spinner} from "@heroui/spinner";
 import {siteConfig} from "@/config/site";
-import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {Tab, Tabs} from "@heroui/tabs";
 import {Card, CardBody} from "@heroui/card";
 import {Accordion, AccordionItem} from "@heroui/accordion";
@@ -101,7 +101,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         setErrMsg('');
         const currentSchedules = scheduleInfo.filter(s => s.stage_name === selectedRound);
         const isValid = currentSchedules.every(s =>
-            s.is_lobby ? (s.name && s.match_time) : (s.team1 && s.team2 && s.match_time && s.match_id)
+            s.is_lobby ? (s.name && s.match_time) : (s.team1 && s.team2 && s.match_time)
         );
 
         if (!isValid) {
@@ -147,7 +147,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         const newSchedule: Schedule = {
             tournament_name: tournament_name,
             stage_name: selectedRound,
-            match_id: "",
+            match_id: crypto.randomUUID(),
             match_url: [""],
             is_lobby: currentRoundInfo?.is_lobby || false,
             is_winner_bracket: true,
@@ -190,7 +190,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
             {/* Content ... */}
             <div className="flex flex-col gap-6">
                 <Tabs
-                    aria-label="Rounds" items={roundInfo} selectedKey={selectedRound}
+                    aria-label="Rounds" items={roundInfo} selectedKey={selectedRound ?? undefined}
                     onSelectionChange={(key) => setSelectedRound(key as string)} variant="underlined" color="primary"
                     classNames={{
                         tabList: "gap-6 w-full relative rounded-none p-0 border-b border-default-200 dark:border-white/10",
@@ -245,7 +245,15 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
 
 // --- 子组件：赛程卡片 ---
 // 接收 participants (参赛单位) 和 staffMembers (工作人员) 分开处理
-const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, onDelete, isTeamMode}: any) => {
+const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, onDelete, isTeamMode}: {
+    index: number;
+    schedule: Schedule;
+    staffMembers: Player[];
+    participants: Player[] | Team[];
+    onChange: (schedule: Schedule) => void;
+    onDelete: () => void;
+    isTeamMode?: boolean;
+}) => {
     const title = schedule.is_lobby
         ? (schedule.name || "未命名 Lobby")
         : `${schedule.team1 || "TBD"} vs ${schedule.team2 || "TBD"}`;
@@ -267,10 +275,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         <div className="flex items-center justify-between w-full pr-4">
                             <div className="flex flex-col">
                                 <span className="font-bold text-foreground text-lg">{title}</span>
-                                <span className="text-xs text-default-400 font-mono mt-1 flex gap-2">
-                                    <Chip size="sm" variant="flat" color="primary">{schedule.match_id || "ID?"}</Chip>
-                                    <span className="self-center">{subtitle}</span>
-                                </span>
+                                <span className="text-xs text-default-400 font-mono mt-1">{subtitle}</span>
                             </div>
                             {!schedule.is_lobby && (
                                 <Chip size="sm" color={schedule.is_winner_bracket ? "success" : "danger"} variant="dot"
@@ -287,8 +292,6 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
 
                         {/* 1. 基础信息 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <Input label="比赛 ID" size="sm" isRequired value={schedule.match_id}
-                                   onChange={e => onChange({...schedule, match_id: e.target.value})}/>
                             {schedule.is_lobby ? (
                                 <Input label="Lobby 名称" size="sm" isRequired value={schedule.name}
                                        onChange={e => onChange({...schedule, name: e.target.value})}/>
@@ -386,7 +389,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                 <MultiSelect
                                     items={participants}
                                     selectedKeys={schedule.participants || []}
-                                    onSelectionChange={(keys: any) => onChange({...schedule, participants: keys})}
+                                    onSelectionChange={(keys: string[]) => onChange({...schedule, participants: keys})}
                                     placeholder={isTeamMode ? "添加队伍..." : "添加选手..."}
                                 />
                             </div>
@@ -396,24 +399,24 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="flex flex-col gap-2">
                                 <span className="text-xs font-bold text-default-500">裁判 (Referees)</span>
-                                <MultiSelect items={staffMembers.filter((m: any) => m.referee)}
+                                <MultiSelect items={staffMembers.filter(m => m.referee)}
                                              selectedKeys={schedule.referee || []}
-                                             onSelectionChange={(keys: any) => onChange({...schedule, referee: keys})}/>
+                                             onSelectionChange={(keys: string[]) => onChange({...schedule, referee: keys})}/>
                             </div>
                             <div className="flex flex-col gap-2">
                                 <span className="text-xs font-bold text-default-500">解说 (Commentators)</span>
-                                <MultiSelect items={staffMembers.filter((m: any) => m.commentator)}
+                                <MultiSelect items={staffMembers.filter(m => m.commentator)}
                                              selectedKeys={schedule.commentators || []}
-                                             onSelectionChange={(keys: any) => onChange({
+                                             onSelectionChange={(keys: string[]) => onChange({
                                                  ...schedule,
                                                  commentators: keys
                                              })}/>
                             </div>
                             <div className="flex flex-col gap-2">
                                 <span className="text-xs font-bold text-default-500">直播 (Streamers)</span>
-                                <MultiSelect items={staffMembers.filter((m: any) => m.streamer)}
+                                <MultiSelect items={staffMembers.filter(m => m.streamer)}
                                              selectedKeys={schedule.streamer || []}
-                                             onSelectionChange={(keys: any) => onChange({
+                                             onSelectionChange={(keys: string[]) => onChange({
                                                  ...schedule,
                                                  streamer: keys
                                              })}/>
@@ -439,7 +442,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                     ) : (
                                         <Button isIconOnly size="sm" color="danger" onPress={() => onChange({
                                             ...schedule,
-                                            match_url: schedule.match_url.filter((_: any, idx: number) => idx !== i)
+                                            match_url: schedule.match_url.filter((_: string, idx: number) => idx !== i)
                                         })}>-</Button>
                                     )}
                                 </div>
@@ -458,19 +461,24 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
 }
 
 // --- 通用组件：单选队伍 ---
-const TeamSelect = ({items, selectedKey, onSelectionChange, label}: any) => {
+const TeamSelect = ({items, selectedKey, onSelectionChange, label}: {
+    items: (Player | Team)[];
+    selectedKey: string;
+    onSelectionChange: (key: string) => void;
+    label: string;
+}) => {
     return (
         <Autocomplete
             label={label}
             size="sm"
             defaultSelectedKey={selectedKey}
-            onSelectionChange={onSelectionChange}
+            onSelectionChange={(key) => { if (key != null) onSelectionChange(key.toString()); }}
             variant="bordered"
         >
-            {items.map((item: any) => (
+            {items.map((item) => (
                 <AutocompleteItem key={item.name} textValue={item.name}>
                     <div className="flex gap-2 items-center">
-                        <Avatar src={item.icon_url || `https://a.ppy.sh/${item.uid}`} size="sm"/>
+                        <Avatar src={"icon_url" in item ? (item.icon_url ?? `https://a.ppy.sh/`) : `https://a.ppy.sh/${(item as Player).uid}`} size="sm"/>
                         <span>{item.name}</span>
                     </div>
                 </AutocompleteItem>
@@ -481,12 +489,17 @@ const TeamSelect = ({items, selectedKey, onSelectionChange, label}: any) => {
 
 // --- 通用组件：多选 Staff/Player ---
 // 这是一个简化的多选实现，实际上 HeroUI 的 Autocomplete 暂不支持多选，这里用 Input + Chip 模拟，或者你可以用 Select multiple
-const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添加..."}: any) => {
+const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添加..."}: {
+    items: (Player | Team)[];
+    selectedKeys: string[];
+    onSelectionChange: (keys: string[]) => void;
+    placeholder?: string;
+}) => {
     const [inputVal, setInputVal] = useState("");
 
     // 过滤逻辑
     let {contains} = useFilter({sensitivity: 'base'});
-    const filteredItems = items.filter((item: any) => contains(item.name, inputVal));
+    const filteredItems = items.filter((item) => contains(item.name, inputVal));
 
     // 处理选中事件
     const handleSelectionChange = (key: React.Key | null) => {
@@ -506,30 +519,34 @@ const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添
         });
     };
 
+    const itemMap = new Map<string, Player | Team>(items.map((item) => [item.name, item]));
+
     return (
         <div
-            className="flex flex-wrap gap-2 p-2 rounded-lg border border-default-200 dark:border-white/10 min-h-[40px] bg-default-100 dark:bg-zinc-800/50">
-            {selectedKeys.map((key: string) => (
-                <Chip key={key} onClose={() => onSelectionChange(selectedKeys.filter((k: string) => k !== key))}
-                      variant="flat" size="sm">
-                    {key}
-                </Chip>
-            ))}
+            className="flex flex-wrap gap-2 p-2 rounded-lg border border-default-200 dark:border-white/10 min-h-[40px] bg-default-100 dark:bg-zinc-800/50 items-center">
+            {selectedKeys.map((key: string) => {
+                const item = itemMap.get(key);
+                return (
+                    <Chip
+                        key={key}
+                        onClose={() => onSelectionChange(selectedKeys.filter((k: string) => k !== key))}
+                        variant="flat"
+                        size="sm"
+                        avatar={<Avatar src={item && "icon_url" in item ? item.icon_url : `https://a.ppy.sh/${(item as Player)?.uid}`} size="sm" name={key}/>}
+                    >
+                        {key}
+                    </Chip>
+                );
+            })}
 
             <Autocomplete
                 aria-label="Add"
                 placeholder={placeholder}
                 className="w-32 flex-grow"
-
-                // 1. 绑定输入值状态
                 inputValue={inputVal}
                 onInputChange={setInputVal}
-
-                // 2. 关键：强制 selectedKey 为 null
-                // 这告诉组件：你只管搜索，不要由你来“记住”选中了谁，选中状态由上面的 Chips 展示
                 selectedKey={null}
                 onSelectionChange={handleSelectionChange}
-
                 size="sm"
                 classNames={{
                     base: "min-w-[100px]",
@@ -541,12 +558,15 @@ const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添
                     }
                 }}
                 listboxProps={{
-                    hideSelectedIcon: true, // 隐藏列表里的对勾，因为我们要清空状态
+                    hideSelectedIcon: true,
                 }}
             >
-                {filteredItems.map((item: any) => (
+                {filteredItems.map((item) => (
                     <AutocompleteItem key={item.name} textValue={item.name}>
-                        {item.name}
+                        <div className="flex gap-2 items-center">
+                            <Avatar src={"icon_url" in item ? (item.icon_url ?? `https://a.ppy.sh/`) : `https://a.ppy.sh/${(item as Player).uid}`} size="sm" name={item.name}/>
+                            <span>{item.name}</span>
+                        </div>
                     </AutocompleteItem>
                 ))}
             </Autocomplete>
