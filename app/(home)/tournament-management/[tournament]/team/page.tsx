@@ -316,6 +316,7 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                 <div>
                     <span className="text-xs font-bold text-default-500 mb-2 block">添加成员 (从已报名选手列表)</span>
                     <Autocomplete
+                        aria-label="搜索并选择选手"
                         placeholder="搜索并选择选手..."
                         defaultItems={players}
                         size="sm"

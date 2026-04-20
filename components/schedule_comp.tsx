@@ -6,7 +6,7 @@ import {Image} from "@heroui/image";
 import {Link} from "@heroui/link";
 import {Divider} from "@heroui/divider";
 import {Accordion, AccordionItem} from "@heroui/accordion";
-import React, {Dispatch, SetStateAction, useContext, useState} from "react";
+import React, {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Input} from "@heroui/input";
 import {Button} from "@heroui/button";
@@ -717,38 +717,85 @@ const StatItem = ({ label, value }: { label: string, value: string | number }) =
 
 const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_time}: any) => {
     const [map_id, setMapId] = useState("");
+    const [preview, setPreview] = useState<map | null>(null);
+    const [previewError, setPreviewError] = useState<string | null>(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentUser = useContext(CurrentUserContext);
+
+    useEffect(() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (map_id === "" || isNaN(parseInt(map_id))) {
+            setPreview(null);
+            setPreviewError(null);
+            return;
+        }
+        debounceRef.current = setTimeout(async () => {
+            setPreviewLoading(true);
+            setPreviewError(null);
+            setPreview(null);
+            try {
+                const res = await fetch(`/api/beatmap-preview?map_id=${encodeURIComponent(map_id)}`);
+                const data = await res.json();
+                if (!res.ok) {
+                    setPreviewError(data.error ?? "查询失败");
+                } else {
+                    setPreview(data);
+                }
+            } catch {
+                setPreviewError("网络错误，无法预览地图");
+            } finally {
+                setPreviewLoading(false);
+            }
+        }, 600);
+    }, [map_id]);
+
     if (!uid.includes(currentUser?.currentUser?.uid) || new Date(start_time) < new Date()) {
         return null
     }
     return (
-        <div className="flex flex-row gap-2 items-end w-full mt-2">
-            <Input
-                size="sm"
-                labelPlacement="outside"
-                placeholder="Beatmap ID (e.g. 123456)"
-                label="Change Warmup"
-                value={map_id}
-                onChange={(e) => setMapId(e.target.value)}
-                className="flex-grow"
-            />
-            <Button size="sm" color="primary" onPress={async () => {
-                // ... 逻辑保持不变 ...
-                 if (map_id == "" || isNaN(parseInt(map_id))) {
-                    alert("请输入正确的map id")
-                }
-                const res = await fetch(
-                    siteConfig.backend_url + `/api/update-warmup?map_id=${encodeURIComponent(map_id)}&team=${encodeURIComponent(team)}&tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(stage_name)}&match_id=${match_id}`,
-                    { method: "PATCH", credentials: "include" }
-                )
-                if (!res.ok) {
-                    alert(await res.text());
-                    return;
-                }
-                alert('更新成功 请等待服务器更新后 刷新页面查看');
-            }}>
-                Submit
-            </Button>
+        <div className="flex flex-col gap-2 w-full mt-2">
+            <div className="flex flex-row gap-2 items-center w-full">
+                <Input
+                    size="sm"
+                    labelPlacement="outside"
+                    placeholder="Beatmap ID（例如 123456）"
+                    label="更换热手图"
+                    description="注意：请输入单个难度的 Beatmap ID，而非谱面集 Beatmapset ID"
+                    value={map_id}
+                    onChange={(e) => setMapId(e.target.value)}
+                    className="flex-grow"
+                />
+                <Button size="sm" color="primary" className="mt-5" onPress={async () => {
+                    if (map_id == "" || isNaN(parseInt(map_id))) {
+                        alert("请输入正确的 Beatmap ID（纯数字）");
+                        return;
+                    }
+                    try {
+                        const res = await fetch(
+                            siteConfig.backend_url + `/api/update-warmup?map_id=${encodeURIComponent(map_id)}&team=${encodeURIComponent(team)}&tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(stage_name)}&match_id=${match_id}`,
+                            { method: "PATCH", credentials: "include" }
+                        )
+                        if (!res.ok) {
+                            const errText = await res.text();
+                            alert(`提交失败：${errText}`);
+                            return;
+                        }
+                        alert('更新成功 请等待服务器更新后 刷新页面查看');
+                    } catch (e) {
+                        alert("网络错误，无法连接到服务器，请检查网络后重试");
+                    }
+                }}>
+                    提交
+                </Button>
+            </div>
+            {previewLoading && (
+                <div className="text-xs text-default-400 px-1">正在查询地图信息…</div>
+            )}
+            {previewError && (
+                <div className="text-xs text-danger px-1">{previewError}</div>
+            )}
+            {preview && <MapComp map={preview} />}
         </div>
     )
 }

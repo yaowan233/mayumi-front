@@ -74,7 +74,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     setScheduleInfo(schedules);
                     setMembers(players);
                     setTournamentInfo(info);
-                    if (rounds.length > 0) setSelectedRound(rounds[0].stage_name);
+                    if (rounds.length > 0) setSelectedRound(rounds[rounds.length - 1].stage_name);
                 } catch (e) {
                     setErrMsg("加载数据失败");
                 } finally {
