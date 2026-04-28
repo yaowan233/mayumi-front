@@ -58,7 +58,7 @@
     "eslint-config-next": "^16.0.8",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.18.2",
-    "intl-messageformat": "^10.7.16",
+    "intl-messageformat": "^11.2.2",
     "jszip": "^3.10.1",
     "next": "^16.0.8",
     "next-themes": "^0.4.6",
