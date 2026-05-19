@@ -43,7 +43,7 @@
     "@react-aria/visually-hidden": "^3.8.18",
     "@react-stately/data": "^3.12.0",
     "@react-types/combobox": "^3.13.4",
-    "@sentry/nextjs": "^10.29.0",
+    "@sentry/nextjs": "^10.39.0",
     "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^24.10.2",
@@ -54,13 +54,13 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "echarts": "^6.0.0",
-    "eslint": "^9.37.0",
-    "eslint-config-next": "^16.0.8",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.1.6",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.18.2",
     "intl-messageformat": "^10.7.16",
     "jszip": "^3.10.1",
-    "next": "^16.0.8",
+    "next": "^16.1.6",
     "next-themes": "^0.4.6",
     "postcss": "^8.5.6",
     "react": "^19.2.1",
@@ -78,5 +78,11 @@
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
     "cross-env": "^10.1.0"
+  },
+  "overrides": {
+    "minimatch": "^10.2.1",
+    "glob": {
+      "minimatch": "^10.2.1"
+    }
   }
 }
