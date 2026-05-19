@@ -169,7 +169,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                     <Tabs
                         aria-label="Rounds"
                         items={roundInfo}
-                        selectedKey={selectedRound}
+                        selectedKey={selectedRound ?? undefined}
                         onSelectionChange={(key) => setSelectedRound(key as string)}
                         variant="underlined"
                         color="primary"

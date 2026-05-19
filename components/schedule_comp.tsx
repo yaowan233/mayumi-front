@@ -6,7 +6,7 @@ import {Image} from "@heroui/image";
 import {Link} from "@heroui/link";
 import {Divider} from "@heroui/divider";
 import {Accordion, AccordionItem} from "@heroui/accordion";
-import React, {Dispatch, SetStateAction, useContext, useState} from "react";
+import React, {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Input} from "@heroui/input";
 import {Button} from "@heroui/button";
@@ -353,26 +353,18 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
     key={lobby.lobby_name}
     className="border border-default-200/50 bg-content1/50 hover:bg-content1 hover:border-primary/50 transition-all duration-300"
 >
-                        <CardHeader className="flex justify-between items-center pb-3 pt-4 px-4">
-                            <div className="flex gap-4 items-center">
-                                <div className="flex flex-col items-center justify-center min-w-[60px]">
-                                    <Chip size="sm" variant="flat" color="primary" className="mb-1 border-none">
-                                        {dateStr}
-                                    </Chip>
-                                    <span className="text-xl font-mono text-default-600 leading-none">
-                                        {timeStr}
-                                    </span>
-                                </div>
-                                <div className="flex flex-col justify-center">
-                                    <h3 className="font-bold text-lg leading-none">{lobby.lobby_name}</h3>
-                                    <span className="text-xs text-default-400 mt-1">Lobby ID: {lobby.match_id}</span>
-                                </div>
+                        <CardHeader className="flex justify-between items-center py-3 px-4">
+                            <h3 className="font-bold text-lg">{lobby.lobby_name}</h3>
+                            <div className="flex items-center gap-2">
+                                <Chip size="sm" variant="flat" color="primary" className="border-none font-mono">
+                                    {dateStr} · {timeStr}
+                                </Chip>
+                                {lobby.match_url && lobby.match_url.filter(u => u !== "").length > 0 && (
+                                    <Button className="bg-primary/20 text-primary" isExternal isIconOnly size="sm" variant="light" as={Link} href={lobby.match_url.filter(u => u !== "")[0]}>
+                                        <LinkIcon className="text-primary w-4 h-4" />
+                                    </Button>
+                                )}
                             </div>
-                            {lobby.match_url && lobby.match_url.length > 0 && (
-                                <Button className="bg-primary/20 text-primary" isExternal isIconOnly size="sm" variant="light" as={Link} href={lobby.match_url[0]}>
-                                    <LinkIcon className="text-primary w-4 h-4" />
-                                </Button>
-                            )}
                         </CardHeader>
                         <Divider />
                         <CardBody className="flex flex-col gap-4">
@@ -725,38 +717,85 @@ const StatItem = ({ label, value }: { label: string, value: string | number }) =
 
 const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_time}: any) => {
     const [map_id, setMapId] = useState("");
+    const [preview, setPreview] = useState<map | null>(null);
+    const [previewError, setPreviewError] = useState<string | null>(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentUser = useContext(CurrentUserContext);
+
+    useEffect(() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        if (map_id === "" || isNaN(parseInt(map_id))) {
+            setPreview(null);
+            setPreviewError(null);
+            return;
+        }
+        debounceRef.current = setTimeout(async () => {
+            setPreviewLoading(true);
+            setPreviewError(null);
+            setPreview(null);
+            try {
+                const res = await fetch(`/api/beatmap-preview?map_id=${encodeURIComponent(map_id)}`);
+                const data = await res.json();
+                if (!res.ok) {
+                    setPreviewError(data.error ?? "查询失败");
+                } else {
+                    setPreview(data);
+                }
+            } catch {
+                setPreviewError("网络错误，无法预览地图");
+            } finally {
+                setPreviewLoading(false);
+            }
+        }, 600);
+    }, [map_id]);
+
     if (!uid.includes(currentUser?.currentUser?.uid) || new Date(start_time) < new Date()) {
         return null
     }
     return (
-        <div className="flex flex-row gap-2 items-end w-full mt-2">
-            <Input
-                size="sm"
-                labelPlacement="outside"
-                placeholder="Beatmap ID (e.g. 123456)"
-                label="Change Warmup"
-                value={map_id}
-                onChange={(e) => setMapId(e.target.value)}
-                className="flex-grow"
-            />
-            <Button size="sm" color="primary" onPress={async () => {
-                // ... 逻辑保持不变 ...
-                 if (map_id == "" || isNaN(parseInt(map_id))) {
-                    alert("请输入正确的map id")
-                }
-                const res = await fetch(
-                    siteConfig.backend_url + `/api/update-warmup?map_id=${encodeURIComponent(map_id)}&team=${encodeURIComponent(team)}&tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(stage_name)}&match_id=${match_id}`,
-                    { method: "PATCH", credentials: "include" }
-                )
-                if (!res.ok) {
-                    alert(await res.text());
-                    return;
-                }
-                alert('更新成功 请等待服务器更新后 刷新页面查看');
-            }}>
-                Submit
-            </Button>
+        <div className="flex flex-col gap-2 w-full mt-2">
+            <div className="flex flex-row gap-2 items-center w-full">
+                <Input
+                    size="sm"
+                    labelPlacement="outside"
+                    placeholder="Beatmap ID（例如 123456）"
+                    label="更换热手图"
+                    description="注意：请输入单个难度的 Beatmap ID，而非谱面集 Beatmapset ID"
+                    value={map_id}
+                    onChange={(e) => setMapId(e.target.value)}
+                    className="flex-grow"
+                />
+                <Button size="sm" color="primary" className="mt-5" onPress={async () => {
+                    if (map_id == "" || isNaN(parseInt(map_id))) {
+                        alert("请输入正确的 Beatmap ID（纯数字）");
+                        return;
+                    }
+                    try {
+                        const res = await fetch(
+                            siteConfig.backend_url + `/api/update-warmup?map_id=${encodeURIComponent(map_id)}&team=${encodeURIComponent(team)}&tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(stage_name)}&match_id=${match_id}`,
+                            { method: "PATCH", credentials: "include" }
+                        )
+                        if (!res.ok) {
+                            const errText = await res.text();
+                            alert(`提交失败：${errText}`);
+                            return;
+                        }
+                        alert('更新成功 请等待服务器更新后 刷新页面查看');
+                    } catch (e) {
+                        alert("网络错误，无法连接到服务器，请检查网络后重试");
+                    }
+                }}>
+                    提交
+                </Button>
+            </div>
+            {previewLoading && (
+                <div className="text-xs text-default-400 px-1">正在查询地图信息…</div>
+            )}
+            {previewError && (
+                <div className="text-xs text-danger px-1">{previewError}</div>
+            )}
+            {preview && <MapComp map={preview} />}
         </div>
     )
 }

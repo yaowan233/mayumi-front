@@ -14,11 +14,12 @@ import {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {Tooltip} from "@heroui/tooltip";
 import {siteConfig} from "@/config/site";
-import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {Image} from "@heroui/image";
 import NextImage from "next/image";
 import {Chip} from "@heroui/chip";
 import {Snippet} from "@heroui/snippet";
+import {Avatar} from "@heroui/avatar";
 
 
 const CalendarIcon = () => (
@@ -59,7 +60,13 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     // ... 状态逻辑保持不变 ...
     const currentUser = useContext(CurrentUserContext);
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
+    const {isOpen: isIconOpen, onOpen: onIconOpen, onOpenChange: onIconOpenChange} = useDisclosure();
     const [errMsg, setErrMsg] = useState('');
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [iconUrl, setIconUrl] = useState('');
+    const [teamName, setTeamName] = useState('');
+    const [isUpdatingIcon, setIsUpdatingIcon] = useState(false);
+    const [iconErrMsg, setIconErrMsg] = useState('');
     const [formData, setFormData] = useState<RegistrationInfo>({
         tournament: tournament_info.abbreviation,
         uid: currentUser?.currentUser?.uid,
@@ -77,6 +84,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             if (currentUser?.currentUser?.uid) {
                 const data = await getPlayers(tournament_info.abbreviation);
                 setMembers(data.players);
+                setTeams(data.groups || []);
             }
         };
         fetchData();
@@ -149,6 +157,9 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
     const isRegistered = members.some((member) => member.player && member.uid === currentUser?.currentUser?.uid);
+    const myTeam = tournament_info.is_group
+        ? teams.find(t => t.captains.includes(currentUser?.currentUser?.uid ?? -1))
+        : null;
     const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
     const bgSrc = tournament_info.pic_url || fallbackImage;
     return (
@@ -425,6 +436,177 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 </CardBody>
             </Card>
 
+
+            {/* 队伍管理 (仅队长可见) */}
+            {myTeam && (
+                <Card className="border border-white/5 bg-content1 shadow-md">
+                    <CardHeader className="px-6 py-4 bg-default-50/50 flex justify-between items-center">
+                        <div className="font-bold text-lg">我的队伍</div>
+                        <Chip size="sm" color="warning" variant="flat">队长</Chip>
+                    </CardHeader>
+                    <CardBody className="px-6 py-4 flex flex-col gap-4">
+                        {/* 队伍基本信息 */}
+                        <div className="flex items-center gap-4">
+                            <Avatar
+                                src={myTeam.icon_url}
+                                name={myTeam.name.charAt(0)}
+                                className="w-16 h-16 text-large shrink-0"
+                                isBordered
+                            />
+                            <div className="flex flex-col gap-1 min-w-0">
+                                <span className="font-bold text-lg truncate">{myTeam.name}</span>
+                                <span className="text-sm text-default-400">
+                                    {myTeam.captains.length + myTeam.members.length} 名成员
+                                </span>
+                            </div>
+                            {myTeam.is_verified ? (
+                                <Chip size="sm" color="success" variant="flat" className="ml-auto shrink-0">已审核锁定</Chip>
+                            ) : (
+                                <Button
+                                    className="ml-auto shrink-0"
+                                    color="primary"
+                                    variant="flat"
+                                    onPress={() => {
+                                        setIconUrl(myTeam.icon_url || '');
+                                        setTeamName(myTeam.name);
+                                        setIconErrMsg('');
+                                        onIconOpen();
+                                    }}
+                                >
+                                    编辑队伍信息
+                                </Button>
+                            )}
+                        </div>
+
+                        <Divider />
+
+                        {/* 队员列表 */}
+                        <div className="flex flex-col gap-3">
+                            {myTeam.captains.length > 0 && (
+                                <div>
+                                    <span className="text-xs font-bold text-warning uppercase mb-2 block">队长</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {myTeam.captains.map(uid => {
+                                            const p = members.find(m => m.uid === uid);
+                                            return (
+                                                <Chip
+                                                    key={uid}
+                                                    variant="flat"
+                                                    color="warning"
+                                                    avatar={<Avatar src={`https://a.ppy.sh/${uid}`} name={p?.name} />}
+                                                >
+                                                    {p?.name || `#${uid}`}
+                                                </Chip>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                            {myTeam.members.length > 0 && (
+                                <div>
+                                    <span className="text-xs font-bold text-default-500 uppercase mb-2 block">队员</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {myTeam.members.map(uid => {
+                                            const p = members.find(m => m.uid === uid);
+                                            return (
+                                                <Chip
+                                                    key={uid}
+                                                    variant="flat"
+                                                    avatar={<Avatar src={`https://a.ppy.sh/${uid}`} name={p?.name} />}
+                                                >
+                                                    {p?.name || `#${uid}`}
+                                                </Chip>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </CardBody>
+                </Card>
+            )}
+
+            {/* 队伍信息编辑模态框 */}
+            <Modal isOpen={isIconOpen} onOpenChange={onIconOpenChange} backdrop="blur">
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader>编辑队伍信息</ModalHeader>
+                            <Divider />
+                            <ModalBody className="py-6 flex flex-col gap-4">
+                                <div className="flex justify-center">
+                                    <Avatar
+                                        src={iconUrl || undefined}
+                                        name={teamName.charAt(0)}
+                                        className="w-24 h-24 text-large"
+                                        isBordered
+                                    />
+                                </div>
+                                <Input
+                                    label="队伍名称"
+                                    variant="bordered"
+                                    value={teamName}
+                                    onChange={e => setTeamName(e.target.value)}
+                                />
+                                <Input
+                                    label="头像图片链接 (URL)"
+                                    placeholder="https://..."
+                                    variant="bordered"
+                                    value={iconUrl}
+                                    onChange={e => setIconUrl(e.target.value)}
+                                    description="请填写图片的直链地址"
+                                />
+                                {iconErrMsg && <Alert color="danger" title={iconErrMsg} />}
+                            </ModalBody>
+                            <Divider />
+                            <ModalFooter>
+                                <Button color="danger" variant="light" onPress={onClose}>取消</Button>
+                                <Button
+                                    color="primary"
+                                    className="font-bold"
+                                    isLoading={isUpdatingIcon}
+                                    onPress={async () => {
+                                        if (!teamName.trim()) {
+                                            setIconErrMsg('队伍名称不能为空');
+                                            return;
+                                        }
+                                        setIsUpdatingIcon(true);
+                                        setIconErrMsg('');
+                                        try {
+                                            const res = await fetch(
+                                                siteConfig.backend_url + `/api/update-team-icon?tournament_name=${encodeURIComponent(tournament_info.abbreviation)}&team_name=${encodeURIComponent(myTeam!.name)}`,
+                                                {
+                                                    method: 'PATCH',
+                                                    body: JSON.stringify({icon_url: iconUrl, name: teamName.trim()}),
+                                                    headers: {'Content-Type': 'application/json'},
+                                                    credentials: 'include'
+                                                }
+                                            );
+                                            if (!res.ok) {
+                                                setIconErrMsg(await res.text());
+                                            } else {
+                                                setTeams(prev => prev.map(t =>
+                                                    t.name === myTeam!.name
+                                                        ? {...t, icon_url: iconUrl, name: teamName.trim()}
+                                                        : t
+                                                ));
+                                                onClose();
+                                                alert('队伍信息更新成功');
+                                            }
+                                        } catch {
+                                            setIconErrMsg('网络请求失败');
+                                        } finally {
+                                            setIsUpdatingIcon(false);
+                                        }
+                                    }}
+                                >
+                                    保存
+                                </Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
 
             {/* Staff 模态框保持不变 */}
              <Modal isOpen={isOpen} onOpenChange={handleOpenChange} size="2xl" scrollBehavior="inside" backdrop="blur">
