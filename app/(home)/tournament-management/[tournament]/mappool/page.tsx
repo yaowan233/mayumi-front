@@ -114,7 +114,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         setIsSyncing(true);
         try {
             const res = await fetch(
-                siteConfig.backend_url + `/api/sync-tournament-maps?tournament_name=${tournament_name}`,
+                siteConfig.backend_url + `/api/sync-tournament-maps?tournament_name=${encodeURIComponent(tournament_name)}`,
                 {
                     method: "POST",
                     credentials: "include",
