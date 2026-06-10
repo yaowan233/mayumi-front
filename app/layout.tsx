@@ -3,7 +3,6 @@ import { Metadata, Viewport } from "next";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Providers } from "./providers";
-import { Link } from "@heroui/link";
 import clsx from "clsx";
 import { UserProvider } from "@/app/user_context";
 import { getMe } from "@/app/actions";
@@ -79,7 +78,7 @@ export default async function RootLayout({
         <html lang="zh" suppressHydrationWarning>
             <body
                 className={clsx(
-                    "min-h-screen bg-background font-sans antialiased",
+                    "min-h-screen bg-background text-foreground font-sans antialiased",
                     fontSans.variable
                 )}
             >
@@ -91,24 +90,26 @@ export default async function RootLayout({
                             </main>
 
                             <footer className="w-full flex flex-col items-center justify-center py-3 border-t border-white/5 mt-10">
-                                <Link
-                                    isExternal
+                                <a
                                     className="flex items-center gap-1 text-current"
                                     href="https://osu.ppy.sh/users/3162675"
+                                    target="_blank"
+                                    rel="noreferrer"
                                     title="yaowan233 OSU主页"
                                 >
                                     <span className="text-default-600">Coded by</span>
                                     <p className="text-primary font-bold">yaowan233</p>
-                                </Link>
-                                <Link
-                                    isExternal
+                                </a>
+                                <a
                                     className="flex items-center gap-1 text-current mt-1"
                                     href="https://heroui.com?utm_source=next-app-template"
+                                    target="_blank"
+                                    rel="noreferrer"
                                     title="heroui.com homepage"
                                 >
                                     <span className="text-default-600 text-sm">Powered by</span>
                                     <p className="text-primary text-sm">HeroUI</p>
-                                </Link>
+                                </a>
                             </footer>
                         </div>
                     </UserProvider>

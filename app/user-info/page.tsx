@@ -1,18 +1,14 @@
 "use client";
-import { Image } from "@heroui/image";
 import { ScoreRankA, ScoreRankS, ScoreRankSS, ScoreRankX, ScoreRankXH } from "@/app/user-info/score-rank";
-import { Progress } from "@heroui/progress";
 import UserLevel from "@/components/user_level";
 import { User } from "@/app/user-info/types";
 import { useCallback, useContext, useEffect, useState } from "react";
 import CurrentUserContext from "@/app/user_context";
 import GameModeIcon, { GameMode } from "@/components/gamemode_icon";
-import { Input } from "@heroui/input";
-import { Tooltip } from "@heroui/tooltip";
-import { SearchIcon } from "@heroui/shared-icons";
+import {Button, Input, Spinner, Tooltip} from "@heroui/react";
+import { SearchIcon } from "@/components/icons";
 import { siteConfig } from "@/config/site";
 import RankDisplay from "@/app/user-info/rank-display";
-import { Button } from "@heroui/button";
 
 
 interface ModeData {
@@ -51,15 +47,30 @@ export default function TournamentHomePage() {
         }
     }, [selectedMode]);
 
-    useEffect(() => {
-        if (currentUser?.currentUser?.uid && !searchName && !userInfo?.username) {
-            handleSearch(currentUser.currentUser.name);
-        }
-    }, [currentUser, searchName, userInfo?.username, handleSearch]);
+    const initialUsername = currentUser?.currentUser?.uid && !searchName && !userInfo?.username
+        ? currentUser.currentUser.name
+        : null;
+    const currentUsername = userInfo?.username ?? null;
 
     useEffect(() => {
-        if (userInfo?.username) handleSearch(userInfo.username);
-    }, [selectedMode, userInfo?.username, handleSearch]);
+        if (!initialUsername) return;
+
+        const timer = window.setTimeout(() => {
+            void handleSearch(initialUsername);
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [handleSearch, initialUsername]);
+
+    useEffect(() => {
+        if (!currentUsername) return;
+
+        const timer = window.setTimeout(() => {
+            void handleSearch(currentUsername);
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [currentUsername, handleSearch, selectedMode]);
 
     const hasBadges = userInfo?.badges && userInfo.badges.length > 0;
 
@@ -102,24 +113,24 @@ export default function TournamentHomePage() {
                 <div className="flex gap-2 w-full">
                     <Input
                         placeholder="搜索用户名..."
-                        size="sm"
                         value={searchName}
-                        classNames={{
-                            inputWrapper: "bg-white/50 dark:bg-black/30 shadow-none h-10 border border-zinc-200 dark:border-white/5",
-                            input: "text-zinc-800 dark:text-white placeholder:text-zinc-500"
-                        }}
-                        onValueChange={setSearchName}
+                        className="h-10 rounded-lg border border-zinc-200 bg-white/50 px-3 text-sm text-zinc-800 shadow-none placeholder:text-zinc-500 dark:border-white/5 dark:bg-black/30 dark:text-white"
+                        onChange={(event) => setSearchName(event.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchName)}
                     />
                     <Button
                         isIconOnly
                         size="sm"
-                        color="primary"
+                        variant="primary"
                         className="h-10 w-10 min-w-10 rounded-lg shadow-md font-bold text-white"
-                        isLoading={isSearching}
+                        isPending={isSearching}
                         onPress={() => handleSearch(searchName)}
                     >
-                        {!isSearching && <SearchIcon />}
+                        {({isPending}) => (
+                            <>
+                                {isPending ? <Spinner color="current" size="sm" /> : <SearchIcon />}
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>
@@ -143,7 +154,7 @@ export default function TournamentHomePage() {
                         {/* --- Header: 信息聚合 (应用 GLASS_CLASS) --- */}
                         <div className={`flex flex-col md:flex-row gap-5 items-center md:items-stretch rounded-2xl p-5 ${GLASS_CLASS}`}>
                             <div className="shrink-0">
-                                <Image
+                                <img
                                     src={`https://a.ppy.sh/${userInfo.id}`}
                                     alt="avatar"
                                     className="w-24 h-24 rounded-2xl border-2 border-white/50 dark:border-white/20 shadow-lg"
@@ -157,12 +168,12 @@ export default function TournamentHomePage() {
                                 <div className="flex flex-wrap justify-center md:justify-start gap-2 text-xs font-bold text-zinc-600 dark:text-white/80">
                                     {userInfo.team && (
                                         <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md border border-black/5 dark:border-white/5">
-                                            <Image radius="none" src={userInfo.team.flag_url} alt="flag" className="w-4 h-3" />
+                                            <img src={userInfo.team.flag_url} alt="flag" className="w-4 h-3" />
                                             <span>{userInfo.team.name}</span>
                                         </div>
                                     )}
                                     <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md border border-black/5 dark:border-white/5">
-                                        <Image radius="none" src={flagUrl(userInfo.country_code)} alt={userInfo.country_code} className="w-4 h-auto" />
+                                        <img src={flagUrl(userInfo.country_code)} alt={userInfo.country_code} className="w-4 h-auto" />
                                         <span>#{userInfo.statistics?.country_rank || 0}</span>
                                     </div>
                                 </div>
@@ -185,17 +196,19 @@ export default function TournamentHomePage() {
                                     <span>等级 (LEVEL)</span>
                                     <span>{userInfo.statistics?.level.progress}%</span>
                                 </div>
-                                <Progress
-                                    size="sm"
-                                    radius="full"
-                                    value={userInfo.statistics?.level.progress}
+                                <div
+                                    className="h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10"
+                                    role="progressbar"
                                     aria-label="Level"
-                                    classNames={{
-                                        track: "bg-black/10 dark:bg-white/10 h-2",
-                                        indicator: "bg-[#0099FF] h-2 shadow-sm"
-                                    }}
-                                    className="flex-grow"
-                                />
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                    aria-valuenow={userInfo.statistics?.level.progress ?? 0}
+                                >
+                                    <div
+                                        className="h-full rounded-full bg-[#0099FF] shadow-sm transition-[width]"
+                                        style={{width: `${userInfo.statistics?.level.progress ?? 0}%`}}
+                                    />
+                                </div>
                             </div>
                             <div className="shrink-0 flex items-center justify-center scale-110">
                                 <UserLevel level={userInfo.statistics?.level.current || 0}/>
@@ -227,12 +240,15 @@ export default function TournamentHomePage() {
                                         {/* 列表 */}
                                         <div className="flex flex-wrap gap-2 justify-center px-4">
                                             {userInfo.badges?.map((badge, i) => (
-                                                <Tooltip key={i} content={badge.description} closeDelay={0}>
-                                                    <Image
-                                                        src={badge.image_url}
-                                                        alt="badge"
-                                                        className="h-10 w-auto rounded-md hover:scale-110 transition-transform cursor-pointer shadow-sm border border-black/5 dark:border-white/10"
-                                                    />
+                                                <Tooltip key={i} closeDelay={0}>
+                                                    <Tooltip.Trigger>
+                                                        <img
+                                                            src={badge.image_url}
+                                                            alt="badge"
+                                                            className="h-10 w-auto rounded-md hover:scale-110 transition-transform cursor-pointer shadow-sm border border-black/5 dark:border-white/10"
+                                                        />
+                                                    </Tooltip.Trigger>
+                                                    <Tooltip.Content>{badge.description}</Tooltip.Content>
                                                 </Tooltip>
                                             ))}
                                         </div>

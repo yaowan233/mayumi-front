@@ -22,7 +22,7 @@ export default async function Home() {
     return (
         <div className="relative min-h-screen flex flex-col">
             <Navbar />
-            <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-24">
+            <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 pt-26 pb-24">
                 <TournamentListClient initialTournaments={publicTournaments} />
             </main>
         </div>

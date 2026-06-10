@@ -1,34 +1,41 @@
 "use client";
 
-import React, {useContext, useEffect, useState} from "react";
+import React, {type Key, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Chip} from "@heroui/chip";
-import {Avatar} from "@heroui/avatar";
-import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
-import {Button} from "@heroui/button";
-import {useFilter} from "@react-aria/i18n";
-import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure} from "@heroui/modal";
+import {
+    Autocomplete,
+    Avatar,
+    Button,
+    Card,
+    Description,
+    EmptyState,
+    Label,
+    ListBox,
+    Modal,
+    SearchField,
+    Spinner,
+    Table,
+    Tabs,
+    useFilter,
+    useOverlayState,
+} from "@heroui/react";
 import {RegistrationInfo} from "@/components/homepage";
-import {getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@heroui/table";
 import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Badge} from "@heroui/badge";
-import {Card, CardBody} from "@heroui/card";
-import {Tab, Tabs} from "@heroui/tabs";
 
 // --- 配置 ---
 const ROLES = [
-    {key: "host", label: "主办 (Host)"},
-    {key: "player", label: "选手 (Player)"},
-    {key: "referee", label: "裁判 (Referee)"},
-    {key: "streamer", label: "直播 (Streamer)"},
-    {key: "commentator", label: "解说 (Commentator)"},
-    {key: "mappooler", label: "选图 (Mappooler)"},
-    {key: "custom_mapper", label: "作图 (Mapper)"},
-    {key: "graphic_designer", label: "设计 (Designer)"},
-    {key: "scheduler", label: "时间安排 (Scheduler)"},
-    {key: "map_tester", label: "测图 (Tester)"},
-    {key: "donator", label: "赞助 (Donator)"},
+    {key: "host", label: "主办"},
+    {key: "player", label: "选手"},
+    {key: "referee", label: "裁判"},
+    {key: "streamer", label: "直播"},
+    {key: "commentator", label: "解说"},
+    {key: "mappooler", label: "选图"},
+    {key: "custom_mapper", label: "作图"},
+    {key: "graphic_designer", label: "设计"},
+    {key: "scheduler", label: "时间安排"},
+    {key: "map_tester", label: "测图"},
+    {key: "donator", label: "赞助"},
 ] as const;
 
 // --- 图标 ---
@@ -50,6 +57,7 @@ const UserIcon = () => (
 
 const columns = [
     {name: "UID", key: "uid"},
+    {name: "名字", key: "name"},
     {name: "QQ", key: "qqNumber"},
     {name: "首次Staff", key: "isFirstTimeStaff"},
     {name: "经验", key: "tournamentExperience"},
@@ -67,10 +75,11 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
     const [isSaving, setIsSaving] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const {isOpen, onOpen, onOpenChange} = useDisclosure();
+    const modalState = useOverlayState();
     const tournament_name = decodeURIComponent(params.tournament);
     const players = tournamentPlayers.players || [];
     const teams = tournamentPlayers.groups;
+    const playerNameByUid = new Map(players.map((player) => [player.uid, player.name]));
 
     useEffect(() => {
         const fetchData = async () => {
@@ -149,80 +158,94 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
 
                 <div className="flex items-center gap-3">
                     <Button
-                        color="success"
-                        variant="flat"
-                        isLoading={isRefreshing}
+                        variant="secondary"
+                        isPending={isRefreshing}
                         onPress={handleRefreshStats}
                     >
                         {isRefreshing ? "刷新中..." : "刷新选手数据"}
                     </Button>
-                    <Badge content={registrationInfo.length} color="danger" isInvisible={registrationInfo.length === 0}>
-                        <Button color="secondary" variant="flat" onPress={onOpen}>
-                            查看申请列表
-                        </Button>
-                    </Badge>
+                    <Modal state={modalState}>
+                        <Modal.Trigger className="relative inline-flex">
+                            <Button variant="secondary">
+                                查看申请列表
+                            </Button>
+                            {registrationInfo.length > 0 && (
+                                <span className="absolute -right-2 -top-2 flex min-w-5 items-center justify-center rounded-full bg-danger px-1.5 py-0.5 text-xs font-semibold text-white">
+                                    {registrationInfo.length}
+                                </span>
+                            )}
+                        </Modal.Trigger>
+                        <Modal.Backdrop>
+                            <Modal.Container size="cover" scroll="inside">
+                                <Modal.Dialog>
+                                    {({close}) => (
+                                        <>
+                                            <Modal.Header>
+                                                <Modal.Heading>成员申请列表 ({registrationInfo.length})</Modal.Heading>
+                                            </Modal.Header>
+                                            <Modal.Body>
+                                                <Table variant="secondary">
+                                                    <Table.ScrollContainer className="overflow-x-auto">
+                                                        <Table.Content aria-label="Applications">
+                                                            <Table.Header>
+                                                                {columns.map((column) => (
+                                                                    <Table.Column key={column.key} isRowHeader={column.key === "uid"} className={getApplicationColumnClass(column.key)}>
+                                                                        {column.name}
+                                                                    </Table.Column>
+                                                                ))}
+                                                            </Table.Header>
+                                                            <Table.Body renderEmptyState={() => <EmptyState>暂无申请</EmptyState>}>
+                                                                {registrationInfo.map((item) => (
+                                                                    <Table.Row key={item.uid} id={String(item.uid)}>
+                                                                        {columns.map((column) => (
+                                                                            <Table.Cell key={column.key}>
+                                                                                {renderRegistrationValue(item, column.key, playerNameByUid)}
+                                                                            </Table.Cell>
+                                                                        ))}
+                                                                    </Table.Row>
+                                                                ))}
+                                                            </Table.Body>
+                                                        </Table.Content>
+                                                    </Table.ScrollContainer>
+                                                </Table>
+                                            </Modal.Body>
+                                            <Modal.Footer>
+                                                <Button variant="ghost" className="text-danger" onPress={close}>关闭</Button>
+                                            </Modal.Footer>
+                                        </>
+                                    )}
+                                </Modal.Dialog>
+                            </Modal.Container>
+                        </Modal.Backdrop>
+                    </Modal>
                 </div>
             </div>
 
-            {/* Modal 保持不变，HeroUI Modal 默认支持亮/暗色 */}
-            <Modal size="5xl" isOpen={isOpen} onOpenChange={onOpenChange} scrollBehavior="inside">
-                <ModalContent>
-                    {(onClose) => (
-                        <>
-                            <ModalHeader>Staff 申请列表 ({registrationInfo.length})</ModalHeader>
-                            <ModalBody>
-                                <Table aria-label="Applications">
-                                    <TableHeader columns={columns}>
-                                        {(column) => <TableColumn key={column.key}>{column.name}</TableColumn>}
-                                    </TableHeader>
-                                    <TableBody items={registrationInfo} emptyContent="暂无申请">
-                                        {(item) => (
-                                            <TableRow key={item.uid}>
-                                                {(columnKey) => (
-                                                    <TableCell>
-                                                        {columnKey === 'selectedPositions'
-                                                            ? (getKeyValue(item, columnKey) as string[]).join("，")
-                                                            : getKeyValue(item, columnKey)}
-                                                    </TableCell>
-                                                )}
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </ModalBody>
-                            <ModalFooter>
-                                <Button color="danger" variant="light" onPress={onClose}>关闭</Button>
-                            </ModalFooter>
-                        </>
-                    )}
-                </ModalContent>
-            </Modal>
+            {isLoading && (
+                <div className="flex min-h-60 flex-col items-center justify-center gap-3 text-default-500">
+                    <Spinner />
+                    <span>正在加载成员信息...</span>
+                </div>
+            )}
 
+            {!isLoading && <>
             {/* Main Content: Role Management Tabs */}
             <div className="flex flex-col gap-4">
-                <Tabs
-                    aria-label="Role Management"
-                    variant="light"
-                    color="primary"
-                    classNames={{
-                        base: "w-full",
-                        // 修复：背景色适配亮/暗
-                        // 亮色: bg-default-100/80 border-default-200
-                        // 暗色: dark:bg-zinc-900/80 dark:border-white/10
-                        tabList: "p-2 gap-2 w-full flex-wrap justify-start bg-default-100/80 dark:bg-zinc-900/80 border border-default-200 dark:border-white/10 rounded-2xl sticky top-4 z-40 backdrop-blur-md shadow-sm",
-                        cursor: "w-full bg-primary/20 border border-primary/50 shadow-sm rounded-lg",
-                        tab: "max-w-fit px-4 h-10 data-[selected=true]:text-primary-500 text-default-500 transition-colors",
-                        tabContent: "group-data-[selected=true]:font-bold text-sm sm:text-base",
-                        panel: "pt-6"
-                    }}
-                >
+                <Tabs>
+                    <Tabs.ListContainer className="sticky top-4 z-40 max-w-full overflow-x-auto rounded-2xl border border-default-200 bg-background/95 p-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/90">
+                        <Tabs.List aria-label="Role Management" className="w-max min-w-full">
+                            {ROLES.map((role) => (
+                                <Tabs.Tab key={role.key} id={role.key} className="whitespace-nowrap">
+                                    {role.label}
+                                    <Tabs.Indicator />
+                                </Tabs.Tab>
+                            ))}
+                        </Tabs.List>
+                    </Tabs.ListContainer>
                     {ROLES.map((role) => (
-                        <Tab key={role.key} title={role.label}>
-                            {/* 修复：内容卡片背景色 */}
-                            {/* 亮色: bg-content1 (白) border-default-200 */}
-                            <Card
-                                className="bg-content1 dark:bg-zinc-900/50 border border-default-200 dark:border-white/5 shadow-sm">
-                                <CardBody className="p-6 sm:p-8">
+                        <Tabs.Panel key={role.key} id={role.key} className="pt-6">
+                            <Card className="border border-default-200 shadow-sm dark:border-white/5">
+                                <Card.Content className="p-6 sm:p-8">
                                     <RoleManagementSection
                                         roleKey={role.key as keyof Player}
                                         roleLabel={role.label}
@@ -232,9 +255,9 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                                         currentUid={currentUser?.currentUser?.uid}
                                         tournamentName={tournament_name}
                                     />
-                                </CardBody>
+                                </Card.Content>
                             </Card>
-                        </Tab>
+                        </Tabs.Panel>
                     ))}
                 </Tabs>
             </div>
@@ -242,25 +265,67 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             {/* Sticky Footer: 修复背景色 */}
             <Card
                 className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
-                <CardBody className="flex flex-row justify-between items-center py-4 px-6">
+                <Card.Content className="flex flex-row items-center justify-between px-6 py-4">
                     <div className="text-default-500 text-sm">
                         * 修改后请务必点击保存
                     </div>
                     <Button
-                        color="primary"
                         size="lg"
-                        variant="shadow"
-                        className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon/>}
-                        isLoading={isSaving}
+                        variant="primary"
+                        className="px-8 font-bold"
+                        isPending={isSaving}
                         onPress={handleSave}
                     >
-                        {isSaving ? "正在保存..." : "保存所有更改"}
+                        <span className="flex items-center gap-2">
+                            {!isSaving && <SaveIcon/>}
+                            <span>{isSaving ? "正在保存..." : "保存所有更改"}</span>
+                        </span>
                     </Button>
-                </CardBody>
+                </Card.Content>
             </Card>
+            </>}
         </div>
     );
+}
+
+function renderRegistrationValue(item: RegistrationInfo, columnKey: string, playerNameByUid: Map<number, string>) {
+    if (columnKey === "name") {
+        return item.uid != null ? playerNameByUid.get(item.uid) ?? "-" : "-";
+    }
+
+    const value = item[columnKey as keyof RegistrationInfo];
+
+    if (columnKey === "selectedPositions") {
+        return Array.isArray(value) ? value.join("，") : "";
+    }
+
+    if (typeof value === "boolean") {
+        return value ? "是" : "否";
+    }
+
+    return value ?? "-";
+}
+
+function getApplicationColumnClass(columnKey: string) {
+    switch (columnKey) {
+        case "uid":
+            return "min-w-20";
+        case "qqNumber":
+            return "min-w-28";
+        case "name":
+            return "min-w-32";
+        case "isFirstTimeStaff":
+            return "min-w-24";
+        case "tournamentExperience":
+            return "min-w-40";
+        case "selectedPositions":
+            return "min-w-44";
+        case "otherDetails":
+        case "additionalComments":
+            return "min-w-48";
+        default:
+            return "min-w-28";
+    }
 }
 
 // --- 子组件：单个职位管理区块 ---
@@ -298,7 +363,7 @@ const RoleManagementSection = ({
                     {/* 修复：文字颜色改为 text-foreground (自动黑白) */}
                     <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
                         {roleLabel}
-                        <span className="text-default-400 text-lg font-normal">({currentMembers.length})</span>
+                                <span className="text-default-400 text-lg font-normal">({currentMembers.length})</span>
                     </h2>
                     <p className="text-default-400 text-sm mt-1">管理拥有此职位的用户，或添加新成员。</p>
                 </div>
@@ -315,32 +380,28 @@ const RoleManagementSection = ({
             <div className="flex flex-wrap gap-4 min-h-[100px]">
                 {currentMembers.length > 0 ? (
                     currentMembers.map((member: any) => (
-                        <Chip
+                        <div
                             key={member.uid}
-                            onClose={() => removeMember(member.originalIndex)}
-                            variant="bordered"
-                            // 修复：Chip 样式适配
-                            // 亮色: bg-default-50 border-default-200 text-foreground
-                            // 暗色: dark:bg-black/40 dark:border-white/10 dark:text-white
-                            classNames={{
-                                base: "h-14 py-1 px-2 border border-default-200 dark:border-white/10 bg-default-50 dark:bg-black/40 hover:bg-default-100 dark:hover:bg-zinc-800 hover:border-primary/50 transition-all cursor-default gap-3 rounded-xl",
-                                content: "font-medium text-foreground dark:text-white pl-1 pr-2 text-base",
-                                closeButton: "text-default-400 hover:text-danger hover:bg-danger/10 rounded-full p-1"
-                            }}
-                            avatar={
-                                <Avatar
-                                    src={`https://a.ppy.sh/${member.uid}`}
-                                    className="w-10 h-10 border-2 border-white/50 dark:border-white/10"
-                                    showFallback
-                                />
-                            }
+                            className="flex h-14 items-center gap-3 rounded-xl border border-default-200 bg-default-50 px-3 py-1.5 transition-colors hover:bg-default-100 dark:border-white/10 dark:bg-black/40 dark:hover:bg-zinc-800"
                         >
-                            <div className="flex flex-col justify-center h-full">
+                            <Avatar className="h-10 w-10 border-2 border-white/50 dark:border-white/10">
+                                <Avatar.Image src={`https://a.ppy.sh/${member.uid}`}/>
+                                <Avatar.Fallback>{member.name?.[0] ?? "?"}</Avatar.Fallback>
+                            </Avatar>
+                            <div className="flex flex-col justify-center">
                                 <span className="leading-none">{member.name}</span>
-                                <span
-                                    className="text-[10px] text-default-400 font-mono leading-tight mt-0.5">#{member.uid}</span>
+                                <span className="mt-0.5 text-[10px] font-mono leading-tight text-default-400">#{member.uid}</span>
                             </div>
-                        </Chip>
+                            <Button
+                                isIconOnly
+                                size="sm"
+                                variant="ghost"
+                                className="ml-1 text-default-400 hover:text-danger"
+                                onPress={() => removeMember(member.originalIndex)}
+                            >
+                                ×
+                            </Button>
+                        </div>
                     ))
                 ) : (
                     // 修复：空状态边框和颜色
@@ -357,28 +418,32 @@ const RoleManagementSection = ({
 
 // --- 子组件：添加成员 ---
 const AddMember = ({members, teams, setMembers, tournamentName, position}: any) => {
-    const [fieldState, setFieldState] = useState<{ selectedKey: string | null, inputValue: string, items: any[] }>({
+    const [fieldState, setFieldState] = useState<{ selectedKey: string | null, inputValue: string }>({
         selectedKey: null,
         inputValue: "",
-        items: members
     });
     let {contains} = useFilter({sensitivity: 'base'});
+    const filteredMembers = members.filter((item: Player) => contains(`${item.uid} ${item.name}`, fieldState.inputValue));
 
     const onInputChange = (value: string) => {
         setFieldState((prev: any) => ({
             inputValue: value,
-            selectedKey: value === "" ? "" : prev.selectedKey,
-            items: members.filter((item: any) => contains(item.uid.toString() + item.name, value)),
+            selectedKey: value === "" ? null : prev.selectedKey,
         }));
     };
 
-    const onSelectionChange = (key: React.Key | null) => {
-        if (!key) return;
-        // 选中下拉项时，自动填入输入框
-        setFieldState(prev => ({
+    const onSelectionChange = (key: Key | null) => {
+        if (!key) {
+            setFieldState((prev) => ({...prev, selectedKey: null}));
+            return;
+        }
+
+        const nextKey = String(key);
+        const selectedMember = members.find((member: Player) => member.uid.toString() === nextKey);
+        setFieldState((prev) => ({
             ...prev,
-            inputValue: key.toString(),
-            selectedKey: key.toString()
+            inputValue: selectedMember ? `${selectedMember.uid}` : nextKey,
+            selectedKey: nextKey,
         }));
     };
 
@@ -392,6 +457,7 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
                 const updatedMembers = [...members];
                 updatedMembers[members.indexOf(member)][position] = true;
                 setMembers({players: updatedMembers, groups: teams});
+                setFieldState({selectedKey: null, inputValue: ""});
                 return;
             }
         }
@@ -426,9 +492,8 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
             };
             setMembers({players: [...members, newMember], groups: teams});
             setFieldState({
-                selectedKey: null, // 清空选中键
-                inputValue: "",    // 清空输入文字
-                items: members     // 重置列表
+                selectedKey: null,
+                inputValue: "",
             });
         } catch (e) {
             alert('添加失败：用户不存在或网络错误');
@@ -436,51 +501,77 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
     };
 
     return (
-        // 修复：添加框背景色
-        // 亮色: bg-default-100 border-default-200
-        // 暗色: dark:bg-zinc-900/50 dark:border-white/5
         <div
             className="flex gap-2 w-full md:w-auto items-center bg-default-100 dark:bg-zinc-900/50 p-1.5 rounded-lg border border-default-200 dark:border-white/5">
             <Autocomplete
                 aria-label="成员搜索框"
-                placeholder="输入 UID 添加..."
-                allowsCustomValue
-                className="w-full md:w-64"
-                inputValue={fieldState.inputValue}
-                items={fieldState.items || []}
-                selectedKey={fieldState.selectedKey}
-                onInputChange={onInputChange}
-                onSelectionChange={onSelectionChange}
-                size="sm"
-                variant="flat"
-                classNames={{
-                    base: "bg-transparent",
-                }}
-                inputProps={{
-                    classNames: {
-                        // 修复：输入框背景色适配
-                        inputWrapper: "bg-transparent shadow-none border border-transparent hover:bg-default-200/50 dark:hover:bg-white/5 data-[hover=true]:bg-default-200/50 dark:data-[hover=true]:bg-white/5",
-                        input: "text-small text-foreground",
-                    }
-                }}
+                className="w-full md:w-72"
+                placeholder="输入成员 UID 或用户名"
+                variant="secondary"
+                value={fieldState.selectedKey}
+                onChange={onSelectionChange}
+                onClear={() => setFieldState({selectedKey: null, inputValue: ""})}
+                selectionMode="single"
             >
-                {(member: any) => (
-                    <AutocompleteItem key={member.uid} textValue={member.uid.toString()}>
-                        <div className="flex gap-2 items-center">
-                            <Avatar src={`https://a.ppy.sh/${member.uid}`} size="sm"/>
-                            <div className="flex flex-col">
-                                <span className="text-small">{member.name}</span>
-                                <span className="text-tiny text-default-400">{member.uid}</span>
-                            </div>
-                        </div>
-                    </AutocompleteItem>
-                )}
+                <Label>添加成员</Label>
+                <Autocomplete.Trigger>
+                    <Autocomplete.Value>
+                        {({defaultChildren, isPlaceholder, state}) => {
+                            if (isPlaceholder || state.selectedItems.length === 0) {
+                                return defaultChildren;
+                            }
+
+                            const selectedMember = members.find((member: Player) => member.uid.toString() === state.selectedItems[0]?.key);
+                            if (!selectedMember) {
+                                return defaultChildren;
+                            }
+
+                            return (
+                                <div className="flex items-center gap-2">
+                                    <Avatar className="size-4" size="sm">
+                                        <Avatar.Image src={`https://a.ppy.sh/${selectedMember.uid}`}/>
+                                        <Avatar.Fallback>{selectedMember.name?.[0] ?? "?"}</Avatar.Fallback>
+                                    </Avatar>
+                                    <span>{selectedMember.name}</span>
+                                </div>
+                            );
+                        }}
+                    </Autocomplete.Value>
+                    <Autocomplete.ClearButton />
+                    <Autocomplete.Indicator />
+                </Autocomplete.Trigger>
+                <Autocomplete.Popover>
+                    <Autocomplete.Filter filter={contains}>
+                        <SearchField autoFocus name="member-search" variant="secondary" value={fieldState.inputValue} onChange={onInputChange}>
+                            <SearchField.Group>
+                                <SearchField.SearchIcon />
+                                <SearchField.Input placeholder="搜索成员 UID 或用户名..." />
+                                <SearchField.ClearButton />
+                            </SearchField.Group>
+                        </SearchField>
+                        <ListBox renderEmptyState={() => <EmptyState>没有匹配成员</EmptyState>}>
+                            {filteredMembers.map((member: Player) => (
+                                <ListBox.Item key={member.uid} id={member.uid.toString()} textValue={`${member.uid} ${member.name}`}>
+                                    <Avatar size="sm">
+                                        <Avatar.Image src={`https://a.ppy.sh/${member.uid}`}/>
+                                        <Avatar.Fallback>{member.name?.[0] ?? "?"}</Avatar.Fallback>
+                                    </Avatar>
+                                    <div className="flex flex-col">
+                                        <Label>{member.name}</Label>
+                                        <Description>#{member.uid}</Description>
+                                    </div>
+                                    <ListBox.ItemIndicator />
+                                </ListBox.Item>
+                            ))}
+                        </ListBox>
+                    </Autocomplete.Filter>
+                </Autocomplete.Popover>
             </Autocomplete>
             <Button
-                color="primary"
                 size="sm"
+                variant="primary"
                 onPress={handleAddMember}
-                className="font-bold px-6 shadow-md"
+                className="font-bold px-6"
             >
                 添加
             </Button>

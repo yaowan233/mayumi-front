@@ -2,7 +2,7 @@
 import Image from "next/image";
 import {title} from "@/components/primitives";
 import {useState} from "react";
-import {Link} from "@heroui/link";
+import Link from "next/link";
 
 export interface Tournament {
     name: string;
@@ -29,7 +29,6 @@ export const TournamentComponent = (tournament: Tournament) => {
             key={tournament.name}
             className="items-center justify-center"
             href={tournament_href}
-            target="_blank"
         >
             <div
                 className="relative flex-auto"

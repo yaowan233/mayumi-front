@@ -3,11 +3,9 @@ import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
-import {Button} from "@heroui/button";
+import {Button, Card, Spinner} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {siteConfig} from "@/config/site";
-import {Card, CardBody} from "@heroui/card";
-import {Spinner} from "@heroui/spinner";
 
 const SaveIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -132,7 +130,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
     if (isLoadingData) {
         return (
             <div className="w-full h-[60vh] flex flex-col items-center justify-center gap-4">
-                <Spinner size="lg" color="primary"/>
+                <Spinner size="lg" color="accent"/>
                 <p className="text-default-500">正在加载赛事信息...</p>
             </div>
         );
@@ -157,13 +155,13 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
             <TournamentInfoForm formData={formData} setFormData={setFormData} errMsg={errMsg}/>
 
             <Card
-                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
-                <CardBody className="flex flex-row justify-between items-center py-4 px-6">
+                variant="secondary"
+                className="sticky bottom-6 z-50 border border-default-200 bg-background/90 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/90">
+                <Card.Content className="flex flex-row items-center justify-between gap-4 px-6 py-4">
 
                     <div className="flex items-center gap-4">
                         <Button
-                            variant="light"
-                            color="default"
+                            variant="ghost"
                             onPress={() => router.back()}
                             className="font-medium text-default-500 hover:text-foreground"
                         >
@@ -175,17 +173,20 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                     </div>
 
                     <Button
-                        color="primary"
                         size="lg"
-                        variant="shadow"
+                        variant="primary"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon/>}
-                        isLoading={isSaving}
+                        isPending={isSaving}
                         onPress={handleUpdateTournament}
                     >
-                        {isSaving ? "正在保存..." : "保存修改"}
+                        {({isPending}) => (
+                            <>
+                                {!isPending && <SaveIcon/>}
+                                {isPending ? "正在保存..." : "保存修改"}
+                            </>
+                        )}
                     </Button>
-                </CardBody>
+                </Card.Content>
             </Card>
         </div>
     );

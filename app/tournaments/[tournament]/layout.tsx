@@ -11,7 +11,7 @@ export default async function HomeLayout({
     return (
         <div>
             <TournamentNavbar tournament_name={tournament}/>
-            <main className="w-full mx-auto pt-6 px-6 grow">
+            <main className="w-full mx-auto px-6 pt-22 grow">
                 {children}
             </main>
         </div>

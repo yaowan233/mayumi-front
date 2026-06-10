@@ -1,10 +1,5 @@
 'use client'
-import {Button} from "@heroui/button";
-import {Link} from "@heroui/link";
-import {Card, CardBody, CardFooter, CardHeader} from "@heroui/card";
-import {Chip} from "@heroui/chip";
-import {Tooltip} from "@heroui/tooltip";
-import {Skeleton} from "@heroui/skeleton";
+import {Button, Card, Chip, Skeleton, Tooltip} from "@heroui/react";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
@@ -42,7 +37,7 @@ const LockIcon = () => (
 );
 const AlertIcon = () => <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>;
 
-const STATUS_CONFIG: Record<string, { label: string; color: "default" | "warning" | "success" | "danger" | "secondary" | "primary" }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: "default" | "warning" | "success" | "danger" | "accent" }> = {
     draft: { label: "草稿", color: "default" },
     pending: { label: "审核中", color: "warning" },
     approved: { label: "已发布", color: "success" },
@@ -53,14 +48,30 @@ const STATUS_CONFIG: Record<string, { label: string; color: "default" | "warning
 const getRoleStyle = (role: string) => {
     switch (role) {
         case "主办":
-            return { color: "primary" as const, label: "主办" }; // 蓝色
+            return { color: "accent" as const, label: "主办" }; // 蓝色
         case "选图":
-            return { color: "secondary" as const, label: "选图" }; // 紫色
+            return { color: "default" as const, label: "选图" }; // 紫色
         case "时间安排":
             return { color: "warning" as const, label: "时间安排" }; // 橙色/黄色
         default:
             return { color: "default" as const, label: role }; // 灰色
     }
+};
+
+const getRoleChipClass = (role: string) => {
+    if (role.includes("\u4e3b\u529e")) {
+        return "border border-sky-500/25 bg-sky-500/10 text-sky-700 shadow-sm shadow-sky-500/5 dark:border-sky-300/15 dark:bg-white/[0.055] dark:text-sky-300";
+    }
+
+    if (role.includes("\u9009\u56fe")) {
+        return "border border-violet-500/25 bg-violet-500/10 text-violet-700 shadow-sm shadow-violet-500/5 dark:border-violet-300/15 dark:bg-white/[0.055] dark:text-violet-300";
+    }
+
+    if (role.includes("\u65f6\u95f4\u5b89\u6392")) {
+        return "border border-amber-500/30 bg-amber-500/10 text-amber-700 shadow-sm shadow-amber-500/5 dark:border-amber-300/15 dark:bg-white/[0.055] dark:text-amber-300";
+    }
+
+    return "border border-zinc-300/70 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/[0.07] dark:text-zinc-300";
 };
 
 export default function TournamentManagementPage() {
@@ -104,13 +115,11 @@ export default function TournamentManagementPage() {
 
                 {isLoggedIn && (
                     <Button
-                        as={Link}
-                        href="/create-tournament"
-                        color="primary"
-                        variant="shadow"
+                        variant="primary"
+                        onPress={() => window.location.assign("/create-tournament")}
                         className="font-bold"
-                        startContent={<PlusIcon/>}
                     >
+                        <PlusIcon/>
                         创建比赛
                     </Button>
                 )}
@@ -121,9 +130,9 @@ export default function TournamentManagementPage() {
                 // Loading Skeleton (保持不变)
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3].map((i) => (
-                        <Card key={i} className="h-[180px] p-4 space-y-4" radius="lg">
-                            <Skeleton className="rounded-lg"><div className="h-6 w-1/3 bg-default-300"></div></Skeleton>
-                            <Skeleton className="rounded-lg"><div className="h-20 bg-default-300"></div></Skeleton>
+                        <Card key={i} className="h-[180px] space-y-4 rounded-lg p-4">
+                            <Skeleton className="h-6 w-1/3 rounded-lg"/>
+                            <Skeleton className="h-20 rounded-lg"/>
                         </Card>
                     ))}
                 </div>
@@ -145,12 +154,18 @@ export default function TournamentManagementPage() {
                         return (
                             <Card
                                 key={info.tournament_name}
-                                as={Link}
-                                href={`/tournament-management/${info.abbreviation}`}
-                                isPressable
-                                className="h-full min-h-[180px] border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 hover:bg-default-100 dark:hover:bg-zinc-800 hover:border-primary/50 transition-all duration-300 group"
+                                role="link"
+                                tabIndex={0}
+                                onClick={() => window.location.assign(`/tournament-management/${info.abbreviation}`)}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                        event.preventDefault();
+                                        window.location.assign(`/tournament-management/${info.abbreviation}`);
+                                    }
+                                }}
+                                className="group h-full min-h-[180px] cursor-pointer border border-default-200 bg-surface transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-default-100 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 dark:border-white/5 dark:bg-zinc-900 dark:hover:bg-zinc-800"
                             >
-                                <CardHeader className="flex flex-row justify-between items-start px-6 pt-6 pb-0 gap-2">
+                                <Card.Header className="flex flex-row justify-between items-start px-6 pt-6 pb-0 gap-2">
                                     {/* 比赛名称 */}
                                     <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 flex-1"
                                         title={info.tournament_name}>
@@ -160,26 +175,24 @@ export default function TournamentManagementPage() {
                                     {/* --- 变化点：状态标签 --- */}
                                     <Chip
                                         color={statusConfig.color}
-                                        variant="flat"
+                                        variant="soft"
                                         size="sm"
                                         className="capitalize border-none min-w-fit"
                                     >
                                         {statusConfig.label}
                                     </Chip>
-                                </CardHeader>
+                                </Card.Header>
 
-                                <CardBody className="px-6 py-3 flex flex-col justify-between">
+                                <Card.Content className="px-6 py-3 flex flex-col justify-between">
                                     {/* 角色标签 */}
                                     <div className="flex flex-wrap gap-2 mb-2">
                                         {info.roles.map((role) => {
-                                            const style = getRoleStyle(role);
                                             return (
                                                 <Chip
                                                     key={role}
                                                     size="sm"
-                                                    variant="flat"
-                                                    color={style.color}
-                                                    className="font-medium"
+                                                    variant="soft"
+                                                    className={`font-semibold ${getRoleChipClass(role)}`}
                                                 >
                                                     {role}
                                                 </Chip>
@@ -189,11 +202,14 @@ export default function TournamentManagementPage() {
 
                                     {/* --- 变化点：如果是“已驳回”，显示醒目的红色提示 --- */}
                                     {info.status === 'rejected' && info.reject_reason && (
-                                        <Tooltip content={info.reject_reason} color="danger">
-                                            <div className="mt-2 p-2 rounded-medium bg-danger-50 dark:bg-danger/10 border border-danger/20 flex items-start gap-2 text-danger text-xs font-medium cursor-help">
-                                                <div className="mt-0.5"><AlertIcon /></div>
-                                                <span className="line-clamp-2">驳回原因: {info.reject_reason}</span>
-                                            </div>
+                                        <Tooltip>
+                                            <Tooltip.Trigger>
+                                                <div className="mt-2 p-2 rounded-medium bg-danger-50 dark:bg-danger/10 border border-danger/20 flex items-start gap-2 text-danger text-xs font-medium cursor-help">
+                                                    <div className="mt-0.5"><AlertIcon /></div>
+                                                    <span className="line-clamp-2">驳回原因: {info.reject_reason}</span>
+                                                </div>
+                                            </Tooltip.Trigger>
+                                            <Tooltip.Content>{info.reject_reason}</Tooltip.Content>
                                         </Tooltip>
                                     )}
 
@@ -203,13 +219,13 @@ export default function TournamentManagementPage() {
                                             正在等待管理员审核，期间您可以修改信息。
                                         </div>
                                     )}
-                                </CardBody>
+                                </Card.Content>
 
-                                <CardFooter className="px-6 pb-6 pt-0">
+                                <Card.Footer className="px-6 pb-6 pt-0">
                                     <div className="text-tiny text-default-500 group-hover:text-primary/80 group-hover:translate-x-1 transition-all duration-300 flex items-center gap-1 font-medium">
                                         {info.status === 'rejected' ? '去修改' : '进入管理后台'} <span>→</span>
                                     </div>
-                                </CardFooter>
+                                </Card.Footer>
                             </Card>
                         );
                     })}
@@ -221,10 +237,8 @@ export default function TournamentManagementPage() {
                     <h3 className="text-xl font-bold mt-4 text-default-600">暂无管理的比赛</h3>
                     <p className="text-default-400 text-sm mb-6">您目前没有参与管理的赛事，或者还没有创建比赛。</p>
                     <Button
-                        as={Link}
-                        href="/create-tournament"
-                        color="primary"
-                        variant="flat"
+                        variant="secondary"
+                        onPress={() => window.location.assign("/create-tournament")}
                         className="font-bold"
                     >
                         立即创建新比赛

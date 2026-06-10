@@ -1,20 +1,166 @@
 "use client"
 
-import {Card, CardBody, CardHeader} from "@heroui/card";
-import {Tab, Tabs} from "@heroui/tabs";
-import {Image} from "@heroui/image";
-import {Link} from "@heroui/link";
-import {Divider} from "@heroui/divider";
-import {Accordion, AccordionItem} from "@heroui/accordion";
-import React, {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from "react";
+import React, {Dispatch, ReactElement, ReactNode, SetStateAction, useContext, useEffect, useRef, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Input} from "@heroui/input";
-import {Button} from "@heroui/button";
-import {Chip} from "@heroui/chip";
 import {siteConfig} from "@/config/site";
 import {LinkIcon} from "@/components/icons"; // 假设你有这个图标，或者用 lucide-react
 import {useRouter, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+
+const colorClass: Record<string, string> = {
+    primary: "bg-primary/15 text-primary",
+    secondary: "bg-primary/15 text-primary",
+    success: "bg-emerald-500/15 text-emerald-300",
+    danger: "bg-red-500/15 text-red-300",
+    warning: "bg-amber-500/15 text-amber-300",
+    default: "bg-zinc-100 text-zinc-700 dark:bg-white/10 dark:text-zinc-200",
+};
+
+const Card = ({children, className = "", onPress, onClick, ...props}: any) => (
+    <div
+        {...props}
+        role={onPress ? "button" : props.role}
+        tabIndex={onPress ? 0 : props.tabIndex}
+        className={`relative overflow-hidden rounded-xl border border-zinc-200 bg-white text-zinc-900 shadow-sm dark:border-white/[0.06] dark:bg-zinc-950 dark:text-zinc-100 ${className}`}
+        onClick={onPress || onClick}
+        onKeyDown={(event) => {
+            if (onPress && (event.key === "Enter" || event.key === " ")) onPress(event);
+        }}
+    >
+        {children}
+    </div>
+);
+
+const CardBody = ({children, className = ""}: any) => (
+    <div className={`p-4 ${className}`}>{children}</div>
+);
+
+const CardHeader = ({children, className = ""}: any) => (
+    <div className={`p-4 ${className}`}>{children}</div>
+);
+
+const Link = ({children, href, isExternal, className = "", ...props}: any) => (
+    <a
+        {...props}
+        href={href}
+        target={isExternal ? "_blank" : props.target}
+        rel={isExternal ? "noreferrer" : props.rel}
+        className={className}
+    >
+        {children}
+    </a>
+);
+
+const Image = ({className = "", src, alt = "", removeWrapper, radius, ...props}: any) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+        {...props}
+        src={src}
+        alt={alt}
+        className={`${radius === "md" ? "rounded-md" : ""} ${className}`}
+    />
+);
+
+const Divider = ({className = ""}: any) => <div className={`h-px bg-zinc-200 dark:bg-white/[0.08] ${className}`}/>;
+
+const Chip = ({children, className = "", classNames, color = "default", avatar, onClose, style}: any) => (
+    <span
+        className={`inline-flex min-h-6 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${colorClass[color] || colorClass.default} ${classNames?.base || ""} ${className}`}
+        style={style}
+    >
+        {avatar && <span className="h-5 w-5 overflow-hidden rounded-full">{avatar}</span>}
+        <span className={classNames?.content}>{children}</span>
+        {onClose && (
+            <button type="button" className={classNames?.closeButton || "ml-1 rounded-full px-1 transition-all duration-150 hover:bg-white/10 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"} onClick={onClose}>
+                ×
+            </button>
+        )}
+    </span>
+);
+
+const Button = ({children, className = "", onPress, onClick, href, as, isExternal, isIconOnly, isDisabled, disabled, color = "default", ...props}: any) => {
+    const classes = `${isIconOnly ? "inline-flex h-8 w-8 items-center justify-center rounded-lg p-0" : "inline-flex items-center justify-center rounded-lg px-3 py-1.5"} text-sm font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ${colorClass[color] || colorClass.default} ${className}`;
+    if (href || as) {
+        return (
+            <a
+                {...props}
+                href={href}
+                target={isExternal ? "_blank" : props.target}
+                rel={isExternal ? "noreferrer" : props.rel}
+                className={classes}
+                onClick={onPress || onClick}
+            >
+                {children}
+            </a>
+        );
+    }
+    return (
+        <button {...props} type={props.type || "button"} disabled={disabled || isDisabled} className={classes} onClick={onPress || onClick}>
+            {children}
+        </button>
+    );
+};
+
+const Input = ({label, description, className = "", value, onChange, placeholder, size}: any) => (
+    <label className={`flex flex-col gap-1 text-sm ${className}`}>
+        {label && <span className="font-bold text-zinc-700 dark:text-zinc-300">{label}</span>}
+        <input
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className={`${size === "sm" ? "h-9" : "h-10"} rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-primary dark:border-white/[0.08] dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-600`}
+        />
+        {description && <span className="text-xs text-zinc-500 dark:text-zinc-400">{description}</span>}
+    </label>
+);
+
+const Accordion = ({children, className = ""}: any) => (
+    <div className={`flex flex-col gap-2 ${className}`}>{children}</div>
+);
+
+const AccordionItem = ({children, title}: any) => (
+    <details className="group rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:border-primary/50 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900">
+        <summary className="cursor-pointer list-none">
+            {title}
+        </summary>
+        <div className="pt-3">{children}</div>
+    </details>
+);
+
+const Tab = ({children}: { children: ReactNode; title?: ReactNode }) => <>{children}</>;
+
+const Tabs = ({items, defaultSelectedKey, onSelectionChange, children}: any) => {
+    const [selected, setSelected] = useState(String(defaultSelectedKey || items?.[0]?.stage_name || ""));
+    const activeItem = items?.find((item: any) => item.stage_name === selected) || items?.[0];
+    const activePanel = activeItem ? children(activeItem) as ReactElement<{ children: ReactNode }> : null;
+
+    return (
+        <div className="w-full">
+            <div className="w-full border-b border-zinc-200 dark:border-white/[0.08]">
+                <div className="mx-auto flex max-w-5xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
+                    {items?.map((item: any) => {
+                        const active = item.stage_name === selected;
+                        return (
+                            <button
+                                key={item.stage_name}
+                                type="button"
+                                className={`relative h-12 shrink-0 rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
+                                onClick={() => {
+                                    setSelected(item.stage_name);
+                                    onSelectionChange?.(item.stage_name);
+                                }}
+                            >
+                                {item.stage_name}
+                                {active && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"/>}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+            <div className="w-full py-4">{activePanel?.props.children}</div>
+        </div>
+    );
+};
 
 
 function isPlayerReserved(playerUID: number | undefined, schedule_stage: ScheduleStage): boolean {
@@ -35,46 +181,44 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
     const [scheduleStages, setScheduleStages] = useState<ScheduleStage []>(tabs);
     const searchParams = useSearchParams();
     const router = useRouter();
+    const [selectedStage, setSelectedStage] = useState(searchParams.get('stage') || tabs.at(-1)?.stage_name || tabs[0]?.stage_name || "");
+    const selectedScheduleStage = scheduleStages.find((stage) => stage.stage_name === selectedStage) || scheduleStages.at(-1) || scheduleStages[0];
+
+    const handleStageChange = (stageName: string) => {
+        setSelectedStage(stageName);
+        router.replace(`?stage=${encodeURIComponent(stageName)}`);
+    };
 
     return (
         <div className="w-full flex flex-col items-center">
-             {/* 增加背景容器或样式优化 */}
-            <Tabs
-                aria-label="Schedule Stages"
-                items={scheduleStages}
-                variant="underlined" // 改为下划线风格更简洁
-                color="primary"
-                className="w-full" // 确保外层占满
-                classNames={{
-                    // 核心修改在这里：
-                    tabList: [
-                        "gap-6 relative rounded-none p-0 border-b border-divider", // 基础样式
-                        "w-full overflow-x-auto scrollbar-hide",                 // 滚动逻辑
-                        "flex justify-start px-6",                               // 手机端：靠左 + 左右留空隙
-                        "md:justify-center md:px-0"                              // 电脑端：居中 + 去除多余空隙
-                    ].join(" "),
-
-                    cursor: "w-full bg-primary",
-                    tab: "max-w-fit px-0 h-12",
-                    tabContent: "text-default-600 group-data-[selected=true]:text-primary group-data-[selected=true]:font-bold text-lg",
-                    panel: "w-full py-4",
-                }}
-                defaultSelectedKey={searchParams.get('stage') || tabs.at(-1)?.stage_name}
-                onSelectionChange={(key) => router.replace(`?stage=${key}`)}
-            >
-                {(schedule_stage) => (
-                    <Tab key={schedule_stage.stage_name} title={schedule_stage.stage_name}>
-                        <div className="w-full max-w-5xl mx-auto">
-                            {schedule_stage.is_lobby ?
-                                <GroupComp schedule={schedule_stage} tournament_name={tournament_name}
-                                           tournamentPlayers={tournamentPlayers} setSchedule={setScheduleStages}/> :
-                                <TeamComp schedule={schedule_stage} tournament_name={tournament_name}
-                                          tournament_players={tournamentPlayers} setSchedule={setScheduleStages}/>
-                            }
-                        </div>
-                    </Tab>
-                )}
-            </Tabs>
+            <div className="w-full border-b border-zinc-200 dark:border-white/[0.08]">
+                <div className="mx-auto flex max-w-5xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
+                    {scheduleStages.map((stage) => {
+                        const active = stage.stage_name === selectedScheduleStage?.stage_name;
+                        return (
+                            <button
+                                key={stage.stage_name}
+                                type="button"
+                                className={`relative h-12 shrink-0 rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
+                                onClick={() => handleStageChange(stage.stage_name)}
+                            >
+                                {stage.stage_name}
+                                {active && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"/>}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+            {selectedScheduleStage && (
+                <div className="w-full max-w-5xl mx-auto py-4">
+                    {selectedScheduleStage.is_lobby ?
+                        <GroupComp schedule={selectedScheduleStage} tournament_name={tournament_name}
+                                   tournamentPlayers={tournamentPlayers} setSchedule={setScheduleStages}/> :
+                        <TeamComp schedule={selectedScheduleStage} tournament_name={tournament_name}
+                                  tournament_players={tournamentPlayers} setSchedule={setScheduleStages}/>
+                    }
+                </div>
+            )}
         </div>
     )
 }
@@ -102,7 +246,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
         // 添加: border border-transparent (预留边框位置防止跳动)
         // 添加: hover:border-primary/50 (鼠标移上去变蓝)
         // 调整: transition-all duration-300 (平滑过渡)
-        base: "group-[.is-splitted]:px-0 group-[.is-splitted]:bg-content1 group-[.is-splitted]:shadow-sm hover:group-[.is-splitted]:bg-content2 border border-default-100/50 hover:border-primary/50 transition-all duration-300 my-2",
+        base: "group-[.is-splitted]:px-0 group-[.is-splitted]:bg-surface group-[.is-splitted]:shadow-sm hover:group-[.is-splitted]:bg-surface-secondary border border-default-100/50 hover:border-primary/50 transition-all duration-300 my-2",
         title: "text-default-500",
         trigger: "py-1", // 稍微减小内边距让整体紧凑一点
         content: "pt-0 pb-4 px-4",
@@ -208,7 +352,7 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                     <Image
                         radius="md"
                         alt={match_info.team1.name}
-                        className="w-10 h-10 md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-content2"
+                        className="w-10 h-10 md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
                         src={match_info.team1.avatar_url || "https://a.ppy.sh"}
                     />
                 </div>
@@ -231,7 +375,7 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                     <Image
                         radius="md"
                         alt={match_info.team2.name}
-                        className="w-10 h-10 md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-content2"
+                        className="w-10 h-10 md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
                         src={match_info.team2.avatar_url || "https://a.ppy.sh"}
                     />
                     {/* PC端名字 (保持不变) */}
@@ -351,7 +495,7 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                  return (
                     <Card
     key={lobby.lobby_name}
-    className="border border-default-200/50 bg-content1/50 hover:bg-content1 hover:border-primary/50 transition-all duration-300"
+    className="border border-default-200/50 bg-surface/50 hover:bg-surface hover:border-primary/50 transition-all duration-300"
 >
                         <CardHeader className="flex justify-between items-center py-3 px-4">
                             <h3 className="font-bold text-lg">{lobby.lobby_name}</h3>
@@ -722,12 +866,11 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
     const [previewLoading, setPreviewLoading] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentUser = useContext(CurrentUserContext);
+    const invalidMapId = map_id === "" || isNaN(parseInt(map_id));
 
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
-        if (map_id === "" || isNaN(parseInt(map_id))) {
-            setPreview(null);
-            setPreviewError(null);
+        if (invalidMapId) {
             return;
         }
         debounceRef.current = setTimeout(async () => {
@@ -748,7 +891,7 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
                 setPreviewLoading(false);
             }
         }, 600);
-    }, [map_id]);
+    }, [invalidMapId, map_id]);
 
     if (!uid.includes(currentUser?.currentUser?.uid) || new Date(start_time) < new Date()) {
         return null
@@ -763,7 +906,7 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
                     label="更换热手图"
                     description="注意：请输入单个难度的 Beatmap ID，而非谱面集 Beatmapset ID"
                     value={map_id}
-                    onChange={(e) => setMapId(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMapId(e.target.value)}
                     className="flex-grow"
                 />
                 <Button size="sm" color="primary" className="mt-5" onPress={async () => {
@@ -789,13 +932,13 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
                     提交
                 </Button>
             </div>
-            {previewLoading && (
+            {!invalidMapId && previewLoading && (
                 <div className="text-xs text-default-400 px-1">正在查询地图信息…</div>
             )}
-            {previewError && (
+            {!invalidMapId && previewError && (
                 <div className="text-xs text-danger px-1">{previewError}</div>
             )}
-            {preview && <MapComp map={preview} />}
+            {!invalidMapId && preview && <MapComp map={preview} />}
         </div>
     )
 }

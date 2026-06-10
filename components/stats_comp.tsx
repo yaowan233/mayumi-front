@@ -1,28 +1,19 @@
 "use client"
 
-import {Tab, Tabs} from "@heroui/tabs";
-import {
-    getKeyValue,
-    SortDescriptor,
-    Table,
-    TableBody,
-    TableCell,
-    TableColumn,
-    TableHeader,
-    TableRow
-} from "@heroui/table";
-import {Card, CardBody, CardHeader} from "@heroui/card";
-import {Link} from "@heroui/link";
-import {Image} from "@heroui/image";
+import {Avatar, Card, Chip, Spinner, Tabs} from "@heroui/react";
 import React, {useEffect, useMemo, useState} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
 import {useRouter, useSearchParams} from "next/navigation";
-import {Chip} from "@heroui/chip";
 import {Player} from "@/app/tournaments/[tournament]/participants/page";
 import {siteConfig} from "@/config/site";
-import {Spinner} from "@heroui/spinner";
-import {User} from "@heroui/user";
+
+type SortDescriptor = {
+    column: React.Key;
+    direction: "ascending" | "descending";
+};
+
+const getKeyValue = (item: any, key: React.Key) => item?.[key as keyof typeof item];
 
 // --- 常量与辅助函数 ---
 
@@ -43,16 +34,16 @@ const getModColor = (mod: string) => {
     // 提取 Mod 前缀 (比如 RC1 -> RC)
     const key = mod.replace(/[0-9]/g, '').trim().toUpperCase();
 
-    const map: Record<string, { color: "default" | "primary" | "secondary" | "success" | "warning" | "danger", hex: string }> = {
-        "RC": { color: "primary", hex: "#006FEE" },   // Blue (Rice)
-        "SV": { color: "secondary", hex: "#9353d3" }, // Purple (Long Note)
+    const map: Record<string, { color: "default" | "accent" | "success" | "warning" | "danger", hex: string }> = {
+        "RC": { color: "accent", hex: "#006FEE" },   // Blue (Rice)
+        "SV": { color: "accent", hex: "#9353d3" }, // Purple (Long Note)
         "HB": { color: "warning", hex: "#f5a524" },   // Orange/Gold (Hybrid)
         "LN": { color: "success", hex: "#17c964" },   // Green (Slider Velocity)
         "TB": { color: "danger", hex: "#f31260" },    // Red (Tiebreaker)
         "NM": { color: "default", hex: "#a1a1aa" },
         "HD": { color: "warning", hex: "#f5a524" },
-        "HR": { color: "primary", hex: "#006FEE" },
-        "DT": { color: "secondary", hex: "#9353d3" },
+        "HR": { color: "accent", hex: "#006FEE" },
+        "DT": { color: "accent", hex: "#9353d3" },
         "FM": { color: "success", hex: "#17c964" },
     };
 
@@ -84,26 +75,23 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
             {/* 1. Tabs 区域 */}
             <div className="w-full">
                 <Tabs
-                    aria-label="Round Selection"
-                    // 修复关键：移除了 max-w-4xl，改为 w-full
                     className="w-full"
-                    size="lg"
-                    variant="underlined"
-                    color="primary"
-                    classNames={{
-                        // 这里的 border-b 会跟随上面的 className="w-full" 撑满整个屏幕
-                        tabList: "w-full relative rounded-none p-0 border-b border-divider overflow-x-auto scrollbar-hide flex justify-start md:justify-center",
-                        cursor: "w-full bg-primary",
-                        tab: "max-w-fit px-6 h-12",
-                        tabContent: "group-data-[selected=true]:text-primary group-data-[selected=true]:font-bold text-lg",
-                        panel: "pt-6 w-full"
-                    }}
                     selectedKey={currentStageName}
-                    onSelectionChange={(key) => router.replace(`?stage=${key}`)}
+                    onSelectionChange={(key) => router.replace(`?stage=${encodeURIComponent(String(key))}`)}
                 >
-                    {roundInfo.map((round) => (
-                        <Tab key={round.stage_name} title={round.stage_name} />
-                    ))}
+                    <Tabs.ListContainer className="w-full">
+                        <Tabs.List
+                            aria-label="Round Selection"
+                            className="w-full relative !rounded-none !bg-transparent p-0 border-b border-divider overflow-x-auto scrollbar-hide flex justify-start md:justify-center"
+                        >
+                            {roundInfo.map((round) => (
+                                <Tabs.Tab key={round.stage_name} id={round.stage_name} className="max-w-fit h-12 !rounded-none !bg-transparent px-6 text-lg font-bold text-default-500 transition-colors hover:text-foreground data-[selected=true]:text-primary">
+                                    {round.stage_name}
+                                    <Tabs.Indicator className="!top-auto !bottom-0 !h-0.5 !rounded-none !bg-primary" />
+                                </Tabs.Tab>
+                            ))}
+                        </Tabs.List>
+                    </Tabs.ListContainer>
                 </Tabs>
             </div>
 
@@ -255,60 +243,66 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
         return "";
     };
 
-    if (loading) return <div className="w-full h-40 flex justify-center items-center"><Spinner label="加载排行榜..." /></div>;
+    if (loading) return (
+        <div className="flex h-40 w-full flex-col items-center justify-center gap-3 text-default-500">
+            <Spinner />
+            <span>加载排行榜...</span>
+        </div>
+    );
     if (leaderboard.length === 0) return <div className="text-default-400 p-4">暂无排行数据</div>;
 
     return (
-        <Table
-            aria-label="Leaderboard"
-            sortDescriptor={sortDescriptor}
-            onSortChange={handleSortChange}
-            classNames={{
-                wrapper: "min-h-[200px] shadow-sm border border-white/5 bg-content1 overflow-x-auto",
-                th: "bg-default-100 text-default-600 font-bold uppercase text-xs whitespace-nowrap hover:text-default-900 cursor-pointer",
-                td: "whitespace-nowrap"
-            }}
-            isStriped
-        >
-            <TableHeader columns={columns.map(c => ({uid: c, name: c}))}>
-                {(column) => (
-                    <TableColumn
-                        key={column.uid}
-                        className="uppercase"
-                        allowsSorting={column.uid !== '#'}
-                    >
-                        {column.name}
-                    </TableColumn>
-                )}
-            </TableHeader>
-            <TableBody items={sortedItems.map((item, idx) => ({ ...item, virtual_rank: idx + 1, key: idx }))}>
-                {(item) => (
-                    <TableRow key={item.key}>
-                        {(columnKey) => {
-                            const keyStr = columnKey.toString();
-                            const rawVal = getKeyValue(item, columnKey);
-                            const displayVal = rawVal ?? '-';
-                            const style = getCellStyle(keyStr, rawVal);
-                            if (keyStr === '#') {
+        <div className="min-h-[200px] overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
+            <table className="w-full border-collapse text-sm">
+                <thead>
+                <tr>
+                    {columns.map((column) => {
+                        const sortable = column !== "#";
+                        const isSorted = sortDescriptor.column === column;
+                        return (
+                            <th
+                                key={column}
+                                scope="col"
+                                className={`whitespace-nowrap bg-default-100 px-4 py-3 text-left text-xs font-bold uppercase text-default-600 ${sortable ? "cursor-pointer hover:text-default-900" : ""}`}
+                                onClick={() => {
+                                    if (!sortable) return;
+                                    handleSortChange({
+                                        column,
+                                        direction: isSorted && sortDescriptor.direction === "ascending" ? "descending" : "ascending",
+                                    });
+                                }}
+                            >
+                                <span className="inline-flex items-center gap-1">
+                                    {column}
+                                    {isSorted && <span>{sortDescriptor.direction === "ascending" ? "↑" : "↓"}</span>}
+                                </span>
+                            </th>
+                        );
+                    })}
+                </tr>
+                </thead>
+                <tbody>
+                {sortedItems.map((item, idx) => {
+                    const row = {...item, virtual_rank: idx + 1};
+                    return (
+                        <tr key={idx} className="odd:bg-zinc-50/60 dark:odd:bg-white/[0.025]">
+                            {columns.map((columnKey) => {
+                                const keyStr = columnKey.toString();
+                                const rawVal = getKeyValue(row, columnKey);
+                                const displayVal = rawVal ?? "-";
+                                const style = getCellStyle(keyStr, rawVal);
                                 return (
-                                    <TableCell>
-                                        <span className={style}>
-                                            {item.virtual_rank}
-                                        </span>
-                                    </TableCell>
+                                    <td key={keyStr} className="whitespace-nowrap px-4 py-3">
+                                        <span className={style}>{keyStr === "#" ? row.virtual_rank : displayVal}</span>
+                                    </td>
                                 );
-                            }
-
-                            return (
-                                <TableCell>
-                                    <span className={style}>{displayVal}</span>
-                                </TableCell>
-                            );
-                        }}
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
+                            })}
+                        </tr>
+                    );
+                })}
+                </tbody>
+            </table>
+        </div>
     );
 };
 // --- 子组件 2: 统计表格 ---
@@ -316,28 +310,43 @@ const StatsTable = ({ stats, stageName }: { stats: Stats[], stageName: string })
     const currentStats = useMemo(() => stats.filter(s => s.stage_name === stageName), [stats, stageName]);
 
     return (
-        <Table aria-label="Map Stats">
-            <TableHeader columns={STATS_COLUMNS}>
-                {(column) => <TableColumn key={column.key}>{column.name}</TableColumn>}
-            </TableHeader>
-            <TableBody items={currentStats} emptyContent={"暂无统计数据"}>
-                {(item) => (
-                    <TableRow key={item.mod_name}>
-                        {(columnKey) => {
-                            const val = getKeyValue(item, columnKey);
-                            if (['acc_max', 'acc_min', 'acc_avg'].includes(columnKey as string)) {
-                                return <TableCell>{val ? (val * 100).toFixed(2) + "%" : '-'}</TableCell>;
+        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
+            <table className="w-full border-collapse text-sm" aria-label="Map Stats">
+                <thead>
+                <tr>
+                    {STATS_COLUMNS.map((column) => (
+                        <th key={column.key} scope="col" className="whitespace-nowrap bg-default-100 px-4 py-3 text-left text-xs font-bold uppercase text-default-600">
+                            {column.name}
+                        </th>
+                    ))}
+                </tr>
+                </thead>
+                <tbody>
+                {currentStats.length === 0 ? (
+                    <tr>
+                        <td colSpan={STATS_COLUMNS.length} className="px-4 py-8 text-center text-default-400">暂无统计数据</td>
+                    </tr>
+                ) : currentStats.map((item) => (
+                    <tr key={item.mod_name} className="border-t border-zinc-200/70 dark:border-white/[0.06]">
+                        {STATS_COLUMNS.map((column) => {
+                            const val = getKeyValue(item, column.key);
+                            if (["acc_max", "acc_min", "acc_avg"].includes(column.key)) {
+                                return <td key={column.key} className="whitespace-nowrap px-4 py-3">{val ? (val * 100).toFixed(2) + "%" : "-"}</td>;
                             }
-                            // 给 Mod 列加个高亮
-                            if (columnKey === 'mod_name') {
-                                return <TableCell><Chip size="sm" color={getModColor(val).color} variant="flat">{val}</Chip></TableCell>
+                            if (column.key === "mod_name") {
+                                return (
+                                    <td key={column.key} className="whitespace-nowrap px-4 py-3">
+                                        <Chip size="sm" color={getModColor(val).color} variant="soft">{val}</Chip>
+                                    </td>
+                                );
                             }
-                            return <TableCell>{val ?? '-'}</TableCell>;
-                        }}
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
+                            return <td key={column.key} className="whitespace-nowrap px-4 py-3">{val ?? "-"}</td>;
+                        })}
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+        </div>
     );
 };
 
@@ -388,25 +397,27 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
     const isContainMods = useMemo(() => {
         return mapScores.some(score => (score.mod ?? []).some(m => m !== 'NF' && m !== map.mod));
     }, [mapScores, map.mod]);
+    const scoreGridClass = isContainMods
+        ? "grid-cols-[40px_minmax(0,1fr)_64px_120px]"
+        : "grid-cols-[40px_minmax(0,1fr)_120px]";
 
     return (
         <Card
-            className="h-[500px] flex flex-col border border-default-200 dark:border-white/5 bg-white dark:bg-zinc-900 shadow-lg"
+            className="flex h-[500px] flex-col overflow-hidden border border-zinc-200 bg-white !p-0 shadow-lg dark:border-white/5 dark:bg-zinc-900"
         >
             {/* 1. 地图头部信息 */}
-            <CardHeader className="p-0 relative h-[140px] shrink-0 overflow-hidden z-0">
-                <Image
-                    removeWrapper
+            <Card.Header className="relative h-[140px] shrink-0 overflow-hidden z-0 !p-0">
+                <img
                     src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
                     alt="bg"
-                    className="w-full h-full object-cover opacity-90 dark:opacity-60 z-0"
+                    className="absolute inset-0 z-0 h-full w-full object-cover opacity-90 dark:opacity-60"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
 
                 <div className="absolute inset-0 z-20 p-4 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
-                        <Chip color={modColor.color} variant="solid" size="sm" className="font-bold shadow-md text-white">
+                        <Chip color={modColor.color} variant="primary" size="sm" className="font-bold shadow-md text-white">
                             {map.mod} {map.index + 1}
                         </Chip>
                         <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-xs text-yellow-400 font-bold border border-white/20">
@@ -415,9 +426,9 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                     </div>
 
                     <div>
-                        <Link isExternal href={`https://osu.ppy.sh/b/${map.map_id}`} className="text-white font-bold line-clamp-1 hover:text-primary transition-colors text-lg">
+                        <a href={`https://osu.ppy.sh/b/${map.map_id}`} target="_blank" rel="noopener noreferrer" className="text-white font-bold line-clamp-1 hover:text-primary transition-colors text-lg">
                             {map.map_name}
-                        </Link>
+                        </a>
                         <div className="flex justify-between text-xs text-gray-300 mt-1">
                             <span>{map.diff_name}</span>
                             <span>by {map.mapper}</span>
@@ -426,15 +437,15 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                 </div>
 
                 {/* 侧边装饰条 */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 z-20 bg-${modColor.color === 'default' ? 'zinc-500' : modColor}`} />
-            </CardHeader>
+                <div className="absolute left-0 top-0 bottom-0 w-1 z-20" style={{backgroundColor: modColor.hex}} />
+            </Card.Header>
 
             {/* 2. 成绩列表区域 */}
-            <CardBody className="p-0 overflow-y-auto scrollbar-hide bg-content1/50 dark:bg-transparent">
+            <Card.Content className="map-score-scroll min-h-0 flex-1 overflow-y-auto !p-0 bg-zinc-50/70 dark:bg-transparent">
                 {mapScores.length > 0 ? (
                     <div className="flex flex-col">
                         {/* 表头 */}
-                        <div className="grid grid-cols-[40px_1fr_auto_auto] gap-2 p-3 text-xs font-bold text-default-500 bg-default-100 dark:bg-content2 sticky top-0 z-30 border-b border-divider">
+                        <div className={`grid ${scoreGridClass} sticky top-0 z-30 gap-2 border-b border-zinc-200 bg-zinc-100 p-3 text-xs font-bold text-zinc-500 dark:border-white/[0.08] dark:bg-zinc-800`}>
                             <div className="text-center">#</div>
                             <div>Player</div>
                             {isContainMods && <div className="text-center">Mods</div>}
@@ -445,23 +456,20 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                         {mapScores.map((score, idx) => {
                             const player = players?.find(p => p.uid.toString() === score.player);
                             return (
-                                <div key={idx} className="grid grid-cols-[40px_1fr_auto_auto] gap-2 p-3 border-b border-divider/50 hover:bg-default-100 dark:hover:bg-white/5 transition-colors items-center text-sm">
-                                    <div className={`text-center font-bold ${idx < 3 ? 'text-primary' : 'text-default-400'}`}>
+                                <div key={idx} className={`grid ${scoreGridClass} items-center gap-2 border-b border-zinc-200/70 p-3 text-sm transition-colors last:border-b-0 hover:bg-zinc-100 dark:border-white/[0.06] dark:hover:bg-white/5`}>
+                                    <div className={`text-center font-bold ${idx < 3 ? 'text-primary' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                         {idx + 1}
                                     </div>
                                     <div className="min-w-0">
-                                        <User
-                                            name={player?.name || score.player}
-                                            avatarProps={{
-                                                src: `https://a.ppy.sh/${player?.uid}` || "https://a.ppy.sh",
-                                                size: "sm",
-                                                className: "hidden sm:flex"
-                                            }}
-                                            classNames={{
-                                                // 修复 4: 名字颜色使用默认的前景色
-                                                name: "truncate font-medium text-small text-foreground",
-                                            }}
-                                        />
+                                        <div className="flex min-w-0 items-center gap-2">
+                                            <Avatar size="sm" className="hidden sm:flex">
+                                                <Avatar.Image src={`https://a.ppy.sh/${player?.uid ?? ""}`} alt={player?.name || score.player}/>
+                                                <Avatar.Fallback>{(player?.name || score.player)?.[0] ?? "?"}</Avatar.Fallback>
+                                            </Avatar>
+                                            <span className="truncate text-small font-medium text-zinc-900 dark:text-zinc-100">
+                                                {player?.name || score.player}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {isContainMods && (
@@ -472,8 +480,8 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
 
                                     <div className="text-right pr-2">
                                         {/* 修复 5: 分数颜色 */}
-                                        <div className="font-mono font-bold text-foreground">{score.score.toLocaleString()}</div>
-                                        <div className={`text-xs ${score.acc === 1 ? 'text-success' : 'text-default-400'}`}>
+                                        <div className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{score.score.toLocaleString()}</div>
+                                        <div className={`text-xs ${score.acc === 1 ? 'text-emerald-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
                                             {(score.acc * 100).toFixed(2)}%
                                         </div>
                                     </div>
@@ -486,7 +494,19 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                         <p>暂无成绩数据</p>
                     </div>
                 )}
-            </CardBody>
+            </Card.Content>
+            <style jsx>{`
+                :global(.map-score-scroll) {
+                    scrollbar-width: none;
+                    -ms-overflow-style: none;
+                }
+
+                :global(.map-score-scroll::-webkit-scrollbar) {
+                    width: 0;
+                    height: 0;
+                    display: none;
+                }
+            `}</style>
         </Card>
     )
 }

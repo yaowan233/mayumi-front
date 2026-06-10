@@ -1,5 +1,4 @@
-import {Card, CardBody} from "@heroui/card";
-import {Divider} from "@heroui/divider";
+import {Card} from "@heroui/react";
 import {siteConfig} from "@/config/site";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -32,8 +31,8 @@ export default async function TournamentRulesPage(props: { params: Promise<{ tou
                 </div>
             </div>
 
-            <Card className="bg-transparent shadow-none border-none">
-                <CardBody className="p-0">
+            <Card variant="transparent" className="border-none bg-transparent shadow-none">
+                <Card.Content className="p-0">
                     {info.data ? (
                         <div className="px-2 sm:px-4 py-4">
                             {/*
@@ -83,7 +82,7 @@ export default async function TournamentRulesPage(props: { params: Promise<{ tou
                             <p>暂无比赛规则 (No rules available yet)</p>
                         </div>
                     )}
-                </CardBody>
+                </Card.Content>
             </Card>
         </div>
     )

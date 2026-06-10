@@ -1,33 +1,11 @@
 "use client";
 
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { TournamentRoundInfo } from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
-import { Button } from "@heroui/button";
+import {Button, Card, Chip, Spinner, Tabs} from "@heroui/react";
 import { siteConfig } from "@/config/site";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Tab, Tabs } from "@heroui/tabs";
-import { Spinner } from "@heroui/spinner";
-import { Select, SelectItem } from "@heroui/select";
-import { Link } from "@heroui/link";
-import {
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    useDisclosure
-} from "@heroui/modal";
-import { Input } from "@heroui/input";
-import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableColumn,
-    TableRow,
-    TableCell
-} from "@heroui/table";
-import { Chip } from "@heroui/chip";
+import Link from "next/link";
 
 // --- 图标 ---
 const DataIcon = () => (
@@ -110,9 +88,8 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
     // Score Management State
     const [allScores, setAllScores] = useState<TournamentScore[]>([]); // Cache all scores
-    const [displayScores, setDisplayScores] = useState<TournamentScore[]>([]); // Filtered scores for current round
     const [isScoresLoading, setIsScoresLoading] = useState(false);
-    const { isOpen, onOpen, onOpenChange } = useDisclosure();
+    const [isAddScoreOpen, setIsAddScoreOpen] = useState(false);
     const [newScore, setNewScore] = useState<Partial<TournamentScore>>({
         mod: [],
         acc: 100,
@@ -162,18 +139,17 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
     // Initial fetch of scores
     useEffect(() => {
-        fetchAllScores();
+        const timer = window.setTimeout(() => {
+            void fetchAllScores();
+        }, 0);
+
+        return () => window.clearTimeout(timer);
     }, [fetchAllScores]);
 
-    // Filter scores when selectedRound or allScores changes
-    useEffect(() => {
-        if (!selectedRound) {
-            setDisplayScores([]);
-            return;
-        }
-        const filtered = allScores.filter(s => s.stage_name === selectedRound);
-        setDisplayScores(filtered);
-    }, [selectedRound, allScores]);
+    const displayScores = useMemo(
+        () => selectedRound ? allScores.filter((score) => score.stage_name === selectedRound) : [],
+        [allScores, selectedRound]
+    );
 
 
     const handleUpdateStats = async () => {
@@ -260,7 +236,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
     };
 
     if (isLoading) {
-        return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg" color="primary" />
+        return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg" color="accent" />
         </div>;
     }
 
@@ -286,26 +262,25 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                 <div className="flex flex-col gap-6">
                     {/* 1. Round Tabs */}
                     <Tabs
-                        aria-label="Rounds"
-                        items={roundInfo}
                         selectedKey={selectedRound ?? undefined}
                         onSelectionChange={(key) => setSelectedRound(key as string)}
-                        variant="underlined"
-                        color="primary"
-                        classNames={{
-                            tabList: "gap-6 w-full relative rounded-none p-0 border-b border-default-200 dark:border-white/10",
-                            cursor: "w-full bg-primary",
-                            tab: "max-w-fit px-0 h-12",
-                            tabContent: "group-data-[selected=true]:text-primary font-bold text-lg"
-                        }}
                     >
-                        {(item) => <Tab key={item.stage_name} title={item.stage_name} />}
+                        <Tabs.ListContainer className="w-full">
+                            <Tabs.List aria-label="Rounds" className="w-full relative !rounded-none !bg-transparent p-0 border-b border-default-200 overflow-x-auto scrollbar-hide flex justify-start dark:border-white/10">
+                                {roundInfo.map((item) => (
+                                    <Tabs.Tab key={item.stage_name} id={item.stage_name} className="max-w-fit h-12 !rounded-none !bg-transparent px-6 text-lg font-bold text-default-500 transition-colors hover:text-foreground data-[selected=true]:text-primary">
+                                        {item.stage_name}
+                                        <Tabs.Indicator className="!top-auto !bottom-0 !h-0.5 !rounded-none !bg-primary" />
+                                    </Tabs.Tab>
+                                ))}
+                            </Tabs.List>
+                        </Tabs.ListContainer>
                     </Tabs>
 
                     {/* 2. Action Card: Fetch Metadata */}
                     <Card
-                        className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 shadow-sm">
-                        <CardHeader className="flex gap-3 px-6 pt-6 pb-2">
+                        className="border border-default-200 dark:border-white/5 bg-surface dark:bg-zinc-900 shadow-sm">
+                        <Card.Header className="flex gap-3 px-6 pt-6 pb-2">
                             <div className="p-2 bg-primary/10 rounded-lg text-primary">
                                 <RefreshIcon />
                             </div>
@@ -313,9 +288,9 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                 <h3 className="text-lg font-bold text-foreground">更新 {selectedRound} 数据</h3>
                                 <p className="text-sm text-default-500">从 Bancho 同步最新成绩</p>
                             </div>
-                        </CardHeader>
+                        </Card.Header>
 
-                        <CardBody className="px-6 py-4 gap-6">
+                        <Card.Content className="px-6 py-4 gap-6">
                             <div
                                 className="flex items-start gap-3 p-4 rounded-xl bg-default-100 dark:bg-white/5 text-default-600 text-sm leading-relaxed border border-default-200 dark:border-white/5">
                                 <div className="text-lg mt-0.5 text-primary"><InfoIcon /></div>
@@ -332,12 +307,10 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
                             <div className="flex flex-col sm:flex-row gap-4 items-center pt-2">
                                 <Button
-                                    color="primary"
                                     size="lg"
-                                    variant="shadow"
+                                    variant="primary"
                                     className="font-bold w-full sm:w-auto px-8"
-                                    startContent={!isUpdating && <RefreshIcon />}
-                                    isLoading={isUpdating}
+                                    isPending={isUpdating}
                                     onPress={handleUpdateStats}
                                 >
                                     {isUpdating ? "正在计算数据..." : "立即更新数据"}
@@ -349,12 +322,12 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                     </span>
                                 )}
                             </div>
-                        </CardBody>
+                        </Card.Content>
                     </Card>
 
                     {/* 3. Score Management Card */}
-                    <Card className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 shadow-sm">
-                        <CardHeader className="flex justify-between items-center px-6 pt-6 pb-2">
+                    <Card className="border border-default-200 dark:border-white/5 bg-surface dark:bg-zinc-900 shadow-sm">
+                        <Card.Header className="flex justify-between items-center px-6 pt-6 pb-2">
                             <div className="flex gap-3 items-center">
                                 <div className="p-2 bg-secondary/10 rounded-lg text-secondary">
                                     <EditIcon />
@@ -365,159 +338,121 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                 </div>
                             </div>
                             <Button
-                                onPress={onOpen}
-                                color="secondary"
-                                variant="flat"
-                                startContent={<PlusIcon />}
+                                onPress={() => setIsAddScoreOpen(true)}
+                                variant="secondary"
                                 className="font-bold"
                             >
                                 添加成绩
                             </Button>
-                        </CardHeader>
+                        </Card.Header>
 
-                        <CardBody className="px-6 py-4">
-                            <Table
-                                aria-label="Score List"
-                                classNames={{
-                                    wrapper: "shadow-sm border border-default-200 dark:border-white/5 bg-content1",
-                                    th: "bg-default-100 text-default-600 font-bold uppercase text-xs",
-                                    td: "whitespace-nowrap"
-                                }}
-                            >
-                                <TableHeader>
-                                    <TableColumn>MAP ID</TableColumn>
-                                    <TableColumn>PLAYER (UID)</TableColumn>
-                                    <TableColumn>SCORE</TableColumn>
-                                    <TableColumn>ACC</TableColumn>
-                                    <TableColumn>COMBO</TableColumn>
-                                    <TableColumn>MISS</TableColumn>
-                                    <TableColumn>MODS</TableColumn>
-                                    <TableColumn>ACTIONS</TableColumn>
-                                </TableHeader>
-                                <TableBody
-                                    items={displayScores}
-                                    emptyContent={isScoresLoading ? <Spinner /> : "暂无成绩数据"}
-                                    isLoading={isScoresLoading}
-                                >
-                                    {(item) => (
-                                        <TableRow key={`${item.map_id}-${item.player}-${item.start_time}`}>
-                                            <TableCell className="font-mono">{item.map_id}</TableCell>
-                                            <TableCell>{item.player}</TableCell>
-                                            <TableCell>{item.score.toLocaleString()}</TableCell>
-                                            <TableCell>{(item.acc * 100).toFixed(2)}%</TableCell>
-                                            <TableCell>{item.max_combo}</TableCell>
-                                            <TableCell>{item.miss}</TableCell>
-                                            <TableCell>
+                        <Card.Content className="px-6 py-4">
+                            <div className="overflow-x-auto rounded-lg border border-default-200 bg-surface shadow-sm dark:border-white/5">
+                                <table className="w-full border-collapse text-sm" aria-label="Score List">
+                                    <thead>
+                                    <tr>
+                                        {['MAP ID', 'PLAYER (UID)', 'SCORE', 'ACC', 'COMBO', 'MISS', 'MODS', 'ACTIONS'].map((column) => (
+                                            <th key={column} scope="col" className="whitespace-nowrap bg-default-100 px-4 py-3 text-left text-xs font-bold uppercase text-default-600">
+                                                {column}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {isScoresLoading ? (
+                                        <tr>
+                                            <td colSpan={8} className="px-4 py-10 text-center text-default-500">
+                                                <span className="inline-flex items-center gap-2"><Spinner size="sm"/> 加载中...</span>
+                                            </td>
+                                        </tr>
+                                    ) : displayScores.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={8} className="px-4 py-10 text-center text-default-400">暂无成绩数据</td>
+                                        </tr>
+                                    ) : displayScores.map((item) => (
+                                        <tr key={`${item.map_id}-${item.player}-${item.start_time}`} className="border-t border-zinc-200/70 transition-colors hover:bg-zinc-50 dark:border-white/[0.06] dark:hover:bg-white/[0.04]">
+                                            <td className="whitespace-nowrap px-4 py-3 font-mono">{item.map_id}</td>
+                                            <td className="whitespace-nowrap px-4 py-3">{item.player}</td>
+                                            <td className="whitespace-nowrap px-4 py-3">{item.score.toLocaleString()}</td>
+                                            <td className="whitespace-nowrap px-4 py-3">{(item.acc * 100).toFixed(2)}%</td>
+                                            <td className="whitespace-nowrap px-4 py-3">{item.max_combo}</td>
+                                            <td className="whitespace-nowrap px-4 py-3">{item.miss}</td>
+                                            <td className="px-4 py-3">
                                                 <div className="flex gap-1">
-                                                    {Array.isArray(item.mod) && item.mod.map((m, i) => (
-                                                        <Chip key={i} size="sm" variant="flat">{m}</Chip>
+                                                    {Array.isArray(item.mod) && item.mod.map((m: string, i: number) => (
+                                                        <Chip key={i} size="sm" variant="soft">{m}</Chip>
                                                     ))}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    isIconOnly
-                                                    size="sm"
-                                                    color="danger"
-                                                    variant="light"
-                                                    onPress={() => handleDeleteScore(item)}
-                                                >
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <Button isIconOnly size="sm" variant="danger-soft" onPress={() => handleDeleteScore(item)}>
                                                     <TrashIcon />
                                                 </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardBody>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </Card.Content>
                     </Card>
 
                     {/* Add Score Modal */}
-                    <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center">
-                        <ModalContent>
-                            {(onClose) => (
-                                <>
-                                    <ModalHeader className="flex flex-col gap-1">添加新成绩</ModalHeader>
-                                    <ModalBody>
-                                        <Input
-                                            autoFocus
-                                            label="Map ID"
-                                            placeholder="e.g. 123456"
-                                            variant="bordered"
-                                            type="number"
-                                            value={newScore.map_id?.toString() || ''}
-                                            onValueChange={(v) => setNewScore({ ...newScore, map_id: parseInt(v) })}
-                                        />
-                                        <Input
-                                            label="Player UID"
-                                            placeholder="e.g. 12345"
-                                            variant="bordered"
-                                            value={newScore.player || ''}
-                                            onValueChange={(v) => setNewScore({ ...newScore, player: v })}
-                                        />
-                                        <div className="flex gap-2">
-                                            <Input
-                                                label="Score"
-                                                type="number"
-                                                variant="bordered"
-                                                value={newScore.score?.toString() || ''}
-                                                onValueChange={(v) => setNewScore({ ...newScore, score: parseInt(v) })}
-                                            />
-                                            <Input
-                                                label="Acc (%)"
-                                                type="number"
-                                                variant="bordered"
-                                                placeholder="99.5"
-                                                value={newScore.acc?.toString() || ''}
-                                                onValueChange={(v) => setNewScore({ ...newScore, acc: parseFloat(v) })}
-                                            />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                label="Max Combo"
-                                                type="number"
-                                                variant="bordered"
-                                                value={newScore.max_combo?.toString() || ''}
-                                                onValueChange={(v) => setNewScore({ ...newScore, max_combo: parseInt(v) })}
-                                            />
-                                            <Input
-                                                label="Miss"
-                                                type="number"
-                                                variant="bordered"
-                                                value={newScore.miss?.toString() || ''}
-                                                onValueChange={(v) => setNewScore({ ...newScore, miss: parseInt(v) })}
-                                            />
-                                        </div>
-                                        <Select
-                                            label="Mods"
-                                            placeholder="Select mods"
-                                            variant="bordered"
-                                            selectionMode="multiple"
-                                            selectedKeys={new Set(newScore.mod)}
-                                            onSelectionChange={(keys) => {
-                                                const selectedMods = Array.from(keys).map(k => k.toString());
-                                                setNewScore({ ...newScore, mod: selectedMods });
-                                            }}
-                                        >
+                    {isAddScoreOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 backdrop-blur-sm" onClick={() => setIsAddScoreOpen(false)}>
+                            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-zinc-200 bg-white shadow-2xl dark:border-white/10 dark:bg-zinc-900" onClick={(event) => event.stopPropagation()}>
+                                <div className="border-b border-zinc-200 px-5 py-4 dark:border-white/[0.08]">
+                                    <h2 className="text-lg font-bold text-foreground">添加新成绩</h2>
+                                </div>
+                                <div className="grid gap-4 px-5 py-4">
+                                    <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                        Map ID
+                                        <input autoFocus className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" placeholder="e.g. 123456" type="number" value={newScore.map_id?.toString() || ''} onChange={(event) => setNewScore({ ...newScore, map_id: parseInt(event.target.value) })}/>
+                                    </label>
+                                    <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                        Player UID
+                                        <input className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" placeholder="e.g. 12345" value={newScore.player || ''} onChange={(event) => setNewScore({ ...newScore, player: event.target.value })}/>
+                                    </label>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                            Score
+                                            <input className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" type="number" value={newScore.score?.toString() || ''} onChange={(event) => setNewScore({ ...newScore, score: parseInt(event.target.value) })}/>
+                                        </label>
+                                        <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                            Acc (%)
+                                            <input className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" type="number" placeholder="99.5" value={newScore.acc?.toString() || ''} onChange={(event) => setNewScore({ ...newScore, acc: parseFloat(event.target.value) })}/>
+                                        </label>
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                            Max Combo
+                                            <input className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" type="number" value={newScore.max_combo?.toString() || ''} onChange={(event) => setNewScore({ ...newScore, max_combo: parseInt(event.target.value) })}/>
+                                        </label>
+                                        <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                            Miss
+                                            <input className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" type="number" value={newScore.miss?.toString() || ''} onChange={(event) => setNewScore({ ...newScore, miss: parseInt(event.target.value) })}/>
+                                        </label>
+                                    </div>
+                                    <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                        Mods
+                                        <select multiple className="min-h-32 rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" value={newScore.mod || []} onChange={(event) => setNewScore({ ...newScore, mod: Array.from(event.currentTarget.selectedOptions).map((option) => option.value) })}>
                                             {AVAILABLE_MODS.map((mod) => (
-                                                <SelectItem key={mod.value}>
-                                                    {mod.value}
-                                                </SelectItem>
+                                                <option key={mod.value} value={mod.value}>{mod.value}</option>
                                             ))}
-                                        </Select>
-                                    </ModalBody>
-                                    <ModalFooter>
-                                        <Button color="danger" variant="light" onPress={onClose}>
-                                            取消
-                                        </Button>
-                                        <Button color="primary" onPress={() => handleAddScore(onClose)} isLoading={isSavingScore}>
-                                            添加
-                                        </Button>
-                                    </ModalFooter>
-                                </>
-                            )}
-                        </ModalContent>
-                    </Modal>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div className="flex justify-end gap-2 border-t border-zinc-200 px-5 py-4 dark:border-white/[0.08]">
+                                    <Button variant="danger-soft" onPress={() => setIsAddScoreOpen(false)}>
+                                        取消
+                                    </Button>
+                                    <Button variant="primary" onPress={() => handleAddScore(() => setIsAddScoreOpen(false))} isPending={isSavingScore}>
+                                        {({isPending}) => isPending ? "添加中..." : "添加"}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                 </div>
             ) : (
@@ -525,10 +460,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                 <div
                     className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-default-200 dark:border-white/10 rounded-xl">
                     <p className="text-default-500">暂无轮次信息，请先前往“轮次管理”添加。</p>
-                    <Button as={Link} href={`/tournament-management/${tournament_name}/round`} color="primary"
-                        className="mt-4" variant="flat">
-                        去添加轮次
-                    </Button>
+                    <Link href={`/tournament-management/${tournament_name}/round`} className="mt-4 no-underline"><Button variant="primary">去添加轮次</Button></Link>
                 </div>
             )}
         </div>

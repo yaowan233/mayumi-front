@@ -1,6 +1,50 @@
 @import "tailwindcss";
+@import "@heroui/styles";
 
 @config "../tailwind.config.js";
+
+@theme {
+    --color-primary: var(--accent);
+    --color-secondary: var(--accent);
+}
+
+:root {
+    --background: #f4f4f5;
+    --foreground: #18181b;
+    --color-background: #f4f4f5;
+    --color-foreground: #18181b;
+}
+
+.dark {
+    --background: #000000;
+    --foreground: #ffffff;
+    --color-background: #000000;
+    --color-foreground: #ffffff;
+}
+
+html.dark,
+html.dark body {
+    background: #000000;
+}
+
+html,
+body {
+    background: var(--background);
+    color: var(--foreground);
+}
+
+html {
+    font-size: 15px;
+}
+
+@keyframes nav-loading {
+    0% {
+        transform: translateX(-120%);
+    }
+    100% {
+        transform: translateX(340%);
+    }
+}
 
 .text-stroke {
     text-shadow: -1px -1px 0 black,

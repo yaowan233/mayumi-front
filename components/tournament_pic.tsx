@@ -1,9 +1,7 @@
-'use client'
-import { Link } from "@heroui/link";
-import { Image } from "@heroui/image";
-import { Card, CardFooter } from "@heroui/card";
-import { Chip } from "@heroui/chip";
+"use client";
+
 import NextImage from "next/image";
+import NextLink from "next/link";
 
 export interface Tournament {
     name: string;
@@ -16,51 +14,47 @@ export interface Tournament {
     status: string;
 }
 
-const getModeColor = (mode: string) => {
+const modeClassName = (mode: string) => {
     switch (mode.toLowerCase()) {
-        case 'mania': return "primary";
-        case 'osu': return "secondary";
-        case 'taiko': return "danger";
-        case 'fruits': return "success";
-        case 'all': return "warning";
-        default: return "default";
+        case "mania":
+            return "bg-primary text-white shadow-primary/30";
+        case "osu":
+            return "bg-fuchsia-500 text-white shadow-fuchsia-500/30";
+        case "taiko":
+            return "bg-red-500 text-white shadow-red-500/30";
+        case "fruits":
+            return "bg-emerald-500 text-emerald-950 shadow-emerald-500/30";
+        case "all":
+            return "bg-amber-400 text-amber-950 shadow-amber-400/30";
+        default:
+            return "bg-zinc-600 text-white shadow-zinc-600/30";
     }
 };
 
-export const TournamentComponent = ({ tournament, priority = false }: { tournament: Tournament; priority?: boolean }) => {
-    let tournament_href = "/tournaments/" + tournament.abbreviation + "/home";
-    const modeColor = getModeColor(tournament.mode || "");
-
+export const TournamentComponent = ({tournament, priority = false}: { tournament: Tournament; priority?: boolean }) => {
+    const tournamentHref = `/tournaments/${tournament.abbreviation}/home`;
     const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
     const imgSrc = tournament.pic_url || fallbackImage;
 
     return (
-        <Card
-            as={Link}
-            href={tournament_href}
-            isPressable
-            className="group relative w-full aspect-video border-none overflow-hidden bg-zinc-900 shadow-lg"
+        <NextLink
+            href={tournamentHref}
+            className="group relative block aspect-video w-full overflow-hidden rounded-xl border border-transparent bg-zinc-100 shadow-sm shadow-zinc-200/70 outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/80 dark:shadow-xl dark:shadow-black/35"
         >
-            {tournament.status && tournament.status !== 'approved' && (
-                 <div className="absolute top-3 left-3 z-20">
-                     <Chip color="warning" variant="solid" size="sm">
-                         {tournament.status === 'pending' ? '审核中' : '已驳回'}
-                     </Chip>
-                 </div>
+            {tournament.status && tournament.status !== "approved" && (
+                <span className="absolute left-3 top-3 z-30 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black uppercase text-amber-950 shadow-lg shadow-amber-400/30">
+                    {tournament.status === "pending" ? "审核中" : "已驳回"}
+                </span>
             )}
-            <Chip
-                color={modeColor}
-                variant="shadow"
-                size="sm"
-                className="absolute z-30 top-3 right-3 font-bold uppercase border border-white/20"
+            <span
+                className={`absolute right-3 top-3 z-30 inline-flex items-center justify-center rounded-full border border-white/15 px-2.5 py-1 text-center text-[11px] font-medium uppercase leading-none tracking-wide shadow-md backdrop-blur-sm ${modeClassName(tournament.mode || "")}`}
             >
                 {tournament.mode}
-            </Chip>
+            </span>
 
-            {/* Layer 1: 氛围背景层 */}
             <div className="absolute inset-0 z-0">
                 <NextImage
-                    className="object-cover blur-2xl opacity-50 scale-125 saturate-200"
+                    className="object-cover opacity-50 blur-2xl saturate-200"
                     src={imgSrc}
                     alt=""
                     fill
@@ -68,10 +62,9 @@ export const TournamentComponent = ({ tournament, priority = false }: { tourname
                 />
             </div>
 
-            {/* Layer 2: 核心展示层 */}
             <div className="absolute inset-0 z-10">
                 <NextImage
-                    className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-105"
+                    className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-[1.06]"
                     src={imgSrc}
                     alt={tournament.name}
                     fill
@@ -80,19 +73,16 @@ export const TournamentComponent = ({ tournament, priority = false }: { tourname
                 />
             </div>
 
-            <div className="absolute inset-x-0 bottom-0 z-20 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-2/3 bg-gradient-to-t from-black/95 via-black/55 to-transparent"/>
 
-            <CardFooter className="absolute z-20 bottom-0 flex flex-col items-start justify-end w-full pb-3 px-4 gap-1">
-                <h4 className="text-white font-bold text-lg leading-tight line-clamp-1 drop-shadow-md group-hover:text-primary transition-colors">
+            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-start gap-1 px-4 pb-3">
+                <h4 className="line-clamp-1 text-lg font-bold leading-tight text-white drop-shadow-md transition-colors group-hover:text-primary">
                     {tournament.name}
                 </h4>
-
-                <div className="overflow-hidden transition-all duration-300 max-h-[40px] group-hover:max-h-[80px]">
-                    <p className="text-tiny text-gray-300 font-normal line-clamp-2 leading-relaxed">
-                        {tournament.description || "暂无详细描述..."}
-                    </p>
-                </div>
-            </CardFooter>
-        </Card>
+                <p className="line-clamp-2 text-[11px] font-normal leading-snug text-zinc-300">
+                    {tournament.description || "暂无详细描述..."}
+                </p>
+            </div>
+        </NextLink>
     );
 };
