@@ -1,4 +1,4 @@
-﻿"use client"
+"use client";
 
 import {Button, Spinner} from "@heroui/react";
 import {HomePage, TournamentInfo} from "@/components/homepage";
