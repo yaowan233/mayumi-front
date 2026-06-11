@@ -1,10 +1,27 @@
-"use client"
+﻿"use client"
 
-import {createContext, ReactNode, useCallback, useContext, useEffect, useState} from "react";
+import {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import NextImage from "next/image";
+import {
+    Alert,
+    Avatar,
+    Button,
+    Card,
+    Checkbox,
+    CheckboxGroup,
+    Chip,
+    Input,
+    Modal,
+    Radio,
+    RadioGroup,
+    Separator,
+    Spinner,
+    TextArea,
+    Tooltip,
+} from "@heroui/react";
 
 const colorClass: Record<string, string> = {
     primary: "bg-primary/15 text-primary",
@@ -25,208 +42,12 @@ const useDisclosure = () => {
     };
 };
 
-const Alert = ({title, description, color = "default", className = ""}: any) => (
-    <div className={`rounded-xl border border-zinc-200 px-4 py-3 text-sm dark:border-white/[0.08] ${colorClass[color] || colorClass.default} ${className}`}>
-        {title && <div className="font-bold">{title}</div>}
-        {description && <div className="mt-1 text-xs opacity-80">{description}</div>}
-    </div>
-);
-
-const hasPaddingClass = (className: string) => /\b!?p[trblxy]?-[^\s]+/.test(className);
-
-const Card = ({children, className = ""}: any) => (
-    <div className={`relative overflow-hidden rounded-xl border border-zinc-200 bg-white text-zinc-900 shadow-sm dark:border-white/10 dark:bg-zinc-900/80 dark:text-zinc-100 ${className}`}>{children}</div>
-);
-const CardHeader = ({children, className = ""}: any) => <div className={`${hasPaddingClass(className) ? "" : "p-4"} ${className}`}>{children}</div>;
-const CardBody = ({children, className = ""}: any) => <div className={`${hasPaddingClass(className) ? "" : "p-4"} ${className}`}>{children}</div>;
-const CardFooter = ({children, className = ""}: any) => <div className={`${hasPaddingClass(className) ? "" : "p-4"} ${className}`}>{children}</div>;
-const Divider = ({className = ""}: any) => <div className={`h-px bg-white/[0.08] ${className}`}/>;
-
-const Link = ({children, href, isExternal, className = "", ...props}: any) => (
-    <a {...props} href={href} target={isExternal ? "_blank" : props.target} rel={isExternal ? "noreferrer" : props.rel} className={className}>{children}</a>
-);
-
-const Button = ({children, href, as, isExternal, onPress, onClick, isDisabled, disabled, className = "", color = "default", variant, size, startContent, endContent, isLoading, ...props}: any) => {
-    const classes = `inline-flex items-center justify-center gap-2 rounded-xl px-4 ${size === "lg" ? "py-3 text-base" : "py-2 text-sm"} font-bold transition-all duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100 ${color === "primary" || color === "secondary" ? "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90" : colorClass[color] || colorClass.default} ${variant === "light" ? "bg-transparent shadow-none hover:bg-white/[0.06]" : ""} ${className}`;
-    if (href || as) {
-        return <a {...props} href={href} target={isExternal ? "_blank" : props.target} rel={isExternal ? "noreferrer" : props.rel} className={classes} onClick={onPress || onClick}>{startContent}{children}{endContent}</a>;
-    }
-    return <button {...props} type={props.type || "button"} disabled={disabled || isDisabled || isLoading} className={classes} onClick={onPress || onClick}>{startContent}{children}{endContent}</button>;
-};
-
-const Field = ({as: Component = "input", label, description, value, onValueChange, onChange, placeholder, className = "", ...props}: any) => (
-    <label className={`flex flex-col gap-1 text-sm ${className}`}>
-        {label && <span className="font-bold text-zinc-700 dark:text-zinc-300">{label}</span>}
-        <Component
-            {...props}
-            value={value}
-            placeholder={placeholder}
-            className="min-h-10 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-400 focus:border-primary dark:border-white/[0.08] dark:bg-black dark:text-zinc-100 dark:placeholder:text-zinc-600"
-            onChange={(event: any) => {
-                onValueChange?.(event.target.value);
-                onChange?.(event);
-            }}
-        />
-        {description && <span className="text-xs text-zinc-500 dark:text-zinc-400">{description}</span>}
-    </label>
-);
-const Input = (props: any) => <Field {...props}/>;
-const Textarea = (props: any) => <Field {...props} as="textarea"/>;
-
-const RadioGroup = ({children, label, value, onValueChange, onChange, className = ""}: any) => (
-    <div className={`flex flex-col gap-2 ${className}`}>
-        {label && <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{label}</span>}
-        <div className="flex flex-wrap gap-3">
-            {Array.isArray(children) ? children.map((child: any) => ({...child, props: {...child.props, checked: child.props.value === value, onChange: () => {
-                onValueChange?.(child.props.value);
-                onChange?.({target: {value: child.props.value}});
-            }}})) : children}
-        </div>
-    </div>
-);
-const Radio = ({children, value, checked, onChange}: any) => (
-    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
-        <input type="radio" value={value} checked={checked} onChange={onChange} className="accent-primary"/>
-        {children}
-    </label>
-);
-const CheckboxGroup = ({children, label, value = [], onValueChange, className = ""}: any) => (
-    <div className={`flex flex-col gap-2 ${className}`}>
-        {label && <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{label}</span>}
-        <div className="flex flex-wrap gap-3">
-            {Array.isArray(children) ? children.map((child: any) => {
-                const checked = value.includes(child.props.value);
-                return {...child, props: {...child.props, checked, onChange: () => onValueChange?.(checked ? value.filter((item: string) => item !== child.props.value) : [...value, child.props.value])}};
-            }) : children}
-        </div>
-    </div>
-);
-const Checkbox = ({children, value, checked, onChange}: any) => (
-    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
-        <input type="checkbox" value={value} checked={checked} onChange={onChange} className="accent-primary"/>
-        {children}
-    </label>
-);
-
-const TooltipRoot = ({children, className = ""}: any) => <span className={`group relative inline-flex ${className}`}>{children}</span>;
-const TooltipTrigger = ({children, className = ""}: any) => <span className={`inline-flex ${className}`}>{children}</span>;
-const TooltipContent = ({children, color = "default", className = ""}: any) => (
-    <span role="tooltip" className={`pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium shadow-lg group-hover:block group-focus-within:block ${colorClass[color] || colorClass.default} ${className}`}>
-        {children}
-    </span>
-);
-const Tooltip = Object.assign(TooltipRoot, {
-    Trigger: TooltipTrigger,
-    Content: TooltipContent,
-});
-const Image = ({as: Component, className = "", src, alt = "", removeWrapper, radius, isZoomed, shadow, fallbackSrc, fill, priority, sizes, quality, ...props}: any) => {
-    if (Component) {
-        return (
-            <Component
-                {...props}
-                src={src}
-                alt={alt}
-                className={className}
-                fill={fill}
-                priority={priority}
-                sizes={sizes}
-                quality={quality}
-            />
-        );
-    }
-
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} src={src} alt={alt} className={className}/>;
-};
-const Avatar = ({src, name, className = ""}: any) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={name || ""} className={`h-8 w-8 rounded-full object-cover ${className}`}/>
-);
-const Chip = ({children, color = "default", className = "", startContent, avatar}: any) => (
-    <span className={`inline-flex min-h-6 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${colorClass[color] || colorClass.default} ${className}`}>
-        {startContent}
-        {avatar}
-        {children}
-    </span>
-);
-const Snippet = ({children, codeString}: any) => (
-    <button type="button" className="rounded-lg bg-emerald-500/15 px-2 py-1 text-sm font-bold text-emerald-300 transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50" onClick={() => navigator.clipboard.writeText(codeString || String(children))}>
-        {children}
-    </button>
-);
-
-const ModalContext = createContext({onClose: () => {}});
-type ModalRenderProps = { close: () => void };
-const getModalPlacementClass = (placement?: string) => {
-    if (placement === "top-center" || placement === "top") return "items-start pt-16";
-    if (placement === "bottom") return "items-end pb-8";
-    return "items-center";
-};
-const getModalWidthClass = (size?: string) => {
-    if (size === "5xl") return "max-w-5xl";
-    if (size === "4xl") return "max-w-4xl";
-    if (size === "3xl") return "max-w-3xl";
-    if (size === "2xl") return "max-w-2xl";
-    if (size === "xl") return "max-w-xl";
-    return "max-w-lg";
-};
-const ModalRoot = ({isOpen, onOpenChange, children}: any) => {
-    if (!isOpen) return null;
-    return (
-        <ModalContext.Provider value={{onClose: () => onOpenChange?.(false)}}>
-            {children}
-        </ModalContext.Provider>
-    );
-};
-const ModalBackdrop = ({children, className = "", variant = "opaque", isDismissable = true}: any) => {
-    const {onClose} = useContext(ModalContext);
-
-    return (
-        <div className={`fixed inset-0 z-[100] flex justify-center bg-zinc-950/40 p-4 dark:bg-black/70 ${variant === "blur" ? "backdrop-blur-sm" : ""} ${className}`} onMouseDown={isDismissable ? onClose : undefined}>
-            {children}
-        </div>
-    );
-};
-const ModalContainer = ({children, className = "", placement = "center", size = "2xl", scroll = "inside"}: any) => (
-    <div className={`flex w-full justify-center ${getModalPlacementClass(placement)} ${className}`}>
-        <div className={`w-full ${getModalWidthClass(size)} ${scroll === "inside" ? "max-h-[90vh]" : ""}`}>{children}</div>
-    </div>
-);
-const ModalDialog = ({children, className = ""}: { children?: ReactNode | ((props: ModalRenderProps) => ReactNode); className?: string }) => {
-    const {onClose} = useContext(ModalContext);
-
-    return (
-        <div className={`overflow-y-auto rounded-2xl border border-zinc-200 bg-white text-zinc-900 shadow-2xl dark:border-white/[0.08] dark:bg-zinc-950 dark:text-zinc-100 ${className}`} onMouseDown={(event) => event.stopPropagation()}>
-            {typeof children === "function" ? children({close: onClose}) : children}
-        </div>
-    );
-};
-const ModalHeader = ({children, className = ""}: any) => <div className={`border-b border-zinc-200 p-5 dark:border-white/[0.08] ${className}`}>{children}</div>;
-const ModalHeading = ({children, className = ""}: any) => <div className={`font-black ${className}`}>{children}</div>;
-const ModalBody = ({children, className = ""}: any) => <div className={`p-5 ${className}`}>{children}</div>;
-const ModalFooter = ({children, className = ""}: any) => <div className={`flex justify-end gap-3 border-t border-zinc-200 p-5 dark:border-white/[0.08] ${className}`}>{children}</div>;
-type ModalComponent = typeof ModalRoot & {
-    Backdrop: typeof ModalBackdrop;
-    Container: typeof ModalContainer;
-    Dialog: typeof ModalDialog;
-    Header: typeof ModalHeader;
-    Heading: typeof ModalHeading;
-    Body: typeof ModalBody;
-    Footer: typeof ModalFooter;
-};
-
-const Modal: ModalComponent = Object.assign(ModalRoot, {
-    Backdrop: ModalBackdrop,
-    Container: ModalContainer,
-    Dialog: ModalDialog,
-    Header: ModalHeader,
-    Heading: ModalHeading,
-    Body: ModalBody,
-    Footer: ModalFooter,
-});
-const ModalContent = ({children}: { children: ReactNode | ((onClose: () => void) => ReactNode) }) => {
-    const {onClose} = useContext(ModalContext);
-    return <ModalDialog>{typeof children === "function" ? ({close}: {close: () => void}) => children(close) : children}</ModalDialog>;
+const alertToneClass: Record<string, string> = {
+    warning: "border-l-amber-400 bg-amber-50/80 text-amber-800 dark:bg-amber-400/[0.08] dark:text-amber-100",
+    danger: "border-l-red-400 bg-red-50/80 text-red-800 dark:bg-red-400/[0.08] dark:text-red-100",
+    success: "border-l-emerald-400 bg-emerald-50/80 text-emerald-800 dark:bg-emerald-400/[0.08] dark:text-emerald-100",
+    accent: "border-l-primary bg-primary/10 text-primary dark:bg-primary/[0.10] dark:text-primary-foreground",
+    default: "border-l-zinc-300 bg-zinc-100/80 text-zinc-700 dark:border-l-zinc-500 dark:bg-white/[0.06] dark:text-zinc-200",
 };
 
 
@@ -267,8 +88,8 @@ const statusLabelMap: Record<string, string> = {
 export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
     // ... 状态逻辑保持不变 ...
     const currentUser = useContext(CurrentUserContext);
-    const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const {isOpen: isIconOpen, onOpen: onIconOpen, onOpenChange: onIconOpenChange} = useDisclosure();
+    const {isOpen, onOpen, onClose, onOpenChange} = useDisclosure();
+    const {isOpen: isIconOpen, onOpen: onIconOpen, onClose: onIconClose, onOpenChange: onIconOpenChange} = useDisclosure();
     const [errMsg, setErrMsg] = useState('');
     const [teams, setTeams] = useState<Team[]>([]);
     const [iconUrl, setIconUrl] = useState('');
@@ -371,6 +192,20 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         : null;
     const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
     const bgSrc = tournament_info.pic_url || fallbackImage;
+    const iconModalState = {
+        isOpen: isIconOpen,
+        setOpen: onIconOpenChange,
+        open: onIconOpen,
+        close: onIconClose,
+        toggle: () => onIconOpenChange(!isIconOpen),
+    };
+    const staffModalState = {
+        isOpen,
+        setOpen: handleOpenChange,
+        open: handleOpenStaffModal,
+        close: onClose,
+        toggle: () => handleOpenChange(!isOpen),
+    };
     return (
         <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10">
             {tournament_info.status !== 'approved' && (
@@ -384,7 +219,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     <div className="flex flex-wrap items-center gap-3">
                         <Chip
                             color={statusColorMap[tournament_info.status]}
-                            variant="solid"
+                            variant="primary"
                             className="text-white font-bold border-none"
                             size="sm"
                         >
@@ -414,12 +249,10 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 </div>
             )}
 
-            <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-white group border border-zinc-200 dark:bg-[#161b24] dark:border-white/15 dark:shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+            <div className="relative w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-50 shadow-[0_16px_38px_rgba(15,23,42,0.08)] group dark:border-white/[0.10] dark:bg-zinc-950 dark:shadow-[0_18px_45px_rgba(0,0,0,0.34)]">
 
                 <div className="absolute inset-0 z-0">
-                    <Image
-                        as={NextImage}
-                        removeWrapper
+                    <NextImage
                         src={bgSrc}
                         alt=""
                         fill
@@ -428,14 +261,12 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         quality={10}
                     />
                     {/* 黑色遮罩，增强文字对比度 */}
-                    <div className="absolute inset-0 bg-white/10 dark:bg-black/20" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-zinc-50/20 dark:bg-none dark:bg-black/20" />
                 </div>
 
                 {/* --- 主体层 --- */}
                 <div className="relative z-10 w-full aspect-video md:aspect-[21/9] flex items-center justify-center">
-                    <Image
-                        as={NextImage}
-                        removeWrapper
+                    <NextImage
                         src={bgSrc}
                         alt={tournament_info.name}
                         width={1200}
@@ -452,28 +283,28 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     p-5 md:p-8
 
                     /* === 手机端样式 === */
-                    bg-white border-t border-zinc-200 dark:bg-[#131821]/95 dark:border-white/10  /* 纯色背景，有顶部分割线 */
+                    bg-zinc-50/95 border-t border-zinc-200/70 dark:bg-zinc-950/95 dark:border-white/10  /* 纯色背景，有顶部分割线 */
 
                     /* === 电脑端样式 (覆盖手机端) === */
                     md:border-t-0                        /* 移除分割线 */
-                    md:bg-transparent md:bg-gradient-to-t md:from-white/95 md:via-white/70 md:to-transparent md:dark:bg-transparent md:dark:from-black/95 md:dark:via-black/70 md:dark:to-transparent /* 渐变背景 */
-                    md:absolute md:bottom-0 md:left-0 md:right-0 /* 绝对定位到底部 */
+                    md:bg-zinc-50/95 md:dark:bg-zinc-950/95
                     md:flex-row md:items-end             /* 左右布局，底部对齐 */
                 ">
 
                     {/* 左侧：标题与信息 */}
                     <div className="flex flex-col gap-2 w-full md:w-auto flex-1 min-w-0">
                         {/* 标题 */}
-                        <h1 className="text-xl md:text-4xl font-black text-zinc-950 tracking-tight leading-tight drop-shadow-md dark:text-white">
+                        <h1 className="text-xl md:text-3xl font-extrabold text-slate-700 tracking-tight leading-tight dark:text-white">
                             {tournament_info.name}
                         </h1>
 
                         {/* 标签组 */}
                         <div className="flex flex-wrap gap-2 items-center mt-1">
-                            <Chip color="primary" size="sm" variant="shadow" className="uppercase md:text-md">
+                            <Chip color="accent" size="sm" variant="primary" className="uppercase shadow-sm md:text-md">
                                 {tournament_info.mode}
                             </Chip>
-                            <Chip startContent={<CalendarIcon/>} size="sm" variant="flat" className="text-zinc-700 bg-zinc-100 border border-zinc-200 md:bg-white/70 md:backdrop-blur-md dark:text-zinc-300 dark:bg-white/5 dark:border-white/10 dark:md:text-white/90 dark:md:bg-white/10">
+                            <Chip size="sm" variant="soft" className="border border-zinc-200/70 bg-white/75 text-zinc-600 shadow-sm backdrop-blur-md dark:text-zinc-300 dark:bg-white/5 dark:border-white/10 dark:md:text-white/90 dark:md:bg-white/10">
+                                <CalendarIcon/>
                                 {formatDate(tournament_info.start_date)} - {formatDate(tournament_info.end_date)}
                             </Chip>
                         </div>
@@ -483,33 +314,31 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     {/* 手机端 Grid (两列)，电脑端 Flex */}
                     <div className="grid grid-cols-2 gap-3 w-full md:w-auto md:flex md:flex-wrap shrink-0 mt-2 md:mt-0">
                         {tournament_info.links.map((link) => (
-                            <Button
+                            <a
                                 key={link.name}
-                                as={Link}
                                 href={link.url}
-                                isExternal
-                                size="md"
+                                target="_blank"
+                                rel="noreferrer"
                                 className="
-                                    w-full md:w-auto sm:h-10 md:h-11
-                                    border-zinc-200 bg-zinc-100 text-zinc-900
-                                    hover:bg-zinc-200 hover:border-zinc-300
+                                    inline-flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors md:w-auto sm:h-10 md:h-11
+                                    border-zinc-200/80 bg-white/80 text-zinc-900 shadow-sm
+                                    hover:bg-white hover:border-zinc-300
                                     dark:border-white/10 dark:bg-white/5 dark:text-white
                                     dark:hover:bg-white/10 dark:hover:border-white/50
                                     font-medium backdrop-blur-md
                                     md:text-base
                                 "
-                                variant="bordered"
-                                startContent={<LinkIcon />}
                             >
+                                <LinkIcon />
                                 {link.name}
-                            </Button>
+                            </a>
                         ))}
                     </div>
                 </div>
             </div>
 
-            <Card className="border border-zinc-200 bg-white shadow-xl dark:border-white/15 dark:bg-[#181f2b] dark:shadow-[0_18px_45px_rgba(0,0,0,0.42)]">
-                <CardBody className="p-0">
+            <Card className="overflow-hidden border border-zinc-200/80 bg-white/95 shadow-[0_14px_34px_rgba(15,23,42,0.07)] dark:border-white/[0.06] dark:bg-zinc-900/70 dark:shadow-[0_14px_34px_rgba(0,0,0,0.24)]">
+                <Card.Content className="p-0">
                     <section className="px-6 py-6 md:px-8 md:py-7">
                         <div className="flex items-center justify-between gap-3">
                             <h2 className="font-bold text-lg">Staff 报名</h2>
@@ -519,18 +348,26 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         </div>
                         <div className="mt-5">
                             {hasRegistrationEnded ? (
-                                <Alert color="warning" title="该比赛报名已结束" />
+                                <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>该比赛报名已结束</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
                             ) : currentUser?.currentUser ? (
-                                <Button onPress={handleOpenStaffModal} color="secondary" variant="shadow" className="font-bold w-full sm:w-auto" size="lg">
+                                <Button onPress={handleOpenStaffModal} variant="primary" className="font-bold w-full sm:w-auto" size="lg">
                                     立即报名 Staff
                                 </Button>
                             ) : (
-                                <Alert color="warning" title="请登录后进行 Staff 报名" />
+                                <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>请登录后进行 Staff 报名</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
                             )}
                         </div>
                     </section>
 
-                    <Divider className="bg-zinc-200 dark:bg-white/10" />
+                    <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
 
                     <section className="px-6 py-6 md:px-8 md:py-7">
                         <h2 className="font-bold text-lg">赛程</h2>
@@ -539,7 +376,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         </div>
                     </section>
 
-                    <Divider className="bg-zinc-200 dark:bg-white/10" />
+                    <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
 
                     <section className="px-6 py-6 md:px-8 md:py-7">
                         <h2 className="font-bold text-lg">奖金</h2>
@@ -548,18 +385,18 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         </div>
                     </section>
 
-                    <Divider className="bg-zinc-200 dark:bg-white/10" />
+                    <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
 
                     <section className="px-6 py-6 md:px-8 md:py-7">
                         <h2 className="font-bold text-lg">选手报名</h2>
 
                         <div className="mt-4 flex flex-col gap-4">
                             {(tournament_info.rank_max || tournament_info.rank_min) && (
-                                <Alert
-                                    color="primary"
-                                    variant="faded"
-                                    title={`排名限制：${tournament_info.rank_min || 0} - ${tournament_info.rank_max || "∞"}`}
-                                />
+                                <Alert status="default" className={`${alertToneClass.accent} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>{`排名限制：${tournament_info.rank_min || 0} - ${tournament_info.rank_max || "∞"}`}</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
                             )}
 
                             {tournament_info.registration_info && (
@@ -569,31 +406,47 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                             )}
 
                             {tournament_info.qq_group && isRegistered && (
-                                <div className="flex items-center gap-2 p-3 bg-success/10 rounded-lg border border-success/20">
+                                <div className="flex items-center gap-2 rounded-lg border-l-[3px] border-l-emerald-400 bg-emerald-50/80 p-3 text-emerald-800 dark:bg-emerald-400/[0.08] dark:text-emerald-100">
                                     <span className="text-success font-bold text-sm">QQ群:</span>
-                                    <Snippet symbol="" codeString={tournament_info.qq_group.toString()} color="success" size="sm" variant="flat">
+                                    <button
+                                        type="button"
+                                        className="rounded-lg bg-emerald-500/15 px-2 py-1 text-sm font-bold text-emerald-700 transition-all duration-150 hover:bg-emerald-500/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:text-emerald-200"
+                                        onClick={() => navigator.clipboard.writeText(tournament_info.qq_group!.toString())}
+                                    >
                                         {tournament_info.qq_group.toString()}
-                                    </Snippet>
+                                    </button>
                                     <span className="text-xs text-success-600">(报名后请务必加群)</span>
                                 </div>
                             )}
 
                             <div className="mt-2">
                                 {hasRegistrationEnded ? (
-                                    <Alert color="warning" title="该比赛报名已结束" />
+                                    <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>该比赛报名已结束</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
                                 ) : !currentUser?.currentUser ? (
-                                    <Alert color="warning" variant="faded" title="请点击右上角登录后进行赛事报名" />
+                                    <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>请点击右上角登录后进行赛事报名</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
                                 ) : (
                                     <div className="flex flex-col gap-3">
                                         {regNotAvailable ? (
-                                            <Alert color="danger" title="您不符合报名条件" description={`当前排名 #${userRank} 不在限制范围内`} />
+                                            <Alert status="danger" className={`${alertToneClass.danger} rounded-lg border-l-[3px] px-4 py-3`}>
+                                                <Alert.Content>
+                                                    <Alert.Title>您不符合报名条件</Alert.Title>
+                                                    <Alert.Description>{`当前排名 #${userRank} 不在限制范围内`}</Alert.Description>
+                                                </Alert.Content>
+                                            </Alert>
                                         ) : (
                                             <div className="flex flex-col sm:flex-row gap-4 justify-start">
                                                 <Tooltip>
                                                     <Tooltip.Trigger>
                                                         <Button
-                                                            color="primary"
-                                                            variant="shadow"
+                                                            variant="primary"
                                                             size="lg"
                                                             className="font-bold w-full sm:w-auto"
                                                             isDisabled={regNotAvailable || isRegistered}
@@ -613,8 +466,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
                                                 {isRegistered && (
                                                     <Button
-                                                        color="danger"
-                                                        variant="ghost"
+                                                        variant="danger-soft"
                                                         size="lg"
                                                         className="w-full sm:w-auto"
                                                         onPress={async () => {
@@ -632,33 +484,35 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                         )}
 
                                         {isRegistered && (
-                                            <Alert color="success" variant="flat" title="您已成功报名" />
+                                            <Alert status="success" className={`${alertToneClass.success} rounded-lg border-l-[3px] px-4 py-3`}>
+                                                <Alert.Content>
+                                                    <Alert.Title>您已成功报名</Alert.Title>
+                                                </Alert.Content>
+                                            </Alert>
                                         )}
                                     </div>
                                 )}
                             </div>
                         </div>
                     </section>
-                </CardBody>
+                </Card.Content>
             </Card>
 
 
             {/* 队伍管理 (仅队长可见) */}
             {myTeam && (
-                <Card className="border border-zinc-200 bg-white shadow-md dark:border-white/5 dark:bg-zinc-950">
-                    <CardHeader className="px-6 py-4 bg-zinc-50 dark:bg-white/5 flex justify-between items-center">
+                <Card className="overflow-hidden border border-zinc-200 bg-white shadow-md dark:border-white/[0.10] dark:bg-zinc-900/90 dark:shadow-[0_12px_30px_rgba(0,0,0,0.26)]">
+                    <Card.Header className="flex items-center justify-between bg-zinc-50 px-6 py-4 dark:bg-white/[0.04]">
                         <div className="font-bold text-lg">我的队伍</div>
-                        <Chip size="sm" color="warning" variant="flat">队长</Chip>
-                    </CardHeader>
-                    <CardBody className="px-6 py-4 flex flex-col gap-4">
+                        <Chip size="sm" color="warning" variant="soft">队长</Chip>
+                    </Card.Header>
+                    <Card.Content className="px-6 py-4 flex flex-col gap-4">
                         {/* 队伍基本信息 */}
                         <div className="flex items-center gap-4">
-                            <Avatar
-                                src={myTeam.icon_url}
-                                name={myTeam.name.charAt(0)}
-                                className="w-16 h-16 text-large shrink-0"
-                                isBordered
-                            />
+                            <Avatar className="h-16 w-16 shrink-0 border-2 border-default-200 text-large">
+                                <Avatar.Image src={myTeam.icon_url} alt={myTeam.name}/>
+                                <Avatar.Fallback>{myTeam.name.charAt(0) || "?"}</Avatar.Fallback>
+                            </Avatar>
                             <div className="flex flex-col gap-1 min-w-0">
                                 <span className="font-bold text-lg truncate">{myTeam.name}</span>
                                 <span className="text-sm text-default-400">
@@ -666,12 +520,11 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                 </span>
                             </div>
                             {myTeam.is_verified ? (
-                                <Chip size="sm" color="success" variant="flat" className="ml-auto shrink-0">已审核锁定</Chip>
+                                <Chip size="sm" color="success" variant="soft" className="ml-auto shrink-0">已审核锁定</Chip>
                             ) : (
                                 <Button
                                     className="ml-auto shrink-0"
-                                    color="primary"
-                                    variant="flat"
+                                   
                                     onPress={() => {
                                         setIconUrl(myTeam.icon_url || '');
                                         setTeamName(myTeam.name);
@@ -684,7 +537,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                             )}
                         </div>
 
-                        <Divider />
+                        <Separator />
 
                         {/* 队员列表 */}
                         <div className="flex flex-col gap-3">
@@ -697,10 +550,13 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                             return (
                                                 <Chip
                                                     key={uid}
-                                                    variant="flat"
+                                                    variant="soft"
                                                     color="warning"
-                                                    avatar={<Avatar src={`https://a.ppy.sh/${uid}`} name={p?.name} />}
                                                 >
+                                                    <Avatar className="h-5 w-5">
+                                                        <Avatar.Image src={`https://a.ppy.sh/${uid}`} alt={p?.name || `#${uid}`}/>
+                                                        <Avatar.Fallback>{p?.name?.[0] ?? "?"}</Avatar.Fallback>
+                                                    </Avatar>
                                                     {p?.name || `#${uid}`}
                                                 </Chip>
                                             );
@@ -717,9 +573,12 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                             return (
                                                 <Chip
                                                     key={uid}
-                                                    variant="flat"
-                                                    avatar={<Avatar src={`https://a.ppy.sh/${uid}`} name={p?.name} />}
+                                                    variant="soft"
                                                 >
+                                                    <Avatar className="h-5 w-5">
+                                                        <Avatar.Image src={`https://a.ppy.sh/${uid}`} alt={p?.name || `#${uid}`}/>
+                                                        <Avatar.Fallback>{p?.name?.[0] ?? "?"}</Avatar.Fallback>
+                                                    </Avatar>
                                                     {p?.name || `#${uid}`}
                                                 </Chip>
                                             );
@@ -728,53 +587,50 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                 </div>
                             )}
                         </div>
-                    </CardBody>
+                    </Card.Content>
                 </Card>
             )}
 
             {/* 队伍信息编辑模态框 */}
-            <Modal isOpen={isIconOpen} onOpenChange={onIconOpenChange}>
+            <Modal state={iconModalState}>
                 <Modal.Backdrop variant="blur">
                     <Modal.Container>
                         <Modal.Dialog>
-                            {({close}) => (
-                                <>
-                                    <Modal.Header>
-                                        <Modal.Heading>编辑队伍信息</Modal.Heading>
-                                    </Modal.Header>
-                            <Divider />
+                            <Modal.Header>
+                                <Modal.Heading>编辑队伍信息</Modal.Heading>
+                            </Modal.Header>
+                            <Separator />
                             <Modal.Body className="py-6 flex flex-col gap-4">
                                 <div className="flex justify-center">
-                                    <Avatar
-                                        src={iconUrl || undefined}
-                                        name={teamName.charAt(0)}
-                                        className="w-24 h-24 text-large"
-                                        isBordered
-                                    />
+                                    <Avatar className="h-24 w-24 border-2 border-default-200 text-large">
+                                        <Avatar.Image src={iconUrl || undefined} alt={teamName}/>
+                                        <Avatar.Fallback>{teamName.charAt(0) || "?"}</Avatar.Fallback>
+                                    </Avatar>
                                 </div>
-                                <Input
-                                    label="队伍名称"
-                                    variant="bordered"
-                                    value={teamName}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTeamName(e.target.value)}
-                                />
-                                <Input
-                                    label="头像图片链接 (URL)"
-                                    placeholder="https://..."
-                                    variant="bordered"
-                                    value={iconUrl}
-                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIconUrl(e.target.value)}
-                                    description="请填写图片的直链地址"
-                                />
-                                {iconErrMsg && <Alert color="danger" title={iconErrMsg} />}
+                                <label className="flex flex-col gap-1 text-sm">
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">队伍名称</span>
+                                    <Input value={teamName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTeamName(e.target.value)} />
+                                </label>
+                                <label className="flex flex-col gap-1 text-sm">
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">头像图片链接 (URL)</span>
+                                    <Input placeholder="https://..." value={iconUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIconUrl(e.target.value)} />
+                                    <span className="text-xs text-zinc-500 dark:text-zinc-400">请填写图片的直链地址</span>
+                                </label>
+                                {iconErrMsg && (
+                                    <Alert status="danger" className={`${alertToneClass.danger} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>{iconErrMsg}</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
+                                )}
                             </Modal.Body>
-                            <Divider />
+                            <Separator />
                             <Modal.Footer>
-                                <Button color="danger" variant="light" onPress={close}>取消</Button>
+                                <Button variant="danger-soft" onPress={onIconClose}>取消</Button>
                                 <Button
-                                    color="primary"
+                                    variant="primary"
                                     className="font-bold"
-                                    isLoading={isUpdatingIcon}
+                                    isPending={isUpdatingIcon}
                                     onPress={async () => {
                                         if (!teamName.trim()) {
                                             setIconErrMsg('队伍名称不能为空');
@@ -800,7 +656,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                                         ? {...t, icon_url: iconUrl, name: teamName.trim()}
                                                         : t
                                                 ));
-                                                close();
+                                                onIconClose();
                                                 alert('队伍信息更新成功');
                                             }
                                         } catch {
@@ -813,70 +669,97 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                     保存
                                 </Button>
                             </Modal.Footer>
-                                </>
-                            )}
                         </Modal.Dialog>
                     </Modal.Container>
                 </Modal.Backdrop>
             </Modal>
 
             {/* Staff 模态框保持不变 */}
-             <Modal isOpen={isOpen} onOpenChange={handleOpenChange}>
+             <Modal state={staffModalState}>
                  <Modal.Backdrop variant="blur">
-                    <Modal.Container size="2xl" scroll="inside">
+                    <Modal.Container size="lg" scroll="inside">
                         <Modal.Dialog>
-                            {({close}) => (
-                                <>
-                                    <Modal.Header className="flex flex-col gap-1 text-xl">
-                                        <Modal.Heading>报名 Staff - {tournament_info.abbreviation}</Modal.Heading>
-                                    </Modal.Header>
-                            <Divider />
+                            <Modal.Header className="flex flex-col gap-1 text-xl">
+                                <Modal.Heading>报名 Staff - {tournament_info.abbreviation}</Modal.Heading>
+                            </Modal.Header>
+                            <Separator />
                             <Modal.Body className="py-6 flex flex-col gap-6">
-                                <Alert color="default" variant="flat" title="请务必填写真实有效的信息，以便我们与您联系。" />
+                                <Alert status="default" className={`${alertToneClass.default} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>请务必填写真实有效的信息，以便我们与您联系。</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
 
                                 <div className="flex flex-col gap-4">
-                                    <Input isRequired label="QQ号" placeholder="请输入您的QQ号码" variant="bordered" labelPlacement="outside"
-                                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, qqNumber: e.target.value})}/>
+                                    <label className="flex flex-col gap-1 text-sm">
+                                        <span className="font-bold text-zinc-700 dark:text-zinc-300">QQ号</span>
+                                        <Input required placeholder="请输入您的QQ号码"
+                                               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, qqNumber: e.target.value})}/>
+                                    </label>
 
                                     <div className="flex flex-col gap-2">
-                                        <RadioGroup label="是否第一次担任 Staff？" orientation="horizontal" isRequired className="ml-1"
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, isFirstTimeStaff: (e.target.value !== "")})}>
-                                            <Radio value="1">是</Radio>
-                                            <Radio value="">否</Radio>
+                                        <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">是否第一次担任 Staff？</span>
+                                        <RadioGroup
+                                            orientation="horizontal"
+                                            isRequired
+                                            className="ml-1 flex flex-wrap gap-3"
+                                            onChange={(value: string) => setFormData({...formData, isFirstTimeStaff: (value !== "")})}
+                                        >
+                                            <Radio value="1" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                                                <Radio.Control><Radio.Indicator /></Radio.Control>
+                                                <Radio.Content>是</Radio.Content>
+                                            </Radio>
+                                            <Radio value="" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                                                <Radio.Control><Radio.Indicator /></Radio.Control>
+                                                <Radio.Content>否</Radio.Content>
+                                            </Radio>
                                         </RadioGroup>
                                     </div>
                                 </div>
-                                <Textarea minRows={3} label="赛事经验" placeholder="请简述您参与过的比赛及担任的职位..." variant="bordered" labelPlacement="outside"
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, tournamentExperience: e.target.value})} />
-                                <div>
-                                    <CheckboxGroup label="选择意向职位" isRequired orientation="horizontal" className="gap-4"
-                                        //@ts-ignore
+                                <label className="flex flex-col gap-1 text-sm">
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">赛事经验</span>
+                                    <TextArea rows={3} placeholder="请简述您参与过的比赛及担任的职位..."
+                                              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, tournamentExperience: e.target.value})} />
+                                </label>
+                                <div className="flex flex-col gap-2">
+                                    <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">选择意向职位</span>
+                                    <CheckboxGroup isRequired className="flex flex-wrap gap-4"
                                         onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}>
-                                        {tournament_info.streamer && <Checkbox value="直播">直播</Checkbox>}
-                                        {tournament_info.referee && <Checkbox value="裁判">裁判</Checkbox>}
-                                        {tournament_info.commentator && <Checkbox value="解说">解说</Checkbox>}
-                                        {tournament_info.mappooler && <Checkbox value="选图">选图</Checkbox>}
-                                        {tournament_info.custom_mapper && <Checkbox value="作图">作图</Checkbox>}
-                                        {tournament_info.designer && <Checkbox value="设计">设计</Checkbox>}
-                                        {tournament_info.scheduler && <Checkbox value="赛程安排">赛程安排</Checkbox>}
-                                        {tournament_info.map_tester && <Checkbox value="测图">测图</Checkbox>}
+                                        {tournament_info.streamer && <Checkbox value="直播" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>直播</Checkbox.Content></Checkbox>}
+                                        {tournament_info.referee && <Checkbox value="裁判" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>裁判</Checkbox.Content></Checkbox>}
+                                        {tournament_info.commentator && <Checkbox value="解说" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>解说</Checkbox.Content></Checkbox>}
+                                        {tournament_info.mappooler && <Checkbox value="选图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>选图</Checkbox.Content></Checkbox>}
+                                        {tournament_info.custom_mapper && <Checkbox value="作图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>作图</Checkbox.Content></Checkbox>}
+                                        {tournament_info.designer && <Checkbox value="设计" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>设计</Checkbox.Content></Checkbox>}
+                                        {tournament_info.scheduler && <Checkbox value="赛程安排" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>赛程安排</Checkbox.Content></Checkbox>}
+                                        {tournament_info.map_tester && <Checkbox value="测图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>测图</Checkbox.Content></Checkbox>}
                                     </CheckboxGroup>
                                 </div>
                                 <div className="flex flex-col gap-4">
-                                     <Textarea minRows={2} label="其他说明 (选填)" variant="bordered" labelPlacement="outside" placeholder="例如：擅长Mania 4K/7K，有作图经验等..."
-                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, otherDetails: e.target.value})} />
-                                     <Textarea minRows={2} label="补充信息 (选填)" variant="bordered" labelPlacement="outside"
-                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, additionalComments: e.target.value})} />
+                                     <label className="flex flex-col gap-1 text-sm">
+                                         <span className="font-bold text-zinc-700 dark:text-zinc-300">其他说明 (选填)</span>
+                                         <TextArea rows={2} placeholder="例如：擅长Mania 4K/7K，有作图经验等..."
+                                                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, otherDetails: e.target.value})} />
+                                     </label>
+                                     <label className="flex flex-col gap-1 text-sm">
+                                         <span className="font-bold text-zinc-700 dark:text-zinc-300">补充信息 (选填)</span>
+                                         <TextArea rows={2}
+                                                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, additionalComments: e.target.value})} />
+                                     </label>
                                 </div>
-                                {errMsg && <Alert color="danger" title={errMsg} />}
+                                {errMsg && (
+                                    <Alert status="danger" className={`${alertToneClass.danger} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>{errMsg}</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
+                                )}
                             </Modal.Body>
-                            <Divider />
+                            <Separator />
                             <Modal.Footer>
-                                <Button color="danger" variant="light" onPress={close}>取消</Button>
-                                <Button color="primary" onPress={() => handleRegistration(close)} className="font-bold">提交报名</Button>
+                                <Button variant="danger-soft" onPress={onClose}>取消</Button>
+                                <Button variant="primary" onPress={() => handleRegistration(onClose)} className="font-bold">提交报名</Button>
                             </Modal.Footer>
-                                </>
-                            )}
                         </Modal.Dialog>
                     </Modal.Container>
                 </Modal.Backdrop>
@@ -943,3 +826,4 @@ async function getPlayers(tournament_name: string, revalidate_time: number = 0):
         {next: {revalidate: revalidate_time}})
     return await res.json()
 }
+

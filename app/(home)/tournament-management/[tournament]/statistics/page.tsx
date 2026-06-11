@@ -279,20 +279,20 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
                     {/* 2. Action Card: Fetch Metadata */}
                     <Card
-                        className="border border-default-200 dark:border-white/5 bg-surface dark:bg-zinc-900 shadow-sm">
-                        <Card.Header className="flex gap-3 px-6 pt-6 pb-2">
-                            <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                        className="overflow-hidden rounded-xl border border-default-200 bg-surface shadow-sm dark:border-white/5 dark:bg-zinc-900">
+                        <Card.Header className="!flex-row items-start gap-3 px-6 pb-2 pt-6 text-left">
+                            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
                                 <RefreshIcon />
                             </div>
-                            <div className="flex flex-col">
+                            <div className="flex min-w-0 flex-col">
                                 <h3 className="text-lg font-bold text-foreground">更新 {selectedRound} 数据</h3>
                                 <p className="text-sm text-default-500">从 Bancho 同步最新成绩</p>
                             </div>
                         </Card.Header>
 
-                        <Card.Content className="px-6 py-4 gap-6">
+                        <Card.Content className="gap-6 px-6 py-4">
                             <div
-                                className="flex items-start gap-3 p-4 rounded-xl bg-default-100 dark:bg-white/5 text-default-600 text-sm leading-relaxed border border-default-200 dark:border-white/5">
+                                className="flex items-start gap-3 rounded-lg border border-default-200 bg-default-100/70 p-4 text-sm leading-relaxed text-default-600 dark:border-white/5 dark:bg-white/[0.04]">
                                 <div className="text-lg mt-0.5 text-primary"><InfoIcon /></div>
                                 <div>
                                     <p className="font-bold mb-1">操作说明：</p>
@@ -305,11 +305,11 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                 </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-4 items-center pt-2">
+                            <div className="flex flex-col items-start gap-3 pt-2 sm:flex-row sm:items-center">
                                 <Button
                                     size="lg"
                                     variant="primary"
-                                    className="font-bold w-full sm:w-auto px-8"
+                                    className="w-full px-8 font-bold sm:w-auto"
                                     isPending={isUpdating}
                                     onPress={handleUpdateStats}
                                 >
@@ -326,13 +326,13 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                     </Card>
 
                     {/* 3. Score Management Card */}
-                    <Card className="border border-default-200 dark:border-white/5 bg-surface dark:bg-zinc-900 shadow-sm">
-                        <Card.Header className="flex justify-between items-center px-6 pt-6 pb-2">
-                            <div className="flex gap-3 items-center">
-                                <div className="p-2 bg-secondary/10 rounded-lg text-secondary">
+                    <Card className="overflow-hidden rounded-xl border border-default-200 bg-surface shadow-sm dark:border-white/5 dark:bg-zinc-900">
+                        <Card.Header className="!flex-row items-start justify-between gap-4 px-6 pb-2 pt-6 text-left">
+                            <div className="flex min-w-0 items-start gap-3">
+                                <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/15 bg-primary/10 text-primary">
                                     <EditIcon />
                                 </div>
-                                <div className="flex flex-col">
+                                <div className="flex min-w-0 flex-col">
                                     <h3 className="text-lg font-bold text-foreground">成绩管理</h3>
                                     <p className="text-sm text-default-500">手动添加或删除该轮次的成绩</p>
                                 </div>
@@ -340,19 +340,19 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                             <Button
                                 onPress={() => setIsAddScoreOpen(true)}
                                 variant="secondary"
-                                className="font-bold"
+                                className="shrink-0 font-bold"
                             >
                                 添加成绩
                             </Button>
                         </Card.Header>
 
-                        <Card.Content className="px-6 py-4">
-                            <div className="overflow-x-auto rounded-lg border border-default-200 bg-surface shadow-sm dark:border-white/5">
+                        <Card.Content className="px-6 pb-6 pt-4">
+                            <div className="overflow-x-auto rounded-lg border border-default-200 bg-surface dark:border-white/5">
                                 <table className="w-full border-collapse text-sm" aria-label="Score List">
                                     <thead>
                                     <tr>
                                         {['MAP ID', 'PLAYER (UID)', 'SCORE', 'ACC', 'COMBO', 'MISS', 'MODS', 'ACTIONS'].map((column) => (
-                                            <th key={column} scope="col" className="whitespace-nowrap bg-default-100 px-4 py-3 text-left text-xs font-bold uppercase text-default-600">
+                                            <th key={column} scope="col" className="whitespace-nowrap bg-default-100 px-4 py-3 text-left text-xs font-bold uppercase text-default-600 dark:bg-white/[0.04]">
                                                 {column}
                                             </th>
                                         ))}
@@ -371,12 +371,12 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                         </tr>
                                     ) : displayScores.map((item) => (
                                         <tr key={`${item.map_id}-${item.player}-${item.start_time}`} className="border-t border-zinc-200/70 transition-colors hover:bg-zinc-50 dark:border-white/[0.06] dark:hover:bg-white/[0.04]">
-                                            <td className="whitespace-nowrap px-4 py-3 font-mono">{item.map_id}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{item.player}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{item.score.toLocaleString()}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{(item.acc * 100).toFixed(2)}%</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{item.max_combo}</td>
-                                            <td className="whitespace-nowrap px-4 py-3">{item.miss}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 font-mono text-zinc-800 dark:text-zinc-100">{item.map_id}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-zinc-800 dark:text-zinc-100">{item.player}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 font-semibold text-zinc-900 dark:text-zinc-100">{item.score.toLocaleString()}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-zinc-800 dark:text-zinc-100">{(item.acc * 100).toFixed(2)}%</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-zinc-800 dark:text-zinc-100">{item.max_combo}</td>
+                                            <td className="whitespace-nowrap px-4 py-3 text-zinc-800 dark:text-zinc-100">{item.miss}</td>
                                             <td className="px-4 py-3">
                                                 <div className="flex gap-1">
                                                     {Array.isArray(item.mod) && item.mod.map((m: string, i: number) => (
@@ -433,14 +433,37 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                             <input className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" type="number" value={newScore.miss?.toString() || ''} onChange={(event) => setNewScore({ ...newScore, miss: parseInt(event.target.value) })}/>
                                         </label>
                                     </div>
-                                    <label className="flex flex-col gap-2 text-sm font-semibold text-default-600">
+                                    <div className="flex flex-col gap-2 text-sm font-semibold text-default-600">
                                         Mods
-                                        <select multiple className="min-h-32 rounded-lg border border-zinc-300 bg-white px-3 py-2 font-normal text-zinc-900 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-black/20 dark:text-zinc-100" value={newScore.mod || []} onChange={(event) => setNewScore({ ...newScore, mod: Array.from(event.currentTarget.selectedOptions).map((option) => option.value) })}>
-                                            {AVAILABLE_MODS.map((mod) => (
-                                                <option key={mod.value} value={mod.value}>{mod.value}</option>
-                                            ))}
-                                        </select>
-                                    </label>
+                                        <div className="flex flex-wrap gap-2 rounded-lg border border-zinc-300 bg-white p-3 dark:border-white/10 dark:bg-black/20">
+                                            {AVAILABLE_MODS.map((mod) => {
+                                                const selectedMods = newScore.mod || [];
+                                                const isSelected = selectedMods.includes(mod.value);
+
+                                                return (
+                                                    <button
+                                                        key={mod.value}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setNewScore({
+                                                                ...newScore,
+                                                                mod: isSelected
+                                                                    ? selectedMods.filter((value) => value !== mod.value)
+                                                                    : [...selectedMods, mod.value],
+                                                            });
+                                                        }}
+                                                        className={`rounded-full border px-3 py-1.5 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                                                            isSelected
+                                                                ? "border-primary bg-primary text-white shadow-sm shadow-primary/20"
+                                                                : "border-zinc-300 bg-zinc-100 text-zinc-700 hover:border-primary/40 hover:text-primary dark:border-white/10 dark:bg-white/[0.06] dark:text-zinc-300 dark:hover:text-primary"
+                                                        }`}
+                                                    >
+                                                        {mod.value}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="flex justify-end gap-2 border-t border-zinc-200 px-5 py-4 dark:border-white/[0.08]">
                                     <Button variant="danger-soft" onPress={() => setIsAddScoreOpen(false)}>

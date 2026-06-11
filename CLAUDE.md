@@ -59,7 +59,7 @@ app/
 
 ### HeroUI v3 Migration Notes
 
-- Prefer native HeroUI v3 components from `@heroui/react` over the legacy compatibility layer in `components/ui.tsx`.
+- Use native HeroUI v3 components from `@heroui/react`; the legacy compatibility layer `components/ui.tsx` has been removed.
 - HeroUI v3 uses compound components, for example `Card.Header` / `Card.Content`, `Tabs.ListContainer` / `Tabs.List` / `Tabs.Tab` / `Tabs.Panel`, and `Avatar.Image` / `Avatar.Fallback`.
 - Do not use removed v2-style components or props in new migrations, including `User`, `Image`, `Snippet`, `CardBody`, `CardHeader`, `isExternal`, `avatarProps`, and `classNames` slot props.
 - Replace v2 `User` with an explicit layout: anchor/link + `Avatar` + text.

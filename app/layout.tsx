@@ -82,7 +82,7 @@ export default async function RootLayout({
                     fontSans.variable
                 )}
             >
-                <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+                <Providers themeProps={{ attribute: "class", defaultTheme: "system", enableSystem: true }}>
                     <UserProvider initialUser={initialUser}>
                         <div className="w-full relative flex flex-col min-h-dvh">
                             <main className="flex-grow w-full">
