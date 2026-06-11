@@ -53,8 +53,19 @@ jobs:
         key: ${{ secrets.KEY }}
         script: |
           export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          node -v 
+          if [ -s "$NVM_DIR/nvm.sh" ]; then
+            \. "$NVM_DIR/nvm.sh"
+          else
+            echo "nvm not found at $NVM_DIR/nvm.sh"
+            exit 1
+          fi
+          nvm install 24
+          nvm alias default 24
+          nvm use 24
+          node -v
+          npm -v
+          npm install -g pm2
+          pm2 -v
           cd /home/ubuntu/meow
-          npm install --production
-          pm2 restart all
+          npm ci --omit=dev
+          pm2 restart all --update-env
