@@ -1,25 +1,54 @@
-"use client"
+﻿"use client"
 
-import {useDisclosure} from "@heroui/use-disclosure";
-import {Alert} from "@heroui/alert";
-import {Card, CardBody, CardFooter, CardHeader} from "@heroui/card";
-import {Divider} from "@heroui/divider";
-import {Button} from "@heroui/button";
-import {Modal, ModalBody, ModalContent, ModalFooter, ModalHeader} from "@heroui/modal";
-import {Link} from "@heroui/link";
-import {Input, Textarea} from "@heroui/input";
-import {Radio, RadioGroup} from "@heroui/radio";
-import {Checkbox, CheckboxGroup} from "@heroui/checkbox";
 import {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Tooltip} from "@heroui/tooltip";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Image} from "@heroui/image";
 import NextImage from "next/image";
-import {Chip} from "@heroui/chip";
-import {Snippet} from "@heroui/snippet";
-import {Avatar} from "@heroui/avatar";
+import {
+    Alert,
+    Avatar,
+    Button,
+    Card,
+    Checkbox,
+    CheckboxGroup,
+    Chip,
+    Input,
+    Modal,
+    Radio,
+    RadioGroup,
+    Separator,
+    Spinner,
+    TextArea,
+    Tooltip,
+} from "@heroui/react";
+
+const colorClass: Record<string, string> = {
+    primary: "bg-primary/15 text-primary",
+    secondary: "bg-primary/15 text-primary",
+    success: "bg-emerald-500/15 text-emerald-300",
+    danger: "bg-red-500/15 text-red-300",
+    warning: "bg-amber-500/15 text-amber-300",
+    default: "bg-zinc-100 text-zinc-700 dark:bg-white/10 dark:text-zinc-200",
+};
+
+const useDisclosure = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    return {
+        isOpen,
+        onOpen: () => setIsOpen(true),
+        onClose: () => setIsOpen(false),
+        onOpenChange: (open?: boolean) => setIsOpen((value) => typeof open === "boolean" ? open : !value),
+    };
+};
+
+const alertToneClass: Record<string, string> = {
+    warning: "border-l-amber-400 bg-amber-50/80 text-amber-800 dark:bg-amber-400/[0.08] dark:text-amber-100",
+    danger: "border-l-red-400 bg-red-50/80 text-red-800 dark:bg-red-400/[0.08] dark:text-red-100",
+    success: "border-l-emerald-400 bg-emerald-50/80 text-emerald-800 dark:bg-emerald-400/[0.08] dark:text-emerald-100",
+    accent: "border-l-primary bg-primary/10 text-primary dark:bg-primary/[0.10] dark:text-primary-foreground",
+    default: "border-l-zinc-300 bg-zinc-100/80 text-zinc-700 dark:border-l-zinc-500 dark:bg-white/[0.06] dark:text-zinc-200",
+};
 
 
 const CalendarIcon = () => (
@@ -59,8 +88,8 @@ const statusLabelMap: Record<string, string> = {
 export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
     // ... 状态逻辑保持不变 ...
     const currentUser = useContext(CurrentUserContext);
-    const {isOpen, onOpen, onOpenChange} = useDisclosure();
-    const {isOpen: isIconOpen, onOpen: onIconOpen, onOpenChange: onIconOpenChange} = useDisclosure();
+    const {isOpen, onOpen, onClose, onOpenChange} = useDisclosure();
+    const {isOpen: isIconOpen, onOpen: onIconOpen, onClose: onIconClose, onOpenChange: onIconOpenChange} = useDisclosure();
     const [errMsg, setErrMsg] = useState('');
     const [teams, setTeams] = useState<Team[]>([]);
     const [iconUrl, setIconUrl] = useState('');
@@ -154,6 +183,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
             (tournament_info.rank_max && userRank > tournament_info.rank_max) ||
             (new Date(tournament_info.start_date) < new Date())
         );
+    const hasRegistrationEnded = new Date(tournament_info.start_date) < new Date();
 
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
     const isRegistered = members.some((member) => member.player && member.uid === currentUser?.currentUser?.uid);
@@ -162,6 +192,20 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         : null;
     const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
     const bgSrc = tournament_info.pic_url || fallbackImage;
+    const iconModalState = {
+        isOpen: isIconOpen,
+        setOpen: onIconOpenChange,
+        open: onIconOpen,
+        close: onIconClose,
+        toggle: () => onIconOpenChange(!isIconOpen),
+    };
+    const staffModalState = {
+        isOpen,
+        setOpen: handleOpenChange,
+        open: handleOpenStaffModal,
+        close: onClose,
+        toggle: () => handleOpenChange(!isOpen),
+    };
     return (
         <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10">
             {tournament_info.status !== 'approved' && (
@@ -175,7 +219,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     <div className="flex flex-wrap items-center gap-3">
                         <Chip
                             color={statusColorMap[tournament_info.status]}
-                            variant="solid"
+                            variant="primary"
                             className="text-white font-bold border-none"
                             size="sm"
                         >
@@ -205,12 +249,10 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 </div>
             )}
 
-            <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-zinc-950 group border border-white/10">
+            <div className="relative w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-50 shadow-[0_16px_38px_rgba(15,23,42,0.08)] group dark:border-white/[0.10] dark:bg-zinc-950 dark:shadow-[0_18px_45px_rgba(0,0,0,0.34)]">
 
                 <div className="absolute inset-0 z-0">
-                    <Image
-                        as={NextImage}
-                        removeWrapper
+                    <NextImage
                         src={bgSrc}
                         alt=""
                         fill
@@ -219,14 +261,12 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         quality={10}
                     />
                     {/* 黑色遮罩，增强文字对比度 */}
-                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-zinc-50/20 dark:bg-none dark:bg-black/20" />
                 </div>
 
                 {/* --- 主体层 --- */}
                 <div className="relative z-10 w-full aspect-video md:aspect-[21/9] flex items-center justify-center">
-                    <Image
-                        as={NextImage}
-                        removeWrapper
+                    <NextImage
                         src={bgSrc}
                         alt={tournament_info.name}
                         width={1200}
@@ -243,28 +283,28 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     p-5 md:p-8
 
                     /* === 手机端样式 === */
-                    bg-zinc-900 border-t border-white/5  /* 纯色背景，有顶部分割线 */
+                    bg-zinc-50/95 border-t border-zinc-200/70 dark:bg-zinc-950/95 dark:border-white/10  /* 纯色背景，有顶部分割线 */
 
                     /* === 电脑端样式 (覆盖手机端) === */
                     md:border-t-0                        /* 移除分割线 */
-                    md:bg-transparent md:bg-gradient-to-t md:from-black/95 md:via-black/70 md:to-transparent /* 渐变背景 */
-                    md:absolute md:bottom-0 md:left-0 md:right-0 /* 绝对定位到底部 */
+                    md:bg-zinc-50/95 md:dark:bg-zinc-950/95
                     md:flex-row md:items-end             /* 左右布局，底部对齐 */
                 ">
 
                     {/* 左侧：标题与信息 */}
                     <div className="flex flex-col gap-2 w-full md:w-auto flex-1 min-w-0">
                         {/* 标题 */}
-                        <h1 className="text-xl md:text-4xl font-black text-white tracking-tight leading-tight drop-shadow-md">
+                        <h1 className="text-xl md:text-3xl font-extrabold text-slate-700 tracking-tight leading-tight dark:text-white">
                             {tournament_info.name}
                         </h1>
 
                         {/* 标签组 */}
                         <div className="flex flex-wrap gap-2 items-center mt-1">
-                            <Chip color="primary" size="sm" variant="shadow" className="font-bold uppercase md:text-md">
+                            <Chip color="accent" size="sm" variant="primary" className="uppercase shadow-sm md:text-md">
                                 {tournament_info.mode}
                             </Chip>
-                            <Chip startContent={<CalendarIcon/>} size="sm" variant="flat" className="text-zinc-300 bg-white/5 border border-white/10 md:text-white/90 md:bg-white/10 md:backdrop-blur-md">
+                            <Chip size="sm" variant="soft" className="border border-zinc-200/70 bg-white/75 text-zinc-600 shadow-sm backdrop-blur-md dark:text-zinc-300 dark:bg-white/5 dark:border-white/10 dark:md:text-white/90 dark:md:bg-white/10">
+                                <CalendarIcon/>
                                 {formatDate(tournament_info.start_date)} - {formatDate(tournament_info.end_date)}
                             </Chip>
                         </div>
@@ -274,185 +314,205 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     {/* 手机端 Grid (两列)，电脑端 Flex */}
                     <div className="grid grid-cols-2 gap-3 w-full md:w-auto md:flex md:flex-wrap shrink-0 mt-2 md:mt-0">
                         {tournament_info.links.map((link) => (
-                            <Button
+                            <a
                                 key={link.name}
-                                as={Link}
                                 href={link.url}
-                                isExternal
-                                size="md"
+                                target="_blank"
+                                rel="noreferrer"
                                 className="
-                                    w-full md:w-auto sm:h-10 md:h-11
-                                    border-white/10 bg-white/5 text-white
-                                    hover:bg-white/10 hover:border-white/50
+                                    inline-flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors md:w-auto sm:h-10 md:h-11
+                                    border-zinc-200/80 bg-white/80 text-zinc-900 shadow-sm
+                                    hover:bg-white hover:border-zinc-300
+                                    dark:border-white/10 dark:bg-white/5 dark:text-white
+                                    dark:hover:bg-white/10 dark:hover:border-white/50
                                     font-medium backdrop-blur-md
                                     md:text-base
                                 "
-                                variant="bordered"
-                                startContent={<LinkIcon />}
                             >
+                                <LinkIcon />
                                 {link.name}
-                            </Button>
+                            </a>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* 2. Staff 报名卡片 (保持之前修复的左对齐样式) */}
-            <Card className="border border-white/5 bg-content1 shadow-md">
-                <CardHeader className="flex justify-between items-center px-6 py-4 bg-default-50/50">
-                    <h2 className="font-bold text-lg">Staff 报名</h2>
-                </CardHeader>
-
-                <CardBody className="px-6 pt-4 pb-2 gap-4">
-                    <div className="whitespace-pre-wrap text-default-600 leading-relaxed text-sm sm:text-base">
-                        {tournament_info.staff_registration_info}
-                    </div>
-                </CardBody>
-
-                {currentUser?.currentUser ? (
-                    <CardFooter className="px-6 pb-6 pt-2 flex justify-start">
-                                                <Button onPress={handleOpenStaffModal} color="secondary" variant="shadow" className="font-bold w-full sm:w-auto" size="lg">
-                            立即报名 Staff
-                        </Button>
-                    </CardFooter>
-                ) : (
-                    <CardFooter className="px-6 py-3 bg-warning/10 justify-start">
-                         <p className="text-warning text-sm">请登录后进行 Staff 报名</p>
-                    </CardFooter>
-                )}
-            </Card>
-
-            {/* 4. 赛程 */}
-            <Card className="border border-white/5 bg-content1 shadow-md">
-                <CardHeader className="px-6 py-4 bg-default-50/50">
-                    <h2 className="font-bold text-lg">赛程</h2>
-                </CardHeader>
-                <CardBody className="px-6 py-4">
-                    <div className="whitespace-pre-wrap text-default-600 leading-relaxed font-mono">
-                        {tournament_info.tournament_schedule_info || "暂无赛程信息"}
-                    </div>
-                </CardBody>
-            </Card>
-
-            {/* 5. 奖金 */}
-            <Card className="border border-white/5 bg-content1 shadow-md">
-                <CardHeader className="px-6 py-4 bg-default-50/50">
-                    <h2 className="font-bold text-lg">奖金</h2>
-                </CardHeader>
-                <CardBody className="px-6 py-4">
-                    <div className="whitespace-pre-wrap text-default-600 leading-relaxed">
-                        {tournament_info.prize_info || "暂无奖金信息"}
-                    </div>
-                </CardBody>
-            </Card>
-
-            <Card className="border border-white/5 bg-content1 shadow-md">
-                <CardHeader className="px-6 py-4 bg-default-50/50">
-                    <h2 className="font-bold text-lg">选手报名</h2>
-                </CardHeader>
-                {/* 移除 Divider */}
-
-                <CardBody className="px-6 py-4 gap-4">
-                     {(tournament_info.rank_max || tournament_info.rank_min) && (
-                        <Alert
-                            color="primary"
-                            variant="faded"
-                            title={`排名限制：${tournament_info.rank_min || 0} - ${tournament_info.rank_max || "∞"}`}
-                        />
-                    )}
-
-                    {tournament_info.registration_info && (
-                        <div className="whitespace-pre-wrap text-default-600 leading-relaxed">
-                            {tournament_info.registration_info}
+            <Card className="overflow-hidden border border-zinc-200/80 bg-white/95 shadow-[0_14px_34px_rgba(15,23,42,0.07)] dark:border-white/[0.06] dark:bg-zinc-900/70 dark:shadow-[0_14px_34px_rgba(0,0,0,0.24)]">
+                <Card.Content className="p-0">
+                    <section className="px-6 py-6 md:px-8 md:py-7">
+                        <div className="flex items-center justify-between gap-3">
+                            <h2 className="font-bold text-lg">Staff 报名</h2>
                         </div>
-                    )}
-
-                    {tournament_info.qq_group && isRegistered && (
-                        <div className="flex items-center gap-2 p-3 bg-success/10 rounded-lg border border-success/20">
-                            <span className="text-success font-bold text-sm">QQ群:</span>
-                            <Snippet symbol="" codeString={tournament_info.qq_group.toString()} color="success" size="sm" variant="flat">
-                                {tournament_info.qq_group.toString()}
-                            </Snippet>
-                            <span className="text-xs text-success-600">(报名后请务必加群)</span>
+                        <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300 text-sm sm:text-base">
+                            {tournament_info.staff_registration_info}
                         </div>
-                    )}
+                        <div className="mt-5">
+                            {hasRegistrationEnded ? (
+                                <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>该比赛报名已结束</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
+                            ) : currentUser?.currentUser ? (
+                                <Button onPress={handleOpenStaffModal} variant="primary" className="font-bold w-full sm:w-auto" size="lg">
+                                    立即报名 Staff
+                                </Button>
+                            ) : (
+                                <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>请登录后进行 Staff 报名</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
+                            )}
+                        </div>
+                    </section>
 
-                    <div className="mt-2">
-                        {(new Date(tournament_info.start_date) < new Date()) ? (
-                            <Alert color="warning" title="该比赛报名已结束" />
-                        ) : !currentUser?.currentUser ? (
-                            <Alert color="warning" variant="faded" title="请点击右上角登录后进行赛事报名" />
-                        ) : (
-                            <div className="flex flex-col gap-3">
-                                {regNotAvailable ? (
-                                    <Alert color="danger" title="您不符合报名条件" description={`当前排名 #${userRank} 不在限制范围内`} />
+                    <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
+
+                    <section className="px-6 py-6 md:px-8 md:py-7">
+                        <h2 className="font-bold text-lg">赛程</h2>
+                        <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300 font-mono">
+                            {tournament_info.tournament_schedule_info || "暂无赛程信息"}
+                        </div>
+                    </section>
+
+                    <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
+
+                    <section className="px-6 py-6 md:px-8 md:py-7">
+                        <h2 className="font-bold text-lg">奖金</h2>
+                        <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300">
+                            {tournament_info.prize_info || "暂无奖金信息"}
+                        </div>
+                    </section>
+
+                    <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
+
+                    <section className="px-6 py-6 md:px-8 md:py-7">
+                        <h2 className="font-bold text-lg">选手报名</h2>
+
+                        <div className="mt-4 flex flex-col gap-4">
+                            {(tournament_info.rank_max || tournament_info.rank_min) && (
+                                <Alert status="default" className={`${alertToneClass.accent} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>{`排名限制：${tournament_info.rank_min || 0} - ${tournament_info.rank_max || "∞"}`}</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
+                            )}
+
+                            {tournament_info.registration_info && (
+                                <div className="whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300">
+                                    {tournament_info.registration_info}
+                                </div>
+                            )}
+
+                            {tournament_info.qq_group && isRegistered && (
+                                <div className="flex items-center gap-2 rounded-lg border-l-[3px] border-l-emerald-400 bg-emerald-50/80 p-3 text-emerald-800 dark:bg-emerald-400/[0.08] dark:text-emerald-100">
+                                    <span className="text-success font-bold text-sm">QQ群:</span>
+                                    <button
+                                        type="button"
+                                        className="rounded-lg bg-emerald-500/15 px-2 py-1 text-sm font-bold text-emerald-700 transition-all duration-150 hover:bg-emerald-500/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:text-emerald-200"
+                                        onClick={() => navigator.clipboard.writeText(tournament_info.qq_group!.toString())}
+                                    >
+                                        {tournament_info.qq_group.toString()}
+                                    </button>
+                                    <span className="text-xs text-success-600">(报名后请务必加群)</span>
+                                </div>
+                            )}
+
+                            <div className="mt-2">
+                                {hasRegistrationEnded ? (
+                                    <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>该比赛报名已结束</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
+                                ) : !currentUser?.currentUser ? (
+                                    <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>请点击右上角登录后进行赛事报名</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
                                 ) : (
-                                    <div className="flex flex-col sm:flex-row gap-4 justify-start">
-                                        <Tooltip content="排名需符合赛事要求才能报名">
-                                            <Button
-                                                color="primary"
-                                                variant="shadow"
-                                                size="lg"
-                                                className="font-bold w-full sm:w-auto"
-                                                isDisabled={regNotAvailable || isRegistered}
-                                                onPress={async () => {
-                                                    const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${encodeURIComponent(tournament_info.abbreviation)}`, {
-                                                        method: 'POST', credentials: 'include'
-                                                    })
-                                                    if (!res.ok) alert(await res.text());
-                                                    else { alert('报名成功'); setMembers(await res.json()) }
-                                                }}
-                                            >
-                                                {isRegistered ? "已报名" : "立即报名比赛"}
-                                            </Button>
-                                        </Tooltip>
+                                    <div className="flex flex-col gap-3">
+                                        {regNotAvailable ? (
+                                            <Alert status="danger" className={`${alertToneClass.danger} rounded-lg border-l-[3px] px-4 py-3`}>
+                                                <Alert.Content>
+                                                    <Alert.Title>您不符合报名条件</Alert.Title>
+                                                    <Alert.Description>{`当前排名 #${userRank} 不在限制范围内`}</Alert.Description>
+                                                </Alert.Content>
+                                            </Alert>
+                                        ) : (
+                                            <div className="flex flex-col sm:flex-row gap-4 justify-start">
+                                                <Tooltip>
+                                                    <Tooltip.Trigger>
+                                                        <Button
+                                                            variant="primary"
+                                                            size="lg"
+                                                            className="font-bold w-full sm:w-auto"
+                                                            isDisabled={regNotAvailable || isRegistered}
+                                                            onPress={async () => {
+                                                                const res = await fetch(siteConfig.backend_url + `/api/reg?tournament_name=${encodeURIComponent(tournament_info.abbreviation)}`, {
+                                                                    method: 'POST', credentials: 'include'
+                                                                })
+                                                                if (!res.ok) alert(await res.text());
+                                                                else { alert('报名成功'); setMembers(await res.json()) }
+                                                            }}
+                                                        >
+                                                            {isRegistered ? "已报名" : "立即报名比赛"}
+                                                        </Button>
+                                                    </Tooltip.Trigger>
+                                                    <Tooltip.Content>排名需符合赛事要求才能报名</Tooltip.Content>
+                                                </Tooltip>
+
+                                                {isRegistered && (
+                                                    <Button
+                                                        variant="danger-soft"
+                                                        size="lg"
+                                                        className="w-full sm:w-auto"
+                                                        onPress={async () => {
+                                                            const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${encodeURIComponent(tournament_info.abbreviation)}`, {
+                                                                method: 'DELETE', credentials: 'include'
+                                                            })
+                                                            if (!res.ok) alert(await res.text());
+                                                            else { alert('取消报名成功'); setMembers(await res.json()) }
+                                                        }}
+                                                    >
+                                                        取消报名
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        )}
 
                                         {isRegistered && (
-                                            <Button
-                                                color="danger"
-                                                variant="ghost"
-                                                size="lg"
-                                                className="w-full sm:w-auto"
-                                                onPress={async () => {
-                                                    const res = await fetch(siteConfig.backend_url + `/api/del_reg?tournament_name=${encodeURIComponent(tournament_info.abbreviation)}`, {
-                                                        method: 'DELETE', credentials: 'include'
-                                                    })
-                                                    if (!res.ok) alert(await res.text());
-                                                    else { alert('取消报名成功'); setMembers(await res.json()) }
-                                                }}
-                                            >
-                                                取消报名
-                                            </Button>
+                                            <Alert status="success" className={`${alertToneClass.success} rounded-lg border-l-[3px] px-4 py-3`}>
+                                                <Alert.Content>
+                                                    <Alert.Title>您已成功报名</Alert.Title>
+                                                </Alert.Content>
+                                            </Alert>
                                         )}
                                     </div>
                                 )}
-
-                                {isRegistered && (
-                                    <Alert color="success" variant="flat" title="您已成功报名" />
-                                )}
                             </div>
-                        )}
-                    </div>
-                </CardBody>
+                        </div>
+                    </section>
+                </Card.Content>
             </Card>
 
 
             {/* 队伍管理 (仅队长可见) */}
             {myTeam && (
-                <Card className="border border-white/5 bg-content1 shadow-md">
-                    <CardHeader className="px-6 py-4 bg-default-50/50 flex justify-between items-center">
+                <Card className="overflow-hidden border border-zinc-200 bg-white shadow-md dark:border-white/[0.10] dark:bg-zinc-900/90 dark:shadow-[0_12px_30px_rgba(0,0,0,0.26)]">
+                    <Card.Header className="flex items-center justify-between bg-zinc-50 px-6 py-4 dark:bg-white/[0.04]">
                         <div className="font-bold text-lg">我的队伍</div>
-                        <Chip size="sm" color="warning" variant="flat">队长</Chip>
-                    </CardHeader>
-                    <CardBody className="px-6 py-4 flex flex-col gap-4">
+                        <Chip size="sm" color="warning" variant="soft">队长</Chip>
+                    </Card.Header>
+                    <Card.Content className="px-6 py-4 flex flex-col gap-4">
                         {/* 队伍基本信息 */}
                         <div className="flex items-center gap-4">
-                            <Avatar
-                                src={myTeam.icon_url}
-                                name={myTeam.name.charAt(0)}
-                                className="w-16 h-16 text-large shrink-0"
-                                isBordered
-                            />
+                            <Avatar className="h-16 w-16 shrink-0 border-2 border-default-200 text-large">
+                                <Avatar.Image src={myTeam.icon_url} alt={myTeam.name}/>
+                                <Avatar.Fallback>{myTeam.name.charAt(0) || "?"}</Avatar.Fallback>
+                            </Avatar>
                             <div className="flex flex-col gap-1 min-w-0">
                                 <span className="font-bold text-lg truncate">{myTeam.name}</span>
                                 <span className="text-sm text-default-400">
@@ -460,12 +520,11 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                 </span>
                             </div>
                             {myTeam.is_verified ? (
-                                <Chip size="sm" color="success" variant="flat" className="ml-auto shrink-0">已审核锁定</Chip>
+                                <Chip size="sm" color="success" variant="soft" className="ml-auto shrink-0">已审核锁定</Chip>
                             ) : (
                                 <Button
                                     className="ml-auto shrink-0"
-                                    color="primary"
-                                    variant="flat"
+                                   
                                     onPress={() => {
                                         setIconUrl(myTeam.icon_url || '');
                                         setTeamName(myTeam.name);
@@ -478,7 +537,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                             )}
                         </div>
 
-                        <Divider />
+                        <Separator />
 
                         {/* 队员列表 */}
                         <div className="flex flex-col gap-3">
@@ -491,10 +550,13 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                             return (
                                                 <Chip
                                                     key={uid}
-                                                    variant="flat"
+                                                    variant="soft"
                                                     color="warning"
-                                                    avatar={<Avatar src={`https://a.ppy.sh/${uid}`} name={p?.name} />}
                                                 >
+                                                    <Avatar className="h-5 w-5">
+                                                        <Avatar.Image src={`https://a.ppy.sh/${uid}`} alt={p?.name || `#${uid}`}/>
+                                                        <Avatar.Fallback>{p?.name?.[0] ?? "?"}</Avatar.Fallback>
+                                                    </Avatar>
                                                     {p?.name || `#${uid}`}
                                                 </Chip>
                                             );
@@ -511,9 +573,12 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                             return (
                                                 <Chip
                                                     key={uid}
-                                                    variant="flat"
-                                                    avatar={<Avatar src={`https://a.ppy.sh/${uid}`} name={p?.name} />}
+                                                    variant="soft"
                                                 >
+                                                    <Avatar className="h-5 w-5">
+                                                        <Avatar.Image src={`https://a.ppy.sh/${uid}`} alt={p?.name || `#${uid}`}/>
+                                                        <Avatar.Fallback>{p?.name?.[0] ?? "?"}</Avatar.Fallback>
+                                                    </Avatar>
                                                     {p?.name || `#${uid}`}
                                                 </Chip>
                                             );
@@ -522,49 +587,50 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                 </div>
                             )}
                         </div>
-                    </CardBody>
+                    </Card.Content>
                 </Card>
             )}
 
             {/* 队伍信息编辑模态框 */}
-            <Modal isOpen={isIconOpen} onOpenChange={onIconOpenChange} backdrop="blur">
-                <ModalContent>
-                    {(onClose) => (
-                        <>
-                            <ModalHeader>编辑队伍信息</ModalHeader>
-                            <Divider />
-                            <ModalBody className="py-6 flex flex-col gap-4">
+            <Modal state={iconModalState}>
+                <Modal.Backdrop variant="blur">
+                    <Modal.Container>
+                        <Modal.Dialog>
+                            <Modal.Header>
+                                <Modal.Heading>编辑队伍信息</Modal.Heading>
+                            </Modal.Header>
+                            <Separator />
+                            <Modal.Body className="py-6 flex flex-col gap-4">
                                 <div className="flex justify-center">
-                                    <Avatar
-                                        src={iconUrl || undefined}
-                                        name={teamName.charAt(0)}
-                                        className="w-24 h-24 text-large"
-                                        isBordered
-                                    />
+                                    <Avatar className="h-24 w-24 border-2 border-default-200 text-large">
+                                        <Avatar.Image src={iconUrl || undefined} alt={teamName}/>
+                                        <Avatar.Fallback>{teamName.charAt(0) || "?"}</Avatar.Fallback>
+                                    </Avatar>
                                 </div>
-                                <Input
-                                    label="队伍名称"
-                                    variant="bordered"
-                                    value={teamName}
-                                    onChange={e => setTeamName(e.target.value)}
-                                />
-                                <Input
-                                    label="头像图片链接 (URL)"
-                                    placeholder="https://..."
-                                    variant="bordered"
-                                    value={iconUrl}
-                                    onChange={e => setIconUrl(e.target.value)}
-                                    description="请填写图片的直链地址"
-                                />
-                                {iconErrMsg && <Alert color="danger" title={iconErrMsg} />}
-                            </ModalBody>
-                            <Divider />
-                            <ModalFooter>
-                                <Button color="danger" variant="light" onPress={onClose}>取消</Button>
+                                <label className="flex flex-col gap-1 text-sm">
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">队伍名称</span>
+                                    <Input value={teamName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTeamName(e.target.value)} />
+                                </label>
+                                <label className="flex flex-col gap-1 text-sm">
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">头像图片链接 (URL)</span>
+                                    <Input placeholder="https://..." value={iconUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIconUrl(e.target.value)} />
+                                    <span className="text-xs text-zinc-500 dark:text-zinc-400">请填写图片的直链地址</span>
+                                </label>
+                                {iconErrMsg && (
+                                    <Alert status="danger" className={`${alertToneClass.danger} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>{iconErrMsg}</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
+                                )}
+                            </Modal.Body>
+                            <Separator />
+                            <Modal.Footer>
+                                <Button variant="danger-soft" onPress={onIconClose}>取消</Button>
                                 <Button
-                                    color="primary"
+                                    variant="primary"
                                     className="font-bold"
-                                    isLoading={isUpdatingIcon}
+                                    isPending={isUpdatingIcon}
                                     onPress={async () => {
                                         if (!teamName.trim()) {
                                             setIconErrMsg('队伍名称不能为空');
@@ -590,7 +656,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                                         ? {...t, icon_url: iconUrl, name: teamName.trim()}
                                                         : t
                                                 ));
-                                                onClose();
+                                                onIconClose();
                                                 alert('队伍信息更新成功');
                                             }
                                         } catch {
@@ -602,68 +668,101 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                 >
                                     保存
                                 </Button>
-                            </ModalFooter>
-                        </>
-                    )}
-                </ModalContent>
+                            </Modal.Footer>
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
             </Modal>
 
             {/* Staff 模态框保持不变 */}
-             <Modal isOpen={isOpen} onOpenChange={handleOpenChange} size="2xl" scrollBehavior="inside" backdrop="blur">
-                 <ModalContent>
-                    {(onClose) => (
-                        <>
-                            <ModalHeader className="flex flex-col gap-1 text-xl">
-                                报名 Staff - {tournament_info.abbreviation}
-                            </ModalHeader>
-                            <Divider />
-                            <ModalBody className="py-6 flex flex-col gap-6">
-                                <Alert color="default" variant="flat" title="请务必填写真实有效的信息，以便我们与您联系。" />
+             <Modal state={staffModalState}>
+                 <Modal.Backdrop variant="blur">
+                    <Modal.Container size="lg" scroll="inside">
+                        <Modal.Dialog>
+                            <Modal.Header className="flex flex-col gap-1 text-xl">
+                                <Modal.Heading>报名 Staff - {tournament_info.abbreviation}</Modal.Heading>
+                            </Modal.Header>
+                            <Separator />
+                            <Modal.Body className="py-6 flex flex-col gap-6">
+                                <Alert status="default" className={`${alertToneClass.default} rounded-lg border-l-[3px] px-4 py-3`}>
+                                    <Alert.Content>
+                                        <Alert.Title>请务必填写真实有效的信息，以便我们与您联系。</Alert.Title>
+                                    </Alert.Content>
+                                </Alert>
 
                                 <div className="flex flex-col gap-4">
-                                    <Input isRequired label="QQ号" placeholder="请输入您的QQ号码" variant="bordered" labelPlacement="outside"
-                                           onChange={(e) => setFormData({...formData, qqNumber: e.target.value})}/>
+                                    <label className="flex flex-col gap-1 text-sm">
+                                        <span className="font-bold text-zinc-700 dark:text-zinc-300">QQ号</span>
+                                        <Input required placeholder="请输入您的QQ号码"
+                                               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, qqNumber: e.target.value})}/>
+                                    </label>
 
                                     <div className="flex flex-col gap-2">
-                                        <RadioGroup label="是否第一次担任 Staff？" orientation="horizontal" isRequired className="ml-1"
-                                            onChange={(e) => setFormData({...formData, isFirstTimeStaff: (e.target.value !== "")})}>
-                                            <Radio value="1">是</Radio>
-                                            <Radio value="">否</Radio>
+                                        <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">是否第一次担任 Staff？</span>
+                                        <RadioGroup
+                                            orientation="horizontal"
+                                            isRequired
+                                            className="ml-1 flex flex-wrap gap-3"
+                                            onChange={(value: string) => setFormData({...formData, isFirstTimeStaff: (value !== "")})}
+                                        >
+                                            <Radio value="1" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                                                <Radio.Control><Radio.Indicator /></Radio.Control>
+                                                <Radio.Content>是</Radio.Content>
+                                            </Radio>
+                                            <Radio value="" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                                                <Radio.Control><Radio.Indicator /></Radio.Control>
+                                                <Radio.Content>否</Radio.Content>
+                                            </Radio>
                                         </RadioGroup>
                                     </div>
                                 </div>
-                                <Textarea minRows={3} label="赛事经验" placeholder="请简述您参与过的比赛及担任的职位..." variant="bordered" labelPlacement="outside"
-                                    onChange={(e) => setFormData({...formData, tournamentExperience: e.target.value})} />
-                                <div>
-                                    <CheckboxGroup label="选择意向职位" isRequired orientation="horizontal" className="gap-4"
-                                        //@ts-ignore
+                                <label className="flex flex-col gap-1 text-sm">
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">赛事经验</span>
+                                    <TextArea rows={3} placeholder="请简述您参与过的比赛及担任的职位..."
+                                              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, tournamentExperience: e.target.value})} />
+                                </label>
+                                <div className="flex flex-col gap-2">
+                                    <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">选择意向职位</span>
+                                    <CheckboxGroup isRequired className="flex flex-wrap gap-4"
                                         onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}>
-                                        {tournament_info.streamer && <Checkbox value="直播">直播</Checkbox>}
-                                        {tournament_info.referee && <Checkbox value="裁判">裁判</Checkbox>}
-                                        {tournament_info.commentator && <Checkbox value="解说">解说</Checkbox>}
-                                        {tournament_info.mappooler && <Checkbox value="选图">选图</Checkbox>}
-                                        {tournament_info.custom_mapper && <Checkbox value="作图">作图</Checkbox>}
-                                        {tournament_info.designer && <Checkbox value="设计">设计</Checkbox>}
-                                        {tournament_info.scheduler && <Checkbox value="赛程安排">赛程安排</Checkbox>}
-                                        {tournament_info.map_tester && <Checkbox value="测图">测图</Checkbox>}
+                                        {tournament_info.streamer && <Checkbox value="直播" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>直播</Checkbox.Content></Checkbox>}
+                                        {tournament_info.referee && <Checkbox value="裁判" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>裁判</Checkbox.Content></Checkbox>}
+                                        {tournament_info.commentator && <Checkbox value="解说" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>解说</Checkbox.Content></Checkbox>}
+                                        {tournament_info.mappooler && <Checkbox value="选图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>选图</Checkbox.Content></Checkbox>}
+                                        {tournament_info.custom_mapper && <Checkbox value="作图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>作图</Checkbox.Content></Checkbox>}
+                                        {tournament_info.designer && <Checkbox value="设计" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>设计</Checkbox.Content></Checkbox>}
+                                        {tournament_info.scheduler && <Checkbox value="赛程安排" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>赛程安排</Checkbox.Content></Checkbox>}
+                                        {tournament_info.map_tester && <Checkbox value="测图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>测图</Checkbox.Content></Checkbox>}
                                     </CheckboxGroup>
                                 </div>
                                 <div className="flex flex-col gap-4">
-                                     <Textarea minRows={2} label="其他说明 (选填)" variant="bordered" labelPlacement="outside" placeholder="例如：擅长Mania 4K/7K，有作图经验等..."
-                                        onChange={(e) => setFormData({...formData, otherDetails: e.target.value})} />
-                                     <Textarea minRows={2} label="补充信息 (选填)" variant="bordered" labelPlacement="outside"
-                                        onChange={(e) => setFormData({...formData, additionalComments: e.target.value})} />
+                                     <label className="flex flex-col gap-1 text-sm">
+                                         <span className="font-bold text-zinc-700 dark:text-zinc-300">其他说明 (选填)</span>
+                                         <TextArea rows={2} placeholder="例如：擅长Mania 4K/7K，有作图经验等..."
+                                                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, otherDetails: e.target.value})} />
+                                     </label>
+                                     <label className="flex flex-col gap-1 text-sm">
+                                         <span className="font-bold text-zinc-700 dark:text-zinc-300">补充信息 (选填)</span>
+                                         <TextArea rows={2}
+                                                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, additionalComments: e.target.value})} />
+                                     </label>
                                 </div>
-                                {errMsg && <Alert color="danger" title={errMsg} />}
-                            </ModalBody>
-                            <Divider />
-                            <ModalFooter>
-                                <Button color="danger" variant="light" onPress={onClose}>取消</Button>
-                                <Button color="primary" onPress={() => handleRegistration(onClose)} className="font-bold">提交报名</Button>
-                            </ModalFooter>
-                        </>
-                    )}
-                </ModalContent>
+                                {errMsg && (
+                                    <Alert status="danger" className={`${alertToneClass.danger} rounded-lg border-l-[3px] px-4 py-3`}>
+                                        <Alert.Content>
+                                            <Alert.Title>{errMsg}</Alert.Title>
+                                        </Alert.Content>
+                                    </Alert>
+                                )}
+                            </Modal.Body>
+                            <Separator />
+                            <Modal.Footer>
+                                <Button variant="danger-soft" onPress={onClose}>取消</Button>
+                                <Button variant="primary" onPress={() => handleRegistration(onClose)} className="font-bold">提交报名</Button>
+                            </Modal.Footer>
+                        </Modal.Dialog>
+                    </Modal.Container>
+                </Modal.Backdrop>
             </Modal>
         </div>
     );
@@ -727,3 +826,4 @@ async function getPlayers(tournament_name: string, revalidate_time: number = 0):
         {next: {revalidate: revalidate_time}})
     return await res.json()
 }
+

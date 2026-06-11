@@ -3,17 +3,27 @@
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Button} from "@heroui/button";
-import {Input} from "@heroui/input";
-import {Avatar} from "@heroui/avatar";
-import {Chip} from "@heroui/chip";
-import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
 import {siteConfig} from "@/config/site";
-import {Checkbox} from "@heroui/checkbox";
-import {Card, CardBody, CardHeader, CardFooter} from "@heroui/card";
-import {Spinner} from "@heroui/spinner";
 import {useRouter} from "next/navigation";
-import {Divider} from "@heroui/divider";
+import {
+    Autocomplete,
+    Avatar,
+    Button,
+    Card,
+    Checkbox,
+    Chip,
+    CloseButton,
+    Description,
+    FieldError,
+    Input,
+    Label,
+    ListBox,
+    SearchField,
+    Separator,
+    Spinner,
+    TextField,
+    useFilter,
+} from "@heroui/react";
 
 // --- 图标 ---
 const TeamIcon = () => (
@@ -121,7 +131,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
     };
 
     if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg"
-                                                                                                     color="primary"/>
+                                                                                                     color="accent"/>
     </div>;
 
     return (
@@ -176,7 +186,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                         };
                         updateTeams([...teams, newTeam]);
                     }}
-                    className="h-full min-h-[300px] border-2 border-dashed border-default-300 rounded-2xl flex flex-col items-center justify-center gap-4 text-default-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 group"
+                    className="h-full min-h-[300px] border-2 border-dashed border-default-300 rounded-2xl flex flex-col items-center justify-center gap-4 text-default-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 group"
                 >
                     <div className="p-4 rounded-full bg-default-100 group-hover:bg-primary/10 transition-colors">
                         <PlusIcon/>
@@ -188,20 +198,18 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
             {/* Sticky Footer */}
             <Card
                 className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
-                <CardBody className="flex flex-row justify-between items-center py-4 px-6">
-                    <Button variant="light" onPress={() => router.back()}>取消</Button>
+                <Card.Content className="flex flex-row justify-between items-center py-4 px-6">
+                    <Button variant="ghost" onPress={() => router.back()}>取消</Button>
                     <Button
-                        color="primary"
                         size="lg"
-                        variant="shadow"
+                        variant="primary"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon/>}
-                        isLoading={isSaving}
+                        isPending={isSaving}
                         onPress={handleSave}
                     >
                         {isSaving ? "正在保存..." : "保存队伍信息"}
                     </Button>
-                </CardBody>
+                </Card.Content>
             </Card>
         </div>
     );
@@ -209,6 +217,9 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
 
 // --- 子组件：队伍编辑卡片 ---
 const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) => {
+    const {contains} = useFilter({sensitivity: "base"});
+    const [playerSearch, setPlayerSearch] = useState("");
+    const filteredPlayers = players.filter((player: any) => contains(`${player.name} ${player.uid}`, playerSearch));
 
     // 添加成员逻辑
     const addMember = (uid: number) => {
@@ -255,17 +266,15 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
 
     return (
         <Card
-            className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 shadow-sm overflow-visible">
-            <CardHeader className="flex justify-between items-start gap-4 p-4 pb-0">
+            className="border border-default-200 dark:border-white/5 bg-surface dark:bg-zinc-900 shadow-sm overflow-visible">
+            <Card.Header className="flex justify-between items-start gap-4 p-4 pb-0">
                 <div className="flex gap-4 w-full">
                     {/* 图标部分保持不变 */}
                     <div className="flex flex-col gap-2 items-center">
-                        <Avatar
-                            src={team.icon_url}
-                            name={team.name.charAt(0)}
-                            className="w-20 h-20 text-large border-2 border-default-200"
-                            isBordered
-                        />
+                        <Avatar className="h-20 w-20 border-2 border-default-200 text-large">
+                            <Avatar.Image src={team.icon_url} alt={team.name}/>
+                            <Avatar.Fallback>{team.name.charAt(0) || "?"}</Avatar.Fallback>
+                        </Avatar>
                     </div>
 
                     {/* 基础信息输入 */}
@@ -273,68 +282,99 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                         <div className="flex justify-between">
                             <h3 className="text-lg font-bold text-foreground">Team {index + 1}</h3>
                             <div className="flex gap-2">
-                                <Checkbox
-                                    size="sm"
+                                                                <Checkbox
+                                    id={`team-${index}-verified`}
                                     isSelected={team.is_verified}
-                                    onValueChange={v => onUpdate({...team, is_verified: v})}
+                                    onChange={(v: boolean) => onUpdate({...team, is_verified: v})}
+                                    variant="secondary"
+                                    className="items-center"
                                 >
-                                    <span className="text-xs">已审核</span>
+                                    <Checkbox.Control className="size-4 rounded border-default-300 data-[selected=true]:border-primary data-[selected=true]:bg-primary">
+                                        <Checkbox.Indicator/>
+                                    </Checkbox.Control>
+                                    <Checkbox.Content>
+                                        <Label htmlFor={`team-${index}-verified`} className="text-xs">已审核</Label>
+                                    </Checkbox.Content>
                                 </Checkbox>
-                                <Button isIconOnly size="sm" color="danger" variant="light"
+                                <Button isIconOnly size="sm" variant="danger-soft"
                                         onPress={onDelete}><TrashIcon/></Button>
                             </div>
                         </div>
 
-                        {/* 修改点：Input 增加校验状态 */}
-                        <Input
-                            label="队伍名称"
-                            size="sm"
-                            variant="bordered"
-                            value={team.name}
-                            isInvalid={isInvalid}
-                            errorMessage={isInvalid && errorMessage}
-                            color={isInvalid ? "danger" : "default"}
-                            onChange={e => onUpdate({...team, name: e.target.value})}
-                        />
+                        {/* 修改点：Input 增加校验状态 */}                        <TextField isInvalid={isInvalid}>
+                            <Label className="text-xs font-semibold text-default-500">队伍名称</Label>
+                            <Input
+                                variant="secondary"
+                                value={team.name}
+                                onChange={(event) => onUpdate({...team, name: event.target.value})}
+                            />
+                            {isInvalid && <FieldError>{errorMessage}</FieldError>}
+                        </TextField>
 
-                        <Input
-                            label="图标链接 (URL)"
-                            size="sm"
-                            variant="bordered"
-                            value={team.icon_url}
-                            onChange={e => onUpdate({...team, icon_url: e.target.value})}
-                        />
+                        <TextField>
+                            <Label className="text-xs font-semibold text-default-500">图标链接 (URL)</Label>
+                            <Input
+                                variant="secondary"
+                                value={team.icon_url}
+                                onChange={(event) => onUpdate({...team, icon_url: event.target.value})}
+                            />
+                        </TextField>
                     </div>
                 </div>
-            </CardHeader>
+            </Card.Header>
 
-            <Divider className="my-4"/>
+            <Separator className="my-4"/>
 
-            <CardBody className="px-4 pb-4 pt-0 gap-6">
+            <Card.Content className="px-4 pb-4 pt-0 gap-6">
 
                 {/* 添加成员 */}
                 <div>
                     <span className="text-xs font-bold text-default-500 mb-2 block">添加成员 (从已报名选手列表)</span>
-                    <Autocomplete
+                                        <Autocomplete
                         aria-label="搜索并选择选手"
                         placeholder="搜索并选择选手..."
-                        defaultItems={players}
-                        size="sm"
-                        variant="flat"
+                        variant="secondary"
                         className="max-w-full"
-                        onSelectionChange={(key) => key && addMember(Number(key))}
+                        selectionMode="single"
+                        onChange={(key) => {
+                            const selectedKey = Array.isArray(key) ? key[0] : key;
+                            if (selectedKey) {
+                                addMember(Number(selectedKey));
+                                setPlayerSearch("");
+                            }
+                        }}
                     >
-                        {(player: any) => (
-                            <AutocompleteItem key={player.uid} textValue={player.name}>
-                                <div className="flex gap-2 items-center">
-                                    <Avatar src={`https://a.ppy.sh/${player.uid}`} size="sm"/>
-                                    <div className="flex flex-col">
-                                        <span>{player.name}</span>
-                                        <span className="text-tiny text-default-400">#{player.rank}</span>
-                                    </div>
-                                </div>
-                            </AutocompleteItem>
-                        )}
+                        <Autocomplete.Trigger>
+                            <Autocomplete.Value />
+                            <Autocomplete.ClearButton />
+                            <Autocomplete.Indicator />
+                        </Autocomplete.Trigger>
+                        <Autocomplete.Popover>
+                            <Autocomplete.Filter filter={contains} inputValue={playerSearch} onInputChange={setPlayerSearch}>
+                                <SearchField autoFocus name={`team-player-search-${index}`} variant="secondary" value={playerSearch} onChange={setPlayerSearch}>
+                                    <SearchField.Group>
+                                        <SearchField.SearchIcon />
+                                        <SearchField.Input placeholder="搜索选手..." />
+                                        <SearchField.ClearButton />
+                                    </SearchField.Group>
+                                </SearchField>
+                                <ListBox renderEmptyState={() => <div className="px-3 py-2 text-sm text-default-400">没有匹配选手</div>}>
+                                    {filteredPlayers.map((player: any) => (
+                                        <ListBox.Item key={player.uid} id={player.uid.toString()} textValue={player.name}>
+                                            <Avatar size="sm">
+                                                <Avatar.Image src={`https://a.ppy.sh/${player.uid}`} alt={player.name}/>
+                                                <Avatar.Fallback>{player.name?.[0] ?? "?"}</Avatar.Fallback>
+                                            </Avatar>
+                                            <div className="flex flex-col">
+                                                <Label>{player.name}</Label>
+                                                <Description>#{player.rank}</Description>
+                                            </div>
+                                            <ListBox.ItemIndicator />
+                                        </ListBox.Item>
+                                    ))}
+                                </ListBox>
+                            </Autocomplete.Filter>
+                        </Autocomplete.Popover>
                     </Autocomplete>
                 </div>
 
@@ -385,7 +425,7 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                             <span className="text-xs text-default-400 self-center pl-2">暂无队员</span>}
                     </div>
                 </div>
-            </CardBody>
+            </Card.Content>
         </Card>
     );
 }
@@ -393,24 +433,36 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
 // --- 子组件：成员 Chip ---
 const MemberChip = ({player, uid, isCaptain, onToggle, onDelete}: any) => {
     return (
-        <Chip
-            variant={isCaptain ? "shadow" : "flat"}
-            color={isCaptain ? "warning" : "default"}
-            onClose={onDelete}
+        <div
+            role="button"
+            tabIndex={0}
             onClick={onToggle}
-            className="cursor-pointer hover:scale-105 transition-transform"
-            classNames={{
-                base: isCaptain ? "bg-warning text-warning-foreground" : "",
+            onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    onToggle();
+                }
             }}
-            avatar={
-                <Avatar
-                    src={`https://a.ppy.sh/${uid}`}
-                    className="w-5 h-5"
-                />
-            }
+            className={`inline-flex h-8 max-w-full cursor-pointer items-center gap-2 rounded-full border px-2 pr-1 text-sm font-semibold transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                isCaptain
+                    ? "border-amber-400/25 bg-amber-500/15 text-amber-800 dark:border-amber-300/15 dark:bg-white/[0.055] dark:text-amber-300"
+                    : "border-zinc-300/70 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/[0.07] dark:text-zinc-300"
+            }`}
         >
-            {player?.name || `UID: ${uid}`}
-        </Chip>
+            <Avatar className="h-5 w-5">
+                <Avatar.Image src={`https://a.ppy.sh/${uid}`} alt={player?.name || `UID: ${uid}`}/>
+                <Avatar.Fallback>{player?.name?.[0] ?? "?"}</Avatar.Fallback>
+            </Avatar>
+            <span className="max-w-32 truncate">{player?.name || `UID: ${uid}`}</span>
+            <CloseButton
+                aria-label="Remove member"
+                className="h-5 w-5 rounded-full"
+                onPress={(event) => {
+                    event.continuePropagation();
+                    onDelete();
+                }}
+            />
+        </div>
     )
 }
 

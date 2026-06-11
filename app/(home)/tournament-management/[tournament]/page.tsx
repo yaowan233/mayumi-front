@@ -2,12 +2,10 @@
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentManagementInfo} from "@/app/(home)/tournament-management/page";
-import {Link} from "@heroui/link";
+import Link from "next/link";
 import {siteConfig} from "@/config/site";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Card, CardBody} from "@heroui/card";
-import {Skeleton} from "@heroui/skeleton";
-import {Chip} from "@heroui/chip";
+import {Card, Chip, Skeleton} from "@heroui/react";
 
 // --- 图标 (无需修改) ---
 const MetaIcon = () => (
@@ -187,7 +185,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
                     {/* 修复：text-foreground */}
                     <span>当前赛事: <span className="text-foreground font-bold">{tournament_abbr}</span></span>
                     {myRoles.map(role => (
-                        <Chip key={role} size="sm" color="primary" variant="flat">{role}</Chip>
+                        <Chip key={role} size="sm" color="accent" variant="soft">{role}</Chip>
                     ))}
                 </div>
             </div>
@@ -212,32 +210,30 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
 // --- 子组件：仪表盘卡片 ---
 const DashboardCard = ({item}: { item: MenuItem }) => {
 
-    return (
+    const card = (
         <Card
-            as={Link}
-            href={item.disabled ? undefined : item.href}
-            isPressable={!item.disabled}
+            variant="secondary"
             // 修复：
-            // 1. bg-zinc-900 -> bg-content1 (白) dark:bg-zinc-900
+            // 1. bg-zinc-900 -> bg-surface (白) dark:bg-zinc-900
             // 2. border-white/5 -> border-default-200 dark:border-white/5
             // 3. hover:bg-zinc-800 -> hover:bg-default-100 dark:hover:bg-zinc-800
             className={`
-                h-full min-h-[140px] border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 transition-all duration-300 group
+                h-full min-h-[140px] border border-default-200 dark:border-white/5 bg-surface dark:bg-zinc-900 transition-all duration-300 group
                 ${item.disabled
                 ? "opacity-50 cursor-not-allowed grayscale"
-                : "hover:bg-default-100 dark:hover:bg-zinc-800 hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg"
+                : "cursor-pointer hover:bg-default-100 dark:hover:bg-zinc-800 hover:border-primary/50 hover:-translate-y-1 hover:shadow-lg"
             }
             `}
         >
-            <CardBody className="p-6 flex flex-col justify-between gap-4">
+            <Card.Content className="p-6 flex flex-col justify-between gap-4">
                 <div className="flex justify-between items-start">
                     {/* 修复：图标背景色 bg-default-100 (浅灰) 适合亮暗模式 */}
                     <div
-                        className={`p-3 rounded-xl bg-default-100 text-2xl ${item.disabled ? 'text-default-400' : 'text-primary group-hover:bg-primary group-hover:text-white transition-colors'}`}>
+                        className={`rounded-xl border p-3 text-2xl shadow-sm transition-colors ${item.disabled ? 'border-zinc-200 bg-zinc-100 text-default-400 dark:border-white/10 dark:bg-white/[0.06]' : 'border-primary/15 bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white dark:border-white/10 dark:bg-white/[0.08]'}`}>
                         {item.icon}
                     </div>
                     {item.disabled && (
-                        <Chip size="sm" variant="flat" color="default">{item.disabledReason}</Chip>
+                        <Chip size="sm" variant="soft" color="default">{item.disabledReason}</Chip>
                     )}
                 </div>
 
@@ -250,8 +246,16 @@ const DashboardCard = ({item}: { item: MenuItem }) => {
                         {item.desc}
                     </p>
                 </div>
-            </CardBody>
+            </Card.Content>
         </Card>
+    );
+
+    if (item.disabled) return card;
+
+    return (
+        <Link href={item.href} className="block h-full no-underline">
+            {card}
+        </Link>
     );
 }
 
@@ -264,9 +268,9 @@ const DashboardSkeleton = () => (
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
-                // 修复：骨架屏背景色 bg-content1 dark:bg-zinc-900
+                // 修复：骨架屏背景色 bg-surface dark:bg-zinc-900
                 <Card key={i}
-                      className="h-[140px] bg-content1 dark:bg-zinc-900 border border-default-200 dark:border-white/5 p-6 space-y-4">
+                      className="h-[140px] bg-surface dark:bg-zinc-900 border border-default-200 dark:border-white/5 p-6 space-y-4">
                     <Skeleton className="w-12 h-12 rounded-xl bg-default-200"/>
                     <div className="space-y-2">
                         <Skeleton className="w-24 h-5 rounded-lg bg-default-200"/>

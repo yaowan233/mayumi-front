@@ -1,9 +1,15 @@
 "use client"
 
-import { Link } from "@heroui/link";
-import { Card, CardBody } from "@heroui/card";
-import { Avatar } from "@heroui/avatar";
-import { Divider } from "@heroui/divider";
+import {Avatar, Card, Separator} from "@heroui/react";
+
+const getInitials = (name?: string) => (name || "?").trim().slice(0, 2).toUpperCase();
+
+const avatarRingClass: Record<"primary" | "secondary" | "warning" | "default", string> = {
+    primary: "ring-primary",
+    secondary: "ring-secondary",
+    warning: "ring-warning",
+    default: "ring-default",
+};
 
 // --- 子组件：贡献者卡片 ---
 const ContributorCard = ({
@@ -20,46 +26,46 @@ const ContributorCard = ({
     isMain?: boolean
 }) => {
     return (
-        <Card
-            as={Link}
+        <a
             href={`https://osu.ppy.sh/users/${osuId}`}
-            isExternal
-            className={`
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block no-underline"
+        >
+            <Card
+                variant="transparent"
+                className={`
                 border border-default-200 dark:border-white/5 transition-all duration-300 group
                 ${isMain 
-                    ? "w-full max-w-md mx-auto bg-gradient-to-br from-white to-default-100 dark:from-zinc-900 dark:to-black hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,111,238,0.15)]" 
-                    : "w-full bg-content1 dark:bg-zinc-900/50 hover:bg-default-100 dark:hover:bg-zinc-800/80 hover:border-default-300 dark:hover:border-white/20"
+                    ? "w-full max-w-lg mx-auto bg-gradient-to-br from-white to-default-100 dark:from-zinc-900 dark:to-black hover:border-primary/50 hover:shadow-[0_0_30px_rgba(0,111,238,0.15)]" 
+                    : "w-full bg-surface dark:bg-zinc-900/50 hover:bg-default-100 dark:hover:bg-zinc-800/80 hover:border-default-300 dark:hover:border-white/20"
                 }
             `}
-        >
-            <CardBody className={`flex flex-row items-center gap-5 ${isMain ? "p-6" : "p-4"}`}>
-                <Avatar
-                    src={`https://a.ppy.sh/${osuId}`}
-                    isBordered
-                    color={color as any}
-                    className={`
-                        shrink-0 transition-transform duration-300 group-hover:scale-105
-                        ${isMain ? "w-20 h-20 text-large" : "w-14 h-14"}
-                    `}
-                />
+            >
+            <Card.Content className={`flex flex-col items-center text-center ${isMain ? "gap-5 p-7" : "gap-4 p-5"}`}>
+                <Avatar className={`shrink-0 ring-3 ring-offset-2 ring-offset-background transition-transform duration-300 group-hover:scale-105 ${avatarRingClass[color]} ${isMain ? "h-20 w-20 text-large" : "h-14 w-14"}`}>
+                    <Avatar.Image className="h-full w-full object-cover" src={`https://a.ppy.sh/${osuId}`} alt={name}/>
+                    <Avatar.Fallback>{getInitials(name)}</Avatar.Fallback>
+                </Avatar>
 
-                <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex w-full min-w-0 flex-col items-center gap-1">
                     {/* 修复：text-foreground 自动适配黑白 */}
                     <span className={`
-                        font-bold text-foreground transition-colors truncate group-hover:text-primary
+                        max-w-full break-words text-center font-bold leading-tight text-foreground transition-colors group-hover:text-primary
                         ${isMain ? "text-2xl" : "text-lg"}
                     `}>
                         {name}
                     </span>
                     <span className={`
-                        text-default-500 uppercase tracking-wider font-mono truncate
+                        max-w-full break-words text-center text-default-500 uppercase tracking-wider font-mono
                         ${isMain ? "text-sm font-bold text-primary" : "text-xs"}
                     `}>
                         {role}
                     </span>
                 </div>
-            </CardBody>
+            </Card.Content>
         </Card>
+        </a>
     );
 };
 
@@ -77,7 +83,7 @@ export default function AboutPage() {
                 </p>
             </div>
 
-            <Divider className="opacity-30" />
+            <Separator className="opacity-30" />
 
             {/* 2. 核心开发 */}
             <section className="flex flex-col gap-6 text-center">
@@ -106,7 +112,7 @@ export default function AboutPage() {
                     <h2 className="text-lg font-bold text-foreground tracking-widest">特别致谢</h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <ContributorCard
                         name="Jason House"
                         osuId="5321112"

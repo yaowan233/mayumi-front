@@ -1,21 +1,20 @@
 "use client"
 
-import {Card, CardBody, CardHeader} from "@heroui/card";
-import {Tab, Tabs} from "@heroui/tabs";
-import {Image} from "@heroui/image";
-import {Link} from "@heroui/link";
-import {Divider} from "@heroui/divider";
-import {Accordion, AccordionItem} from "@heroui/accordion";
 import React, {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Input} from "@heroui/input";
-import {Button} from "@heroui/button";
-import {Chip} from "@heroui/chip";
 import {siteConfig} from "@/config/site";
 import {LinkIcon} from "@/components/icons"; // 假设你有这个图标，或者用 lucide-react
 import {useRouter, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-
+import {
+    Accordion,
+    Avatar,
+    Button,
+    Card,
+    Chip,
+    Input,
+    Separator,
+} from "@heroui/react";
 
 function isPlayerReserved(playerUID: number | undefined, schedule_stage: ScheduleStage): boolean {
     if (!playerUID) return false;
@@ -35,46 +34,44 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
     const [scheduleStages, setScheduleStages] = useState<ScheduleStage []>(tabs);
     const searchParams = useSearchParams();
     const router = useRouter();
+    const [selectedStage, setSelectedStage] = useState(searchParams.get('stage') || tabs.at(-1)?.stage_name || tabs[0]?.stage_name || "");
+    const selectedScheduleStage = scheduleStages.find((stage) => stage.stage_name === selectedStage) || scheduleStages.at(-1) || scheduleStages[0];
+
+    const handleStageChange = (stageName: string) => {
+        setSelectedStage(stageName);
+        router.replace(`?stage=${encodeURIComponent(stageName)}`);
+    };
 
     return (
         <div className="w-full flex flex-col items-center">
-             {/* 增加背景容器或样式优化 */}
-            <Tabs
-                aria-label="Schedule Stages"
-                items={scheduleStages}
-                variant="underlined" // 改为下划线风格更简洁
-                color="primary"
-                className="w-full" // 确保外层占满
-                classNames={{
-                    // 核心修改在这里：
-                    tabList: [
-                        "gap-6 relative rounded-none p-0 border-b border-divider", // 基础样式
-                        "w-full overflow-x-auto scrollbar-hide",                 // 滚动逻辑
-                        "flex justify-start px-6",                               // 手机端：靠左 + 左右留空隙
-                        "md:justify-center md:px-0"                              // 电脑端：居中 + 去除多余空隙
-                    ].join(" "),
-
-                    cursor: "w-full bg-primary",
-                    tab: "max-w-fit px-0 h-12",
-                    tabContent: "text-default-600 group-data-[selected=true]:text-primary group-data-[selected=true]:font-bold text-lg",
-                    panel: "w-full py-4",
-                }}
-                defaultSelectedKey={searchParams.get('stage') || tabs.at(-1)?.stage_name}
-                onSelectionChange={(key) => router.replace(`?stage=${key}`)}
-            >
-                {(schedule_stage) => (
-                    <Tab key={schedule_stage.stage_name} title={schedule_stage.stage_name}>
-                        <div className="w-full max-w-5xl mx-auto">
-                            {schedule_stage.is_lobby ?
-                                <GroupComp schedule={schedule_stage} tournament_name={tournament_name}
-                                           tournamentPlayers={tournamentPlayers} setSchedule={setScheduleStages}/> :
-                                <TeamComp schedule={schedule_stage} tournament_name={tournament_name}
-                                          tournament_players={tournamentPlayers} setSchedule={setScheduleStages}/>
-                            }
-                        </div>
-                    </Tab>
-                )}
-            </Tabs>
+            <div className="w-full border-b border-zinc-200 dark:border-white/[0.08]">
+                <div className="mx-auto flex max-w-5xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
+                    {scheduleStages.map((stage) => {
+                        const active = stage.stage_name === selectedScheduleStage?.stage_name;
+                        return (
+                            <button
+                                key={stage.stage_name}
+                                type="button"
+                                className={`relative h-12 shrink-0 rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
+                                onClick={() => handleStageChange(stage.stage_name)}
+                            >
+                                {stage.stage_name}
+                                {active && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"/>}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+            {selectedScheduleStage && (
+                <div className="w-full max-w-5xl mx-auto py-4">
+                    {selectedScheduleStage.is_lobby ?
+                        <GroupComp schedule={selectedScheduleStage} tournament_name={tournament_name}
+                                   tournamentPlayers={tournamentPlayers} setSchedule={setScheduleStages}/> :
+                        <TeamComp schedule={selectedScheduleStage} tournament_name={tournament_name}
+                                  tournament_players={tournamentPlayers} setSchedule={setScheduleStages}/>
+                    }
+                </div>
+            )}
         </div>
     )
 }
@@ -91,10 +88,10 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
     // 提取公共的 Section Title 组件
     const renderBracketHeader = (title: string, color: "success" | "danger" | "primary") => (
         <div className="flex items-center gap-4 my-4">
-            <Chip color={color} variant="flat" size="lg" className="font-bold min-w-fit">
+            <Chip color={color === "primary" ? "accent" : color} variant="soft" size="lg" className="font-bold min-w-fit">
                 {title}
             </Chip>
-            <Divider className="flex-1" />
+            <Separator className="flex-1" />
         </div>
     );
     const accordionStyle = {
@@ -102,7 +99,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
         // 添加: border border-transparent (预留边框位置防止跳动)
         // 添加: hover:border-primary/50 (鼠标移上去变蓝)
         // 调整: transition-all duration-300 (平滑过渡)
-        base: "group-[.is-splitted]:px-0 group-[.is-splitted]:bg-content1 group-[.is-splitted]:shadow-sm hover:group-[.is-splitted]:bg-content2 border border-default-100/50 hover:border-primary/50 transition-all duration-300 my-2",
+        base: "group-[.is-splitted]:px-0 group-[.is-splitted]:bg-surface group-[.is-splitted]:shadow-sm hover:group-[.is-splitted]:bg-surface-secondary border border-default-100/50 hover:border-primary/50 transition-all duration-300 my-2",
         title: "text-default-500",
         trigger: "py-1", // 稍微减小内边距让整体紧凑一点
         content: "pt-0 pb-4 px-4",
@@ -112,20 +109,27 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
         <div className="flex flex-col gap-6">
             <div>
                 {renderBracketHeader("胜者组 / Winner Bracket", "success")}
-                <Accordion
-                    variant="splitted"
-                    itemClasses={accordionStyle}
-                >
+                <Accordion className="flex flex-col gap-2" hideSeparator>
                     {(schedule.match_info || []).filter((match) => match.is_winner_bracket).map((match_info, index) => (
-                        <AccordionItem
+                        <Accordion.Item
                             key={index}
-                            title={<VSInfoComp match_info={match_info}/>}
-                            textValue={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
+                            id={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
+                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:border-primary/50 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
-                            <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
-                                           tournament_name={tournament_name} tournament_players={tournament_players}
-                                           setSchedule={setSchedule}/>
-                        </AccordionItem>
+                            <Accordion.Heading>
+                                <Accordion.Trigger className="w-full py-1">
+                                    <VSInfoComp match_info={match_info}/>
+                                    <Accordion.Indicator className="ml-3 h-4 w-4 shrink-0" />
+                                </Accordion.Trigger>
+                            </Accordion.Heading>
+                            <Accordion.Panel>
+                                <Accordion.Body className="pt-3 pb-4">
+                                    <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
+                                                   tournament_name={tournament_name} tournament_players={tournament_players}
+                                                   setSchedule={setSchedule}/>
+                                </Accordion.Body>
+                            </Accordion.Panel>
+                        </Accordion.Item>
                     ))}
                 </Accordion>
             </div>
@@ -133,17 +137,27 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
             {schedule.match_info?.some((match) => !match.is_winner_bracket) && (
                 <div>
                     {renderBracketHeader("败者组 / Loser Bracket", "danger")}
-                    <Accordion variant="splitted" itemClasses={accordionStyle}>
+                    <Accordion className="flex flex-col gap-2" hideSeparator>
                         {(schedule.match_info || []).filter((match) => !match.is_winner_bracket).map((match_info, index) => (
-                            <AccordionItem
+                            <Accordion.Item
                                 key={index}
-                                title={<VSInfoComp match_info={match_info}/>}
-                                textValue={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
+                                id={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
+                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:border-primary/50 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                             >
-                                <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
-                                               tournament_name={tournament_name} tournament_players={tournament_players}
-                                               setSchedule={setSchedule}/>
-                            </AccordionItem>
+                                <Accordion.Heading>
+                                    <Accordion.Trigger className="w-full py-1">
+                                        <VSInfoComp match_info={match_info}/>
+                                        <Accordion.Indicator className="ml-3 h-4 w-4 shrink-0" />
+                                    </Accordion.Trigger>
+                                </Accordion.Heading>
+                                <Accordion.Panel>
+                                    <Accordion.Body className="pt-3 pb-4">
+                                        <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
+                                                       tournament_name={tournament_name} tournament_players={tournament_players}
+                                                       setSchedule={setSchedule}/>
+                                    </Accordion.Body>
+                                </Accordion.Panel>
+                            </Accordion.Item>
                         ))}
                     </Accordion>
                 </div>
@@ -171,7 +185,7 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
 
                 {/* 1. 左侧：时间区域 (PC端显示，移动端隐藏或变样式) */}
                 <div className="hidden md:flex flex-col items-center justify-center min-w-[80px]">
-                    <Chip size="sm" variant="flat" color="primary" className="mb-1 border-none">
+                    <Chip size="sm" variant="soft" color="accent" className="mb-1 border-none">
                         {dateStr}
                     </Chip>
                     <span className="text-xl font-mono  text-default-700 leading-none">
@@ -182,15 +196,22 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 {/* 移动端的时间显示 (仅在小屏幕显示) */}
                 <div className="flex md:hidden items-center justify-center w-full px-2 mb-2 gap-2">
                     <div className="flex gap-2 items-center">
-                        <Chip size="sm" variant="flat" color="primary">{dateStr}</Chip>
+                        <Chip size="sm" variant="soft" color="accent">{dateStr}</Chip>
                         <span className="text-lg font-mono  text-default-700">{timeStr}</span>
                     </div>
                     {/* 移动端把链接放这里 */}
                     <div className="flex gap-2">
                          {match_info.match_url?.filter(u => u !== "").map((url, i) => (
-                            <Button key={i} className="bg-primary/20 text-primary" isExternal isIconOnly size="sm" variant="light" as={Link} href={url}>
+                            <a
+                                key={i}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary transition-colors hover:bg-primary/30"
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Match-Link"
+                            >
                                 <LinkIcon className="text-primary w-4 h-4" />
-                            </Button>
+                            </a>
                         ))}
                     </div>
                 </div>
@@ -205,10 +226,9 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                         {match_info.team1.name}
                     </span>
 
-                    <Image
-                        radius="md"
+                    <img
                         alt={match_info.team1.name}
-                        className="w-10 h-10 md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-content2"
+                        className="w-10 h-10 rounded-md md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
                         src={match_info.team1.avatar_url || "https://a.ppy.sh"}
                     />
                 </div>
@@ -228,10 +248,9 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
 
                 {/* 4. 队伍 2 (靠左对齐) */}
                 <div className={`flex items-center  justify-center md:justify-start gap-3 min-w-0 ${notStarted? "opacity-100" : isTeam2Win ? "opacity-100 font-bold" : "opacity-30"}`}>
-                    <Image
-                        radius="md"
+                    <img
                         alt={match_info.team2.name}
-                        className="w-10 h-10 md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-content2"
+                        className="w-10 h-10 rounded-md md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
                         src={match_info.team2.avatar_url || "https://a.ppy.sh"}
                     />
                     {/* PC端名字 (保持不变) */}
@@ -250,11 +269,16 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 <div className="hidden md:flex justify-end gap-2 min-w-[80px]">
                     {match_info.match_url && match_info.match_url.length > 0 &&
                         match_info.match_url.filter(u => u !== "").map((url, i) => (
-                            <Button key={i} isExternal isIconOnly size="sm" variant="flat" color="primary"
-                                    className="bg-primary/20 text-primary"
-                                    aria-label="Match-Link" as={Link} href={url}>
+                            <a
+                                key={i}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary transition-colors hover:bg-primary/30"
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                aria-label="Match-Link"
+                            >
                                 <LinkIcon className="text-primary w-4 h-4" />
-                            </Button>
+                            </a>
                         ))
                     }
                     {/* Accordion 的箭头会自动出现在这里，HeroUI 默认放在最右侧 */}
@@ -302,11 +326,11 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_play
                 {renderInfoSection({ title: "解说", role: "commentator", list: match_info.commentators, canJoin: info?.commentator })}
             </div>
 
-            <Divider />
+            <Separator />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                 <div className="flex flex-col gap-3 min-w-0">
-                    <Chip color="primary" variant="flat" className="self-center">{match_info.team1.name} 热手图</Chip>
+                    <Chip color="accent" variant="soft" className="self-center">{match_info.team1.name} 热手图</Chip>
                     <div className="w-full">
                         {match_info.team1_warmup ?
                             <MapComp map={match_info.team1_warmup}/> :
@@ -316,7 +340,7 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_play
                     <WarmupSelect uid={match_info.team1.uid} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
                 </div>
                 <div className="flex flex-col gap-3 min-w-0">
-                    <Chip color="danger" variant="flat" className="self-center">{match_info.team2.name} 热手图</Chip>
+                    <Chip color="danger" variant="soft" className="self-center">{match_info.team2.name} 热手图</Chip>
                     <div className="w-full">
                         {match_info.team2_warmup ?
                             <MapComp map={match_info.team2_warmup}/> :
@@ -341,7 +365,7 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
     const info = tournamentPlayers.players.find(player => player.uid === playerUID);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {schedule.lobby_info?.map((lobby) => {
                  const date = new Date(lobby.datetime);
                  const canJoinPlayer = info?.player && !isPlayerReserved(playerUID, schedule) && !(lobby.participants?.some((p) => playerUID && p.uid.includes(playerUID)));
@@ -350,28 +374,34 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                  const timeStr = `${formatTime(date.getUTCHours().toString())}:${formatTime(date.getUTCMinutes().toString())}`;
                  return (
                     <Card
-    key={lobby.lobby_name}
-    className="border border-default-200/50 bg-content1/50 hover:bg-content1 hover:border-primary/50 transition-all duration-300"
->
-                        <CardHeader className="flex justify-between items-center py-3 px-4">
-                            <h3 className="font-bold text-lg">{lobby.lobby_name}</h3>
-                            <div className="flex items-center gap-2">
-                                <Chip size="sm" variant="flat" color="primary" className="border-none font-mono">
+                        key={lobby.lobby_name}
+                        className="group overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-colors hover:border-primary/45 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-900/90 dark:hover:bg-zinc-900"
+                    >
+                        <Card.Header className="!flex-row items-center justify-between gap-3 !px-4 !py-3">
+                            <h3 className="min-w-0 truncate text-lg font-black text-zinc-900 dark:text-zinc-100">{lobby.lobby_name}</h3>
+                            <div className="flex shrink-0 items-center gap-2">
+                                <Chip size="sm" variant="soft" color="accent" className="border-none font-mono">
                                     {dateStr} · {timeStr}
                                 </Chip>
                                 {lobby.match_url && lobby.match_url.filter(u => u !== "").length > 0 && (
-                                    <Button className="bg-primary/20 text-primary" isExternal isIconOnly size="sm" variant="light" as={Link} href={lobby.match_url.filter(u => u !== "")[0]}>
+                                    <a
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary transition-colors hover:bg-primary/30"
+                                        href={lobby.match_url.filter(u => u !== "")[0]}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        aria-label="Match-Link"
+                                    >
                                         <LinkIcon className="text-primary w-4 h-4" />
-                                    </Button>
+                                    </a>
                                 )}
                             </div>
-                        </CardHeader>
-                        <Divider />
-                        <CardBody className="flex flex-col gap-4">
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-bold text-default-500 uppercase">裁判</span>
-                                    <Chip size="sm" variant="flat">{lobby.referee?.length || 0}</Chip>
+                        </Card.Header>
+                        <Separator className="bg-zinc-200 dark:bg-white/[0.08]" />
+                        <Card.Content className="flex flex-col gap-4 !px-4 !py-4">
+                            <div className="rounded-lg bg-zinc-100/70 p-3 dark:bg-black/15">
+                                <div className="mb-2 flex items-center justify-between">
+                                    <span className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400">裁判</span>
+                                    <Chip size="sm" variant="soft">{lobby.referee?.length || 0}</Chip>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {lobby.referee?.map((ref) => (
@@ -382,14 +412,14 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                                     {canJoinRef && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={lobby} role="referee" setSchedule={setSchedule}/>}
                                 </div>
                             </div>
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-bold text-default-500 uppercase">选手</span>
-                                    <Chip size="sm" variant="flat" color={lobby.participants?.length === 16 ? "danger" : "default"}>
+                            <div className="rounded-lg bg-zinc-100/70 p-3 dark:bg-black/15">
+                                <div className="mb-2 flex items-center justify-between">
+                                    <span className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400">选手</span>
+                                    <Chip size="sm" variant="soft" color={lobby.participants?.length === 16 ? "danger" : "default"}>
                                         {lobby.participants?.length || 0} / 16
                                     </Chip>
                                 </div>
-                                <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto scrollbar-hide">
+                                <div className="flex max-h-[150px] flex-wrap gap-2 overflow-y-auto scrollbar-hide">
                                     {lobby.participants?.map((p) => (
                                         (playerUID && p.uid.includes(playerUID)) ?
                                             <WithDeletePersonInfo key={p.name} tournament_name={tournament_name} stage_name={schedule.stage_name} info={p} lobbyInfo={lobby} role="player" setSchedule={setSchedule}/> :
@@ -398,7 +428,7 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                                     {canJoinPlayer && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={lobby} role="player" setSchedule={setSchedule}/>}
                                 </div>
                             </div>
-                        </CardBody>
+                        </Card.Content>
                     </Card>
                  )
             })}
@@ -411,21 +441,21 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
 // 使用 HeroUI User 组件，看起来更高级
 const PersonInfo = ({info}: { info: SimpleInfo }) => {
     return (
-        <Link isExternal href={`https://osu.ppy.sh/users/${info.uid[0]}`} className="group">
+        <a target="_blank" rel="noreferrer" href={`https://osu.ppy.sh/users/${info.uid[0]}`} className="group">
             <Chip
-                variant="flat"
-                avatar={
-                    <Image
+                variant="soft"
+                className="h-7 min-h-7 gap-1.5 py-0 pl-1 pr-2 hover:bg-default-200 transition-colors cursor-pointer"
+            >
+                <span className="inline-flex h-5 w-5 shrink-0 overflow-hidden rounded-full">
+                    <img
                         src={info.avatar_url || "https://a.ppy.sh"}
                         alt={info.name}
-                        className="rounded-full w-full h-full object-cover" // 确保图片填充
+                        className="h-full w-full rounded-full object-cover"
                     />
-                }
-                classNames={{ base: "pl-1 hover:bg-default-200 transition-colors cursor-pointer" }}
-            >
-                {info.name}
+                </span>
+                <span className="text-xs font-bold leading-none">{info.name}</span>
             </Chip>
-        </Link>
+        </a>
     )
 }
 
@@ -516,23 +546,26 @@ const WithDeletePersonInfo = ({tournament_name, stage_name, info, lobbyInfo, rol
 
     return (
         <Chip
-            variant="flat"
-            color="primary" // 使用高亮颜色表示"这是我自己"
-            onClose={handleSignOut} // HeroUI Chip 自带的关闭按钮功能
-            avatar={
-                <Image
+            variant="soft"
+            color="accent"
+            className="h-7 min-h-7 gap-1.5 py-0 pl-1 pr-1 hover:bg-primary/20 transition-colors"
+        >
+            <span className="inline-flex h-5 w-5 shrink-0 overflow-hidden rounded-full">
+                <img
                     src={info.avatar_url || "https://a.ppy.sh"}
                     alt={info.name}
-                    className="rounded-full w-full h-full object-cover"
+                    className="h-full w-full rounded-full object-cover"
                 />
-            }
-            classNames={{
-                base: "pl-1 pr-1 h-auto py-1 gap-2 hover:bg-primary/20 transition-colors", // 调整内边距让它看起来不像默认那么挤
-                content: "font-bold text-small",
-                closeButton: "hover:bg-black/10 rounded-full text-lg p-0.5 active:bg-black/20 transition-colors ml-1"
-            }}
-        >
-            {info.name}
+            </span>
+            <span className="text-xs font-bold leading-none">{info.name}</span>
+            <button
+                type="button"
+                className="ml-0.5 inline-flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded-full text-xs leading-none transition-all hover:bg-black/10 hover:text-danger active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 dark:hover:bg-white/10 dark:hover:text-danger"
+                onClick={handleSignOut}
+                aria-label="取消报名"
+            >
+                x
+            </button>
         </Chip>
     )
 }
@@ -548,8 +581,7 @@ const ParticipantJoinHere = ({tournament_name, stage_name, lobbyInfo, role, setS
     return (
         <Button
             size="sm"
-            variant="solid"
-            color="primary"
+            variant="primary"
             className="h-6 min-h-6 px-2 border-1"
             onPress={async () => {
                   const res = await fetch(
@@ -636,8 +668,7 @@ const MapComp = ({map}: { map: map }) => {
   return (
     <Card className="w-full h-[110px] sm:h-[120px] shadow-sm group border-none">
 
-      <Image
-        removeWrapper
+      <img
         alt="Beatmap Cover"
         className="z-0 w-full h-full object-cover absolute top-0 left-0 brightness-[0.55] group-hover:scale-105 transition-transform duration-500"
         src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
@@ -651,8 +682,9 @@ const MapComp = ({map}: { map: map }) => {
 
         {/* --- 上半部分：标题与作者 --- */}
         <div className="flex flex-col gap-0 min-w-0">
-          <Link
-            isExternal
+          <a
+            target="_blank"
+            rel="noreferrer"
             href={`https://osu.ppy.sh/b/${map.map_id}`}
             className="text-white hover:text-primary transition-colors block"
           >
@@ -662,7 +694,7 @@ const MapComp = ({map}: { map: map }) => {
             >
               {map.map_name}
             </h4>
-          </Link>
+          </a>
 
           <div className="flex items-center gap-2 text-xs text-white/80 overflow-hidden mt-0.5">
              {/* 难度名 */}
@@ -722,12 +754,11 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
     const [previewLoading, setPreviewLoading] = useState(false);
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentUser = useContext(CurrentUserContext);
+    const invalidMapId = map_id === "" || isNaN(parseInt(map_id));
 
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
-        if (map_id === "" || isNaN(parseInt(map_id))) {
-            setPreview(null);
-            setPreviewError(null);
+        if (invalidMapId) {
             return;
         }
         debounceRef.current = setTimeout(async () => {
@@ -748,25 +779,24 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
                 setPreviewLoading(false);
             }
         }, 600);
-    }, [map_id]);
+    }, [invalidMapId, map_id]);
 
     if (!uid.includes(currentUser?.currentUser?.uid) || new Date(start_time) < new Date()) {
         return null
     }
     return (
         <div className="flex flex-col gap-2 w-full mt-2">
-            <div className="flex flex-row gap-2 items-center w-full">
-                <Input
-                    size="sm"
-                    labelPlacement="outside"
-                    placeholder="Beatmap ID（例如 123456）"
-                    label="更换热手图"
-                    description="注意：请输入单个难度的 Beatmap ID，而非谱面集 Beatmapset ID"
-                    value={map_id}
-                    onChange={(e) => setMapId(e.target.value)}
-                    className="flex-grow"
-                />
-                <Button size="sm" color="primary" className="mt-5" onPress={async () => {
+            <div className="flex flex-row gap-2 items-end w-full">
+                <label className="flex flex-grow flex-col gap-1 text-sm">
+                    <span className="font-bold text-zinc-700 dark:text-zinc-300">更换热手图</span>
+                    <Input
+                        placeholder="Beatmap ID（例如 123456）"
+                        value={map_id}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMapId(e.target.value)}
+                    />
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">注意：请输入单个难度的 Beatmap ID，而非谱面集 Beatmapset ID</span>
+                </label>
+                <Button size="sm" variant="primary" className="mb-5" onPress={async () => {
                     if (map_id == "" || isNaN(parseInt(map_id))) {
                         alert("请输入正确的 Beatmap ID（纯数字）");
                         return;
@@ -789,13 +819,13 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
                     提交
                 </Button>
             </div>
-            {previewLoading && (
+            {!invalidMapId && previewLoading && (
                 <div className="text-xs text-default-400 px-1">正在查询地图信息…</div>
             )}
-            {previewError && (
+            {!invalidMapId && previewError && (
                 <div className="text-xs text-danger px-1">{previewError}</div>
             )}
-            {preview && <MapComp map={preview} />}
+            {!invalidMapId && preview && <MapComp map={preview} />}
         </div>
     )
 }

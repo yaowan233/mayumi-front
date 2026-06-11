@@ -2,11 +2,7 @@
 import React, {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
-import {Button} from "@heroui/button";
-import {Input} from "@heroui/input";
-import {Switch} from "@heroui/switch";
-import {Card, CardBody, CardHeader} from "@heroui/card";
-import {Spinner} from "@heroui/spinner";
+import {Button, Card, FieldError, Input, Label, Spinner, Switch, TextField} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {TournamentInfo} from "@/components/homepage";
 
@@ -123,7 +119,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     if (isLoading) {
         return (
             <div className="w-full h-[50vh] flex flex-col items-center justify-center gap-4">
-                <Spinner size="lg" color="primary"/>
+                <Spinner size="lg" color="accent"/>
                 <p className="text-default-500">正在加载轮次信息...</p>
             </div>
         );
@@ -161,37 +157,42 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                 ))}
 
                 {/* Add Button: 修复 hover 效果和边框颜色 */}
-                <button
-                    onClick={() => setFormData((prev) => [...prev, createInitialFormData()])}
-                    className="w-full h-16 border-2 border-dashed border-default-300 rounded-2xl flex items-center justify-center gap-2 text-default-500 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 group"
+                <Button
+                    fullWidth
+                    variant="outline"
+                    onPress={() => setFormData((prev) => [...prev, createInitialFormData()])}
+                    className="h-16 border-dashed text-default-500 hover:text-primary"
                 >
                     <PlusIcon/>
-                    <span className="font-bold group-hover:tracking-wider transition-all">添加新轮次</span>
-                </button>
+                    <span className="font-bold">添加新轮次</span>
+                </Button>
             </div>
 
-            {/* Sticky Footer: 修复背景色和边框 */}
             <Card
-                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
-                <CardBody className="flex flex-row justify-between items-center py-4 px-6">
+                variant="secondary"
+                className="sticky bottom-6 z-50 border border-default-200 bg-background/90 backdrop-blur-md shadow-2xl dark:border-white/10 dark:bg-zinc-900/90">
+                <Card.Content className="flex flex-row items-center justify-between gap-4 px-6 py-4">
                     <div className="flex items-center gap-4">
-                        <Button variant="light" onPress={() => router.back()}>取消</Button>
+                        <Button variant="ghost" onPress={() => router.back()}>取消</Button>
                         <div className="text-danger font-medium text-sm animate-pulse">
                             {errMsg && <span>⚠️ {errMsg}</span>}
                         </div>
                     </div>
                     <Button
-                        color="primary"
                         size="lg"
-                        variant="shadow"
+                        variant="primary"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isSaving && <SaveIcon/>}
-                        isLoading={isSaving}
+                        isPending={isSaving}
                         onPress={handleUpdateTournament}
                     >
-                        {isSaving ? "正在保存..." : "保存修改"}
+                        {({isPending}) => (
+                            <>
+                                {!isPending && <SaveIcon/>}
+                                {isPending ? "正在保存..." : "保存修改"}
+                            </>
+                        )}
                     </Button>
-                </CardBody>
+                </Card.Content>
             </Card>
         </div>
     );
@@ -208,21 +209,12 @@ interface RoundCardProps {
 
 const RoundCard = ({index, roundData, isGroup, onChange, onDelete}: RoundCardProps) => {
     return (
-        <Card
-            // 修复：
-            // 1. bg-zinc-900/50 -> bg-content1 (亮色为白，暗色为深灰)
-            // 2. border-white/5 -> border-default-200 dark:border-white/5 (亮色用淡灰边框)
-            className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900/50 transition-colors shadow-sm"
-        >
-            {/* Header: 修复背景色和边框 */}
-            <CardHeader
-                className="flex justify-between items-center px-6 py-4 bg-default-50 dark:bg-white/5 border-b border-default-200 dark:border-white/5">
+        <Card className="transition-colors shadow-sm">
+            <Card.Header className="flex flex-row items-center justify-between border-b border-default-200 px-6 py-4 dark:border-white/5">
                 <div className="flex items-center gap-3">
-                    <div
-                        className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
                         {index + 1}
                     </div>
-                    {/* 修复：text-default-700 -> text-foreground */}
                     <span className="font-bold text-foreground">
                         {roundData.stage_name || "新轮次"}
                     </span>
@@ -230,80 +222,86 @@ const RoundCard = ({index, roundData, isGroup, onChange, onDelete}: RoundCardPro
                 <Button
                     isIconOnly
                     size="sm"
-                    color="danger"
-                    variant="light"
+                    variant="ghost"
                     onPress={onDelete}
-                    className="opacity-50 hover:opacity-100"
+                    className="text-danger opacity-60 hover:bg-danger/10 hover:opacity-100"
+                    aria-label="删除轮次"
                 >
                     <TrashIcon/>
                 </Button>
-            </CardHeader>
+            </Card.Header>
 
-            <CardBody className="p-6">
+            <Card.Content className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
-                    {/* 第一行：轮次名称 */}
                     <div className="lg:col-span-4">
-                        <Input
-                            label="轮次名称"
-                            placeholder="例如：Qualifiers / Round of 16"
-                            value={roundData.stage_name}
-                            isRequired
-                            variant="bordered"
-                            labelPlacement="outside"
-                            onChange={e => onChange({...roundData, stage_name: e.target.value})}
-                        />
+                        <TextField isRequired isInvalid={!roundData.stage_name} validationBehavior="aria">
+                            <Label>轮次名称</Label>
+                            <Input
+                                fullWidth
+                                variant="secondary"
+                                placeholder="例如：Qualifiers / Round of 16"
+                                value={roundData.stage_name}
+                                onChange={e => onChange({...roundData, stage_name: e.target.value})}
+                            />
+                            <FieldError>请输入轮次名称</FieldError>
+                        </TextField>
                     </div>
 
-                    {/* 第二行：时间范围 */}
                     <div className="lg:col-span-3">
-                        <Input
-                            type="date"
-                            label="开始日期"
-                            isRequired
-                            value={roundData.start_time || ''}
-                            variant="bordered"
-                            labelPlacement="outside"
-                            onChange={e => onChange({...roundData, start_time: e.target.value})}
-                        />
+                        <TextField isRequired isInvalid={!roundData.start_time} validationBehavior="aria">
+                            <Label>开始日期</Label>
+                            <Input
+                                fullWidth
+                                type="date"
+                                variant="secondary"
+                                value={roundData.start_time || ''}
+                                onChange={e => onChange({...roundData, start_time: e.target.value})}
+                            />
+                            <FieldError>请输入开始日期</FieldError>
+                        </TextField>
                     </div>
                     <div className="lg:col-span-3">
-                        <Input
-                            type="date"
-                            label="结束日期"
-                            placeholder="可选"
-                            value={roundData.end_time || ''}
-                            variant="bordered"
-                            labelPlacement="outside"
-                            onChange={e => onChange({...roundData, end_time: e.target.value})}
-                        />
+                        <TextField>
+                            <Label>结束日期</Label>
+                            <Input
+                                fullWidth
+                                type="date"
+                                variant="secondary"
+                                value={roundData.end_time || ''}
+                                onChange={e => onChange({...roundData, end_time: e.target.value})}
+                            />
+                        </TextField>
                     </div>
 
-                    {/* 第三行：开关 */}
-                    <div className="lg:col-span-2 flex items-end h-full pb-2">
+                    <div className="lg:col-span-2 flex h-full items-end">
                         <div className="flex flex-col gap-2">
                             <span className="text-small text-default-500">类型设置</span>
                             <Switch
                                 isSelected={roundData.is_lobby}
                                 size="sm"
-                                color="success"
-                                onChange={e => onChange({...roundData, is_lobby: e.target.checked})}
+                                onChange={(isSelected) => onChange({...roundData, is_lobby: isSelected})}
                             >
-                                <span className="text-small text-foreground">小组赛 (Lobby)</span>
+                                <Switch.Control>
+                                    <Switch.Thumb/>
+                                </Switch.Control>
+                                <Label className="text-small text-foreground">小组赛 (Lobby)</Label>
                             </Switch>
                             {isGroup && (
                                 <Switch
                                     isSelected={roundData.is_solo_qualifier ?? false}
                                     size="sm"
-                                    color="warning"
-                                    onChange={e => onChange({...roundData, is_solo_qualifier: e.target.checked})}
+                                    onChange={(isSelected) => onChange({...roundData, is_solo_qualifier: isSelected})}
                                 >
-                                    <span className="text-small text-foreground">单人预选赛</span>
+                                    <Switch.Control>
+                                        <Switch.Thumb/>
+                                    </Switch.Control>
+                                    <Label className="text-small text-foreground">单人预选赛</Label>
                                 </Switch>
                             )}
                         </div>
                     </div>
                 </div>
-            </CardBody>
+            </Card.Content>
         </Card>
     );
 }

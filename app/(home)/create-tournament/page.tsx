@@ -2,11 +2,9 @@
 import {useState} from "react";
 import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
-import {Button} from "@heroui/button";
+import {Button, Card} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {siteConfig} from "@/config/site";
-import {Card, CardBody} from "@heroui/card";
-import {Spinner} from "@heroui/spinner";
 
 // 图标
 const CreateIcon = () => (
@@ -67,25 +65,25 @@ export default function CreateTournamentPage() {
             </div>
 
             {/* Form */}
-            {/* 注意：TournamentInfoForm 内部也需要确保使用了语义化颜色 (如 bg-content1) 而不是写死 bg-zinc-900 */}
+            {/* 注意：TournamentInfoForm 内部也需要确保使用了语义化颜色 (如 bg-surface) 而不是写死 bg-zinc-900 */}
             <TournamentInfoForm formData={formData} setFormData={setFormData} errMsg={errMsg}/>
 
             {/* Footer Action */}
             <Card
+                variant="secondary"
                 // 修复：背景色、边框适配亮/暗模式
                 // 亮色: bg-background/90 border-default-200
                 // 暗色: dark:bg-zinc-900/90 dark:border-white/10
                 className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl"
             >
-                <CardBody className="flex flex-row justify-between items-center py-4 px-6">
+                <Card.Content className="flex flex-row justify-between items-center py-4 px-6">
 
                     {/* 左侧：取消按钮 + 错误信息 */}
                     <div className="flex items-center gap-4">
                         <Button
-                            variant="light"
-                            color="danger"
+                            variant="ghost"
                             onPress={() => router.back()}
-                            className="font-medium"
+                            className="font-medium text-danger"
                         >
                             取消
                         </Button>
@@ -97,17 +95,20 @@ export default function CreateTournamentPage() {
 
                     {/* 右侧：提交按钮 */}
                     <Button
-                        color="primary"
                         size="lg"
-                        variant="shadow"
+                        variant="primary"
                         className="font-bold px-8 shadow-primary/20"
-                        startContent={!isLoading && <CreateIcon />}
-                        isLoading={isLoading}
+                        isPending={isLoading}
                         onPress={handleCreateTournament}
                     >
-                        {isLoading ? "正在提交..." : "立即创建比赛"}
+                        {({isPending}) => (
+                            <>
+                                {!isPending && <CreateIcon />}
+                                {isPending ? "正在提交..." : "立即创建比赛"}
+                            </>
+                        )}
                     </Button>
-                </CardBody>
+                </Card.Content>
             </Card>
         </div>
     );

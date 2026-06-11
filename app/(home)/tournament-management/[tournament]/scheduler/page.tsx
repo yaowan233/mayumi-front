@@ -1,22 +1,30 @@
 "use client";
 
-import React, {useContext, useEffect, useState} from "react";
+import React, {type Key, useContext, useEffect, useState} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
-import {Button} from "@heroui/button";
-import {Input} from "@heroui/input";
-import {Autocomplete, AutocompleteItem} from "@heroui/autocomplete";
-import {Avatar} from "@heroui/avatar";
-import {Divider} from "@heroui/divider";
-import {useFilter} from "@react-aria/i18n";
-import {Switch} from "@heroui/switch";
-import {Chip} from "@heroui/chip";
-import {Spinner} from "@heroui/spinner";
+import {
+    Accordion,
+    Autocomplete,
+    Avatar,
+    Button,
+    Card,
+    Chip,
+    Description,
+    EmptyState,
+    Input,
+    Label,
+    ListBox,
+    SearchField,
+    Separator,
+    Spinner,
+    Switch,
+    Tabs,
+    TextField,
+    useFilter,
+} from "@heroui/react";
 import {siteConfig} from "@/config/site";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
-import {Tab, Tabs} from "@heroui/tabs";
-import {Card, CardBody} from "@heroui/card";
-import {Accordion, AccordionItem} from "@heroui/accordion";
 import {TournamentInfo} from "@/components/homepage";
 
 // --- 图标 ---
@@ -163,8 +171,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         setScheduleInfo([...scheduleInfo, newSchedule]);
     };
 
-    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg"
-                                                                                                     color="primary"/>
+    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg"/>
     </div>;
 
     return (
@@ -189,55 +196,64 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
 
             {/* Content ... */}
             <div className="flex flex-col gap-6">
-                <Tabs
-                    aria-label="Rounds" items={roundInfo} selectedKey={selectedRound ?? undefined}
-                    onSelectionChange={(key) => setSelectedRound(key as string)} variant="underlined" color="primary"
-                    classNames={{
-                        tabList: "gap-6 w-full relative rounded-none p-0 border-b border-default-200 dark:border-white/10",
-                        cursor: "w-full bg-primary",
-                        tab: "max-w-fit px-0 h-12",
-                        tabContent: "group-data-[selected=true]:text-primary font-bold text-lg"
-                    }}
-                >
-                    {(item) => <Tab key={item.stage_name} title={item.stage_name}/>}
-                </Tabs>
+                <Tabs selectedKey={selectedRound ?? undefined} onSelectionChange={(key) => setSelectedRound(key as string)}>
+                    <Tabs.ListContainer className="w-fit max-w-full">
+                        <Tabs.List aria-label="Rounds" className="w-fit max-w-full">
+                            {roundInfo.map((item) => (
+                                <Tabs.Tab key={item.stage_name} id={item.stage_name} className="whitespace-nowrap">
+                                    <span>{item.stage_name}</span>
+                                    <Tabs.Indicator/>
+                                </Tabs.Tab>
+                            ))}
+                        </Tabs.List>
+                    </Tabs.ListContainer>
 
-                <div className="flex flex-col gap-4">
-                    {scheduleInfo.map((schedule, index) => {
-                        if (schedule.stage_name !== selectedRound) return null;
+                    {roundInfo.map((item) => {
+                        const schedulesForRound = scheduleInfo
+                            .map((schedule, index) => ({schedule, originalIndex: index}))
+                            .filter(({schedule}) => schedule.stage_name === item.stage_name);
 
                         return (
-                            <ScheduleCard
-                                key={index}
-                                index={index}
-                                schedule={schedule}
-                                staffMembers={staffMembers} // 传所有人员用于选Staff
-                                participants={participantsSource} // 传筛选后的参赛单位用于选队伍/选手
-                                onChange={(newData: Schedule) => updateSchedule(index, newData)}
-                                onDelete={() => removeSchedule(index)}
-                                isTeamMode={tournamentInfo?.is_group && !isSoloRound} // 团队赛且非单人预选赛
-                            />
+                            <Tabs.Panel key={item.stage_name} id={item.stage_name} className="pt-6">
+                                <div className="flex flex-col gap-4">
+                                    {schedulesForRound.map(({schedule, originalIndex}) => (
+                                        <ScheduleCard
+                                            key={schedule.match_id}
+                                            index={originalIndex}
+                                            schedule={schedule}
+                                            staffMembers={staffMembers}
+                                            participants={participantsSource}
+                                            onChange={(newData: Schedule) => updateSchedule(originalIndex, newData)}
+                                            onDelete={() => removeSchedule(originalIndex)}
+                                            isTeamMode={tournamentInfo?.is_group && !isSoloRound}
+                                        />
+                                    ))}
+                                    <Button variant="secondary" size="sm" className="h-10 border-2 border-dashed" onPress={addSchedule}>
+                                        <span className="flex items-center gap-2 text-sm">
+                                            <PlusIcon/>
+                                            <span>添加新赛程</span>
+                                        </span>
+                                    </Button>
+                                </div>
+                            </Tabs.Panel>
                         );
                     })}
-                    {/* Add Button ... */}
-                    <button onClick={addSchedule}
-                            className="w-full h-16 border-2 border-dashed border-default-300 rounded-2xl flex items-center justify-center gap-2 text-default-500 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all duration-300 group">
-                        <PlusIcon/>
-                        <span className="font-bold group-hover:tracking-wider transition-all">添加新赛程</span>
-                    </button>
-                </div>
+                </Tabs>
             </div>
 
             {/* Footer ... */}
             <Card
-                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
-                <CardBody className="flex flex-row justify-between items-center py-4 px-6">
+                variant="secondary"
+                className="sticky bottom-6 z-50 border border-default-200 bg-background/90 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/90">
+                <Card.Content className="flex flex-row items-center justify-between px-6 py-4">
                     <div className="text-danger font-medium text-sm animate-pulse">{errMsg &&
                         <span>⚠️ {errMsg}</span>}</div>
-                    <Button color="primary" size="lg" variant="shadow" className="font-bold px-8 shadow-primary/20"
-                            startContent={!isSaving && <SaveIcon/>} isLoading={isSaving}
-                            onPress={handleSave}>{isSaving ? "正在保存..." : "保存赛程"}</Button>
-                </CardBody>
+                    <Button size="lg" variant="primary" className="px-8 font-bold shadow-primary/20" isPending={isSaving}
+                            onPress={handleSave}>
+                        {!isSaving && <SaveIcon/>}
+                        <span>{isSaving ? "正在保存..." : "保存赛程"}</span>
+                    </Button>
+                </Card.Content>
             </Card>
         </div>
     );
@@ -266,88 +282,94 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
 
     return (
         <Card
-            className="border border-default-200 dark:border-white/5 bg-content1 dark:bg-zinc-900 shadow-sm transition-all hover:border-primary/50">
-            <Accordion isCompact variant="splitted" className="px-0">
-                <AccordionItem
-                    key="1"
-                    aria-label={title}
-                    title={
-                        <div className="flex items-center justify-between w-full pr-4">
-                            <div className="flex flex-col">
-                                <span className="font-bold text-foreground text-lg">{title}</span>
-                                <span className="text-xs text-default-400 font-mono mt-1">{subtitle}</span>
+            className="overflow-hidden p-1 shadow-sm transition-colors">
+            <Accordion className="px-0">
+                <Accordion.Item id="details" className="group">
+                    <Accordion.Heading>
+                        <Accordion.Trigger className="px-6 py-5 text-left">
+                            <div className="flex w-full items-center justify-between gap-4 pr-2">
+                                <div className="flex flex-col">
+                                    <span className="text-lg font-bold text-foreground">{title}</span>
+                                    <span className="mt-1 font-mono text-xs text-default-400">{subtitle}</span>
+                                </div>
+                                {!schedule.is_lobby && (
+                                    <Chip size="sm" color={schedule.is_winner_bracket ? "success" : "danger"} variant="soft"
+                                          className="border-none">
+                                        {schedule.is_winner_bracket ? "胜者组" : "败者组"}
+                                    </Chip>
+                                )}
                             </div>
-                            {!schedule.is_lobby && (
-                                <Chip size="sm" color={schedule.is_winner_bracket ? "success" : "danger"} variant="dot"
-                                      className="border-none">
-                                    {schedule.is_winner_bracket ? "胜者组" : "败者组"}
-                                </Chip>
-                            )}
-                        </div>
-                    }
-                    className="group"
-                >
-                    <div className="pt-2 pb-6 px-2 flex flex-col gap-6">
-                        <Divider className="opacity-50 mb-2"/>
+                            <Accordion.Indicator/>
+                        </Accordion.Trigger>
+                    </Accordion.Heading>
+                    <Accordion.Panel>
+                        <Accordion.Body className="px-6 pb-6 pt-2">
+                            <div className="flex flex-col gap-6">
+                                <Separator className="opacity-50"/>
 
                         {/* 1. 基础信息 */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {schedule.is_lobby ? (
-                                <Input label="Lobby 名称" size="sm" isRequired value={schedule.name}
-                                       onChange={e => onChange({...schedule, name: e.target.value})}/>
+                                <TextField isRequired>
+                                    <Label>Lobby 名称</Label>
+                                    <Input variant="secondary" value={schedule.name ?? ""}
+                                           onChange={e => onChange({...schedule, name: e.target.value})}/>
+                                </TextField>
                             ) : (
                                 <div className="flex items-center gap-2 lg:col-span-2">
-                                    <Switch size="sm" isSelected={schedule.is_winner_bracket} onChange={e => onChange({
+                                    <Switch size="sm" isSelected={schedule.is_winner_bracket} onChange={(isSelected) => onChange({
                                         ...schedule,
-                                        is_winner_bracket: e.target.checked
+                                        is_winner_bracket: isSelected
                                     })}>
-                                        胜者组 Match
+                                        <Switch.Control>
+                                            <Switch.Thumb/>
+                                        </Switch.Control>
+                                        <Switch.Content>
+                                            <Label>胜者组 Match</Label>
+                                        </Switch.Content>
                                     </Switch>
                                 </div>
                             )}
                             <div className="flex gap-2 lg:col-span-2">
+                                <TextField isRequired className="w-full">
+                                    <Label>比赛时间 (UTC)</Label>
                                     <Input
-                                    type="datetime-local"
-                                    label="比赛时间 (UTC)"
-                                    size="sm"
-                                    isRequired
-                                    value={(() => {
-                                        if (!schedule.match_time) return "";
-                                        const date = new Date(schedule.match_time);
-                                        if (isNaN(date.getTime())) return "";
+                                        type="datetime-local"
+                                        variant="secondary"
+                                        value={(() => {
+                                            if (!schedule.match_time) return "";
+                                            const date = new Date(schedule.match_time);
+                                            if (isNaN(date.getTime())) return "";
 
-                                        const pad = (n: number) => n.toString().padStart(2, '0');
-                                        // 关键：全部使用 getUTC... 方法
-                                        return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
-                                    })()}
-                                    onChange={e => {
-                                        const val = e.target.value; // 格式: "2024-01-01T14:00"
-                                        if (!val) return;
+                                            const pad = (n: number) => n.toString().padStart(2, '0');
+                                            return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
+                                        })()}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (!val) return;
 
-                                        const [datePart, timePart] = val.split('T');
-                                        const [year, month, day] = datePart.split('-').map(Number);
-                                        const [hours, minutes] = timePart.split(':').map(Number);
+                                            const [datePart, timePart] = val.split('T');
+                                            const [year, month, day] = datePart.split('-').map(Number);
+                                            const [hours, minutes] = timePart.split(':').map(Number);
 
-                                        const utcDate = new Date();
-                                        // 关键：使用 setUTC... 方法，强行把输入的 "14:00" 设为 UTC 的 14:00
-                                        utcDate.setUTCFullYear(year, month - 1, day);
-                                        utcDate.setUTCHours(hours, minutes, 0, 0);
+                                            const utcDate = new Date();
+                                            utcDate.setUTCFullYear(year, month - 1, day);
+                                            utcDate.setUTCHours(hours, minutes, 0, 0);
 
-                                        onChange({...schedule, match_time: utcDate.toISOString()});
-                                    }}
-                                />
+                                            onChange({...schedule, match_time: utcDate.toISOString()});
+                                        }}
+                                    />
+                                </TextField>
                             </div>
                         </div>
 
                         {/* 2. 对阵与人员 */}
                         {!schedule.is_lobby ? (
                             <div
-                                className="p-4 bg-default-100 dark:bg-zinc-800/50 rounded-xl border border-default-200 dark:border-white/5">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                                    {/* 这里传入 participants (已筛选好的队伍或个人) */}
+                                className="rounded-xl border border-default-200 bg-default-100 p-4 dark:border-white/5 dark:bg-zinc-800/50">
+                                <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
                                     <div className="flex flex-col gap-2">
-                                        <span
-                                            className="text-xs font-bold text-default-500 uppercase">Team 1 (Blue)</span>
+                                        <span className="text-sm text-default-500">Team 1 (Blue)</span>
                                         <TeamSelect
                                             label={isTeamMode ? "选择队伍" : "选择选手"}
                                             items={participants}
@@ -357,15 +379,17 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                                 team1: key as string
                                             })}
                                         />
-                                        <Input type="number" label="分数" size="sm" placeholder="0"
-                                               value={schedule.team1_score?.toString()} onChange={e => onChange({
-                                            ...schedule,
-                                            team1_score: parseInt(e.target.value) || 0
-                                        })}/>
+                                        <TextField>
+                                            <Label>分数</Label>
+                                            <Input type="number" placeholder="0" variant="secondary"
+                                                   value={schedule.team1_score?.toString() ?? ""} onChange={e => onChange({
+                                                ...schedule,
+                                                team1_score: parseInt(e.target.value) || 0
+                                            })}/>
+                                        </TextField>
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <span
-                                            className="text-xs font-bold text-default-500 uppercase">Team 2 (Red)</span>
+                                        <span className="text-sm text-default-500">Team 2 (Red)</span>
                                         <TeamSelect
                                             label={isTeamMode ? "选择队伍" : "选择选手"}
                                             items={participants}
@@ -375,36 +399,39 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                                 team2: key as string
                                             })}
                                         />
-                                        <Input type="number" label="分数" size="sm" placeholder="0"
-                                               value={schedule.team2_score?.toString()} onChange={e => onChange({
-                                            ...schedule,
-                                            team2_score: parseInt(e.target.value) || 0
-                                        })}/>
+                                        <TextField>
+                                            <Label>分数</Label>
+                                            <Input type="number" placeholder="0" variant="secondary"
+                                                   value={schedule.team2_score?.toString() ?? ""} onChange={e => onChange({
+                                                ...schedule,
+                                                team2_score: parseInt(e.target.value) || 0
+                                            })}/>
+                                        </TextField>
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex flex-col gap-2">
-                                <span className="text-xs font-bold text-default-500 uppercase">选手名单</span>
+                                <span className="text-sm font-medium text-foreground">选手名单</span>
                                 <MultiSelect
                                     items={participants}
                                     selectedKeys={schedule.participants || []}
                                     onSelectionChange={(keys: string[]) => onChange({...schedule, participants: keys})}
-                                    placeholder={isTeamMode ? "添加队伍..." : "添加选手..."}
+                                    placeholder={isTeamMode ? "添加人员" : "添加人员"}
                                 />
                             </div>
                         )}
 
                         {/* 3. Staff 配置 (使用 staffMembers) */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div className="flex flex-col gap-2">
-                                <span className="text-xs font-bold text-default-500">裁判 (Referees)</span>
+                                        <span className="text-sm font-medium text-foreground">裁判</span>
                                 <MultiSelect items={staffMembers.filter(m => m.referee)}
                                              selectedKeys={schedule.referee || []}
                                              onSelectionChange={(keys: string[]) => onChange({...schedule, referee: keys})}/>
                             </div>
                             <div className="flex flex-col gap-2">
-                                <span className="text-xs font-bold text-default-500">解说 (Commentators)</span>
+                                        <span className="text-sm font-medium text-foreground">解说</span>
                                 <MultiSelect items={staffMembers.filter(m => m.commentator)}
                                              selectedKeys={schedule.commentators || []}
                                              onSelectionChange={(keys: string[]) => onChange({
@@ -413,7 +440,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                              })}/>
                             </div>
                             <div className="flex flex-col gap-2">
-                                <span className="text-xs font-bold text-default-500">直播 (Streamers)</span>
+                                        <span className="text-sm font-medium text-foreground">直播</span>
                                 <MultiSelect items={staffMembers.filter(m => m.streamer)}
                                              selectedKeys={schedule.streamer || []}
                                              onSelectionChange={(keys: string[]) => onChange({
@@ -425,22 +452,22 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
 
                         {/* 4. 链接管理 ... (保持不变) */}
                         <div className="flex flex-col gap-2">
-                            <span className="text-xs font-bold text-default-500">Match Links (MP Link)</span>
+                            <span className="text-sm font-medium text-foreground">比赛链接</span>
                             {(schedule.match_url || [""]).map((url: string, i: number) => (
-                                <div key={i} className="flex gap-2">
-                                    <Input size="sm" value={url} placeholder="https://osu.ppy.sh/community/matches/..."
+                                <div key={i} className="flex items-center gap-2">
+                                    <Input className="flex-1" variant="secondary" value={url} placeholder="https://osu.ppy.sh/community/matches/..."
                                            onChange={e => {
-                                               const newUrls = [...(schedule.match_url || [""])];
-                                               newUrls[i] = e.target.value;
-                                               onChange({...schedule, match_url: newUrls});
-                                           }}/>
+                                                const newUrls = [...(schedule.match_url || [""])];
+                                                newUrls[i] = e.target.value;
+                                                onChange({...schedule, match_url: newUrls});
+                                            }}/>
                                     {i === (schedule.match_url?.length || 1) - 1 ? (
-                                        <Button isIconOnly size="sm" onPress={() => onChange({
+                                        <Button isIconOnly className="shrink-0" size="sm" variant="secondary" onPress={() => onChange({
                                             ...schedule,
                                             match_url: [...(schedule.match_url || []), ""]
                                         })}>+</Button>
                                     ) : (
-                                        <Button isIconOnly size="sm" color="danger" onPress={() => onChange({
+                                        <Button isIconOnly className="shrink-0" size="sm" variant="secondary" onPress={() => onChange({
                                             ...schedule,
                                             match_url: schedule.match_url.filter((_: string, idx: number) => idx !== i)
                                         })}>-</Button>
@@ -450,11 +477,15 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         </div>
 
                         <div className="flex justify-end pt-4">
-                            <Button color="danger" variant="flat" onPress={onDelete}
-                                    startContent={<TrashIcon/>}>删除此赛程</Button>
+                            <Button onPress={onDelete}  variant="danger">
+                                <TrashIcon/>
+                                <span>删除此赛程</span>
+                            </Button>
                         </div>
                     </div>
-                </AccordionItem>
+                        </Accordion.Body>
+                    </Accordion.Panel>
+                </Accordion.Item>
             </Accordion>
         </Card>
     );
@@ -467,42 +498,111 @@ const TeamSelect = ({items, selectedKey, onSelectionChange, label}: {
     onSelectionChange: (key: string) => void;
     label: string;
 }) => {
+    const [inputValue, setInputValue] = useState("");
+    const {contains} = useFilter({sensitivity: 'base'});
+    const filteredItems = items.filter((item) => contains(item.name, inputValue));
+
+    const onInputChange = (value: string) => {
+        setInputValue(value);
+    };
+
+    const handleSelectionChange = (key: Key | null) => {
+        if (!key) {
+            return;
+        }
+
+        const nextKey = String(key);
+        const selectedItem = items.find((item) => item.name === nextKey);
+        setInputValue(selectedItem?.name ?? nextKey);
+        onSelectionChange(nextKey);
+    };
+
     return (
         <Autocomplete
-            label={label}
-            size="sm"
-            defaultSelectedKey={selectedKey}
-            onSelectionChange={(key) => { if (key != null) onSelectionChange(key.toString()); }}
-            variant="bordered"
+            aria-label={label}
+            className="w-full"
+            variant="secondary"
+            value={selectedKey || null}
+            onChange={handleSelectionChange}
+            onClear={() => {
+                setInputValue("");
+                onSelectionChange("");
+            }}
+            selectionMode="single"
         >
-            {items.map((item) => (
-                <AutocompleteItem key={item.name} textValue={item.name}>
-                    <div className="flex gap-2 items-center">
-                        <Avatar src={"icon_url" in item ? (item.icon_url ?? `https://a.ppy.sh/`) : `https://a.ppy.sh/${(item as Player).uid}`} size="sm"/>
-                        <span>{item.name}</span>
-                    </div>
-                </AutocompleteItem>
-            ))}
+            <Label>{label}</Label>
+            <Autocomplete.Trigger>
+                <Autocomplete.Value>
+                    {({defaultChildren, isPlaceholder, state}) => {
+                        if (isPlaceholder || state.selectedItems.length === 0) {
+                            return defaultChildren;
+                        }
+
+                        const selectedItem = items.find((item) => item.name === state.selectedItems[0]?.key);
+                        if (!selectedItem) {
+                            return defaultChildren;
+                        }
+
+                        return (
+                            <div className="flex items-center gap-2">
+                                <Avatar className="size-4" size="sm">
+                                    <Avatar.Image src={"icon_url" in selectedItem ? (selectedItem.icon_url ?? "https://a.ppy.sh/") : `https://a.ppy.sh/${(selectedItem as Player).uid}`}/>
+                                    <Avatar.Fallback>{selectedItem.name?.[0] ?? "?"}</Avatar.Fallback>
+                                </Avatar>
+                                <span>{selectedItem.name}</span>
+                            </div>
+                        );
+                    }}
+                </Autocomplete.Value>
+                <Autocomplete.ClearButton/>
+                <Autocomplete.Indicator/>
+            </Autocomplete.Trigger>
+            <Autocomplete.Popover>
+                <Autocomplete.Filter filter={contains}>
+                    <SearchField autoFocus name="team-search" variant="secondary" value={inputValue}
+                                 onChange={onInputChange}>
+                        <SearchField.Group>
+                            <SearchField.SearchIcon/>
+                            <SearchField.Input placeholder={`搜索${label}...`}/>
+                            <SearchField.ClearButton/>
+                        </SearchField.Group>
+                    </SearchField>
+                    <ListBox renderEmptyState={() => <EmptyState>没有匹配项</EmptyState>}>
+                        {filteredItems.map((item) => (
+                            <ListBox.Item key={item.name} id={item.name} textValue={item.name}>
+                                <Avatar size="sm">
+                                    <Avatar.Image src={"icon_url" in item ? (item.icon_url ?? "https://a.ppy.sh/") : `https://a.ppy.sh/${(item as Player).uid}`}/>
+                                    <Avatar.Fallback>{item.name?.[0] ?? "?"}</Avatar.Fallback>
+                                </Avatar>
+                                <div className="flex flex-col">
+                                    <Label>{item.name}</Label>
+                                    <Description>{"uid" in item ? `#${item.uid}` : "队伍"}</Description>
+                                </div>
+                                <ListBox.ItemIndicator/>
+                            </ListBox.Item>
+                        ))}
+                    </ListBox>
+                </Autocomplete.Filter>
+            </Autocomplete.Popover>
         </Autocomplete>
     )
 }
 
 // --- 通用组件：多选 Staff/Player ---
 // 这是一个简化的多选实现，实际上 HeroUI 的 Autocomplete 暂不支持多选，这里用 Input + Chip 模拟，或者你可以用 Select multiple
-const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添加..."}: {
+const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添加人员"}: {
     items: (Player | Team)[];
     selectedKeys: string[];
     onSelectionChange: (keys: string[]) => void;
     placeholder?: string;
 }) => {
     const [inputVal, setInputVal] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
 
-    // 过滤逻辑
-    let {contains} = useFilter({sensitivity: 'base'});
+    const {contains} = useFilter({sensitivity: 'base'});
     const filteredItems = items.filter((item) => contains(item.name, inputVal));
 
-    // 处理选中事件
-    const handleSelectionChange = (key: React.Key | null) => {
+    const handleSelectionChange = (key: Key | null) => {
         if (!key) return;
 
         const keyString = key.toString();
@@ -512,10 +612,9 @@ const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添
             onSelectionChange([...selectedKeys, keyString]);
         }
 
-        // 关键：选中后立刻清空输入框
-        // 使用 setTimeout 确保在组件内部状态更新后执行
         requestAnimationFrame(() => {
             setInputVal("");
+            setIsOpen(true);
         });
     };
 
@@ -523,52 +622,77 @@ const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添
 
     return (
         <div
-            className="flex flex-wrap gap-2 p-2 rounded-lg border border-default-200 dark:border-white/10 min-h-[40px] bg-default-100 dark:bg-zinc-800/50 items-center">
+            className="flex min-h-[40px] flex-wrap items-center gap-2 rounded-lg border border-default-200 bg-default-100 p-2 dark:border-white/10 dark:bg-zinc-800/50">
             {selectedKeys.map((key: string) => {
                 const item = itemMap.get(key);
                 return (
-                    <Chip
-                        key={key}
-                        onClose={() => onSelectionChange(selectedKeys.filter((k: string) => k !== key))}
-                        variant="flat"
-                        size="sm"
-                        avatar={<Avatar src={item && "icon_url" in item ? item.icon_url : `https://a.ppy.sh/${(item as Player)?.uid}`} size="sm" name={key}/>}
-                    >
-                        {key}
+                    <Chip key={key} color="default" variant="primary" size="sm">
+                        <span className="flex items-center gap-2 text-foreground">
+                            <Avatar size="sm" className="size-5 shrink-0">
+                                <Avatar.Image src={item && "icon_url" in item ? item.icon_url : `https://a.ppy.sh/${(item as Player)?.uid}`}/>
+                                <Avatar.Fallback>{key[0] ?? "?"}</Avatar.Fallback>
+                            </Avatar>
+                            <span className="max-w-40 truncate">{key}</span>
+                            <button
+                                type="button"
+                                className="text-foreground/70 transition-opacity hover:opacity-70"
+                                onClick={() => onSelectionChange(selectedKeys.filter((k: string) => k !== key))}
+                                aria-label={`移除 ${key}`}
+                            >
+                                ×
+                            </button>
+                        </span>
                     </Chip>
                 );
             })}
 
             <Autocomplete
                 aria-label="Add"
-                placeholder={placeholder}
-                className="w-32 flex-grow"
-                inputValue={inputVal}
-                onInputChange={setInputVal}
-                selectedKey={null}
-                onSelectionChange={handleSelectionChange}
-                size="sm"
-                classNames={{
-                    base: "min-w-[100px]",
+                className="min-w-[140px] flex-1"
+                variant="secondary"
+                value={null}
+                isOpen={isOpen}
+                onOpenChange={setIsOpen}
+                onChange={handleSelectionChange}
+                onClear={() => {
+                    setInputVal("");
+                    setIsOpen(true);
                 }}
-                inputProps={{
-                    classNames: {
-                        inputWrapper: "bg-transparent shadow-none border-none data-[hover=true]:bg-transparent group-data-[focus=true]:bg-transparent px-0 min-h-unit-6 h-auto",
-                        input: "text-small",
-                    }
-                }}
-                listboxProps={{
-                    hideSelectedIcon: true,
-                }}
+                selectionMode="single"
             >
-                {filteredItems.map((item) => (
-                    <AutocompleteItem key={item.name} textValue={item.name}>
-                        <div className="flex gap-2 items-center">
-                            <Avatar src={"icon_url" in item ? (item.icon_url ?? `https://a.ppy.sh/`) : `https://a.ppy.sh/${(item as Player).uid}`} size="sm" name={item.name}/>
-                            <span>{item.name}</span>
-                        </div>
-                    </AutocompleteItem>
-                ))}
+                <Autocomplete.Trigger className="flex min-h-8 w-full items-center justify-between gap-2 border-none bg-transparent px-2 py-1.5 shadow-none data-[hover=true]:bg-transparent data-[focus-visible=true]:ring-0 dark:bg-transparent">
+                    <Autocomplete.Value className="flex-1">
+                        {() => <span className="flex min-h-5 items-center text-sm text-default-400">{placeholder}</span>}
+                    </Autocomplete.Value>
+                    <Autocomplete.Indicator className="shrink-0 text-lg text-default-500"/>
+                </Autocomplete.Trigger>
+                <Autocomplete.Popover>
+                    <Autocomplete.Filter filter={contains}>
+                        <SearchField autoFocus name="multi-select-search" variant="secondary" value={inputVal}
+                                     onChange={setInputVal}>
+                            <SearchField.Group>
+                                <SearchField.SearchIcon/>
+                                <SearchField.Input placeholder={placeholder}/>
+                                <SearchField.ClearButton/>
+                            </SearchField.Group>
+                        </SearchField>
+                        <ListBox renderEmptyState={() => <EmptyState>没有匹配项</EmptyState>}>
+                            {filteredItems.map((item) => (
+                                <ListBox.Item key={item.name} id={item.name} textValue={item.name}>
+                                    <Avatar size="sm">
+                                        <Avatar.Image src={"icon_url" in item ? (item.icon_url ?? "https://a.ppy.sh/") : `https://a.ppy.sh/${(item as Player).uid}`}/>
+                                        <Avatar.Fallback>{item.name?.[0] ?? "?"}</Avatar.Fallback>
+                                    </Avatar>
+                                    <div className="flex flex-col">
+                                        <Label>{item.name}</Label>
+                                        <Description>{"uid" in item ? `#${item.uid}` : "队伍"}</Description>
+                                    </div>
+                                    <ListBox.ItemIndicator/>
+                                </ListBox.Item>
+                            ))}
+                        </ListBox>
+                    </Autocomplete.Filter>
+                </Autocomplete.Popover>
             </Autocomplete>
         </div>
     )
