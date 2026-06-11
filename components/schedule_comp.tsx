@@ -1,10 +1,11 @@
 "use client"
 
+import NextLink from "next/link";
 import React, {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {LinkIcon} from "@/components/icons"; // 假设你有这个图标，或者用 lucide-react
-import {useRouter, useSearchParams} from "next/navigation";
+import {usePathname, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {
     Accordion,
@@ -33,13 +34,12 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
 }) => {
     const [scheduleStages, setScheduleStages] = useState<ScheduleStage []>(tabs);
     const searchParams = useSearchParams();
-    const router = useRouter();
+    const pathname = usePathname();
     const [selectedStage, setSelectedStage] = useState(searchParams.get('stage') || tabs.at(-1)?.stage_name || tabs[0]?.stage_name || "");
     const selectedScheduleStage = scheduleStages.find((stage) => stage.stage_name === selectedStage) || scheduleStages.at(-1) || scheduleStages[0];
 
     const handleStageChange = (stageName: string) => {
         setSelectedStage(stageName);
-        router.replace(`?stage=${encodeURIComponent(stageName)}`);
     };
 
     return (
@@ -49,15 +49,16 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
                     {scheduleStages.map((stage) => {
                         const active = stage.stage_name === selectedScheduleStage?.stage_name;
                         return (
-                            <button
+                            <NextLink
                                 key={stage.stage_name}
-                                type="button"
-                                className={`relative h-12 shrink-0 rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
+                                href={`${pathname}?stage=${encodeURIComponent(stage.stage_name)}`}
+                                scroll={false}
+                                className={`relative flex h-12 shrink-0 cursor-pointer items-center rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
                                 onClick={() => handleStageChange(stage.stage_name)}
                             >
                                 {stage.stage_name}
                                 {active && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"/>}
-                            </button>
+                            </NextLink>
                         );
                     })}
                 </div>
@@ -94,17 +95,6 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
             <Separator className="flex-1" />
         </div>
     );
-    const accordionStyle = {
-        // base 是每一行的容器
-        // 添加: border border-transparent (预留边框位置防止跳动)
-        // 添加: hover:border-primary/50 (鼠标移上去变蓝)
-        // 调整: transition-all duration-300 (平滑过渡)
-        base: "group-[.is-splitted]:px-0 group-[.is-splitted]:bg-surface group-[.is-splitted]:shadow-sm hover:group-[.is-splitted]:bg-surface-secondary border border-default-100/50 hover:border-primary/50 transition-all duration-300 my-2",
-        title: "text-default-500",
-        trigger: "py-1", // 稍微减小内边距让整体紧凑一点
-        content: "pt-0 pb-4 px-4",
-    };
-
     return (
         <div className="flex flex-col gap-6">
             <div>
@@ -114,7 +104,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                         <Accordion.Item
                             key={index}
                             id={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
-                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:border-primary/50 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
                             <Accordion.Heading>
                                 <Accordion.Trigger className="w-full py-1">
@@ -142,7 +132,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                             <Accordion.Item
                                 key={index}
                                 id={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
-                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:border-primary/50 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                             >
                                 <Accordion.Heading>
                                     <Accordion.Trigger className="w-full py-1">
@@ -375,7 +365,7 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                  return (
                     <Card
                         key={lobby.lobby_name}
-                        className="group overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-colors hover:border-primary/45 hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-900/90 dark:hover:bg-zinc-900"
+                        className="group overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-900/90 dark:hover:bg-zinc-900"
                     >
                         <Card.Header className="!flex-row items-center justify-between gap-3 !px-4 !py-3">
                             <h3 className="min-w-0 truncate text-lg font-black text-zinc-900 dark:text-zinc-100">{lobby.lobby_name}</h3>
