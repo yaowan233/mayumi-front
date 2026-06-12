@@ -16,7 +16,7 @@ export default function CreateTournamentPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<TournamentInfo>({
         // ... (保持原有的初始值不变)
-        name: '', abbreviation: '', pic_url: '', start_date: '', end_date: '', is_group: false, mode: 'osu',
+        name: '', abbreviation: '', pic_url: '', theme_color: '#006FEE', start_date: '', end_date: '', is_group: false, mode: 'osu',
         rank_min: undefined, rank_max: undefined, description: '', rules_info: '', staff_registration_info: '',
         tournament_schedule_info: '', registration_info: '', challonge_api_key: undefined, challonge_tournament_url: undefined,
         referee: true, commentator: true, streamer: true, mappooler: true, custom_mapper: true, designer: true,

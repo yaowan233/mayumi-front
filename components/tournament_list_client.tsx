@@ -196,7 +196,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                         <button
                             type="button"
                             onClick={() => setSelectedMode("__all__")}
-                            className={`h-8 rounded-full px-3 text-xs font-bold transition ${
+                            className={`h-8 cursor-pointer rounded-full px-3 text-xs font-bold transition hover:-translate-y-0.5 active:scale-95 ${
                                 selectedMode === "__all__"
                                     ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-950"
                                     : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
@@ -209,7 +209,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                                 key={mode}
                                 type="button"
                                 onClick={() => setSelectedMode(mode)}
-                                className={`h-8 rounded-full px-3 text-xs font-bold transition ${
+                                className={`h-8 cursor-pointer rounded-full px-3 text-xs font-bold transition hover:-translate-y-0.5 active:scale-95 ${
                                     selectedMode === mode
                                         ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-950"
                                         : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"

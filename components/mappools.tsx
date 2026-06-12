@@ -70,18 +70,27 @@ const IconButton = ({
     onClick?: () => void;
     href?: string;
 }) => {
-    const className = "inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-lg backdrop-blur-md transition-all duration-150 hover:bg-white/30 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60";
+    const className = "inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-lg backdrop-blur-md transition-all duration-150 hover:-translate-y-0.5 hover:bg-white/30 hover:shadow-white/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60";
 
     if (href) {
         return (
-            <a className={className} href={href} target="_blank" rel="noreferrer" title={label} aria-label={label}>
+            <a className={className} href={href} target="_blank" rel="noreferrer" title={label} aria-label={label} onClick={(event) => event.stopPropagation()}>
                 {children}
             </a>
         );
     }
 
     return (
-        <button type="button" className={className} title={label} aria-label={label} onClick={onClick}>
+        <button
+            type="button"
+            className={className}
+            title={label}
+            aria-label={label}
+            onClick={(event) => {
+                event.stopPropagation();
+                onClick?.();
+            }}
+        >
             {children}
         </button>
     );
@@ -309,7 +318,7 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
                             <button
                                 key={stage.stage_name}
                                 type="button"
-                                className={`relative h-12 shrink-0 rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
+                                className={`relative h-12 shrink-0 cursor-pointer rounded-md px-1 text-lg font-bold transition-all duration-150 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
                                 onClick={() => handleStageChange(stage.stage_name)}
                             >
                                 {stage.stage_name}
@@ -361,6 +370,13 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
     const modStyle = getModColor(mod);
     const modCode = `${mod}${index + 1}`;
     const [showOverlay, setShowOverlay] = useState(false);
+    const [copiedAction, setCopiedAction] = useState<"id" | "mp" | null>(null);
+
+    const handleCopy = async (value: string, action: "id" | "mp") => {
+        await navigator.clipboard.writeText(value);
+        setCopiedAction(action);
+        window.setTimeout(() => setCopiedAction((current) => current === action ? null : current), 1200);
+    };
 
     return (
         <div
@@ -423,11 +439,17 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
                     {modCode}
                 </div>
                 <div className="flex items-center gap-4">
-                    <IconButton label="Copy ID" onClick={() => navigator.clipboard.writeText(map.map_id)}>
-                        <CopyIcon className="text-xl"/>
+                    <IconButton
+                        label={copiedAction === "id" ? "地图 ID 已复制" : "复制地图 ID"}
+                        onClick={() => handleCopy(map.map_id, "id")}
+                    >
+                        {copiedAction === "id" ? <span className="text-xs font-black">已复制</span> : <CopyIcon className="text-xl"/>}
                     </IconButton>
-                    <IconButton label="Copy !mp map" onClick={() => navigator.clipboard.writeText(`!mp map ${map.map_id}`)}>
-                        <span className="text-sm font-bold">MP</span>
+                    <IconButton
+                        label={copiedAction === "mp" ? "MP 指令已复制" : "复制 MP 指令"}
+                        onClick={() => handleCopy(`!mp map ${map.map_id}`, "mp")}
+                    >
+                        <span className="text-sm font-bold">{copiedAction === "mp" ? "已复制" : "MP"}</span>
                     </IconButton>
                     <IconButton label="Download" href={`https://dl.sayobot.cn/beatmaps/download/novideo/${map.map_set_id}`}>
                         <DownloadIcon className="text-xl"/>

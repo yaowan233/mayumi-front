@@ -37,6 +37,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
         name: '',
         abbreviation: '',
         pic_url: '',
+        theme_color: '#006FEE',
         start_date: '',
         end_date: '',
         is_group: false,

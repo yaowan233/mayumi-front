@@ -12,7 +12,8 @@ import {
     TextField,
 } from "@heroui/react";
 import {TournamentInfo} from "@/components/homepage";
-import {Dispatch, SetStateAction} from "react";
+import {DEFAULT_TOURNAMENT_THEME_COLOR, normalizeTournamentThemeColor} from "@/components/tournament_theme";
+import {Dispatch, SetStateAction, useState} from "react";
 
 const InfoIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 17v-5"/><path d="M12 8h.01"/></svg>);
 const RuleIcon = () => (<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>);
@@ -149,6 +150,58 @@ function SelectField({
     );
 }
 
+function ThemeColorField({
+    value,
+    onChange,
+}: {
+    value?: string;
+    onChange: (value: string) => void;
+}) {
+    const normalizedValue = normalizeTournamentThemeColor(value) ?? DEFAULT_TOURNAMENT_THEME_COLOR;
+    const [draftColor, setDraftColor] = useState(normalizedValue);
+    const [draftHex, setDraftHex] = useState(value || normalizedValue);
+
+    const commitColor = (nextValue = draftHex) => {
+        const normalized = normalizeTournamentThemeColor(nextValue) ?? DEFAULT_TOURNAMENT_THEME_COLOR;
+        setDraftColor(normalized);
+        setDraftHex(normalized);
+        onChange(normalized);
+    };
+
+    return (
+        <div className="grid grid-cols-1 gap-4 rounded-xl border border-default-200 bg-default-50 p-4 dark:border-white/10 dark:bg-white/[0.04] md:grid-cols-[auto_1fr] md:items-end">
+            <label className="flex flex-col gap-2">
+                <span className="text-sm font-medium text-foreground">主题色</span>
+                <input
+                    type="color"
+                    value={draftColor}
+                    onChange={(event) => {
+                        setDraftColor(event.target.value);
+                        setDraftHex(event.target.value);
+                    }}
+                    onBlur={(event) => commitColor(event.currentTarget.value)}
+                    onMouseUp={(event) => commitColor(event.currentTarget.value)}
+                    className="h-11 w-16 cursor-pointer rounded-lg border border-default-200 bg-transparent p-1 dark:border-white/10"
+                    aria-label="选择赛事主题色"
+                />
+            </label>
+
+            <TextField>
+                <Label>主题色 Hex</Label>
+                <Input
+                    fullWidth
+                    variant="secondary"
+                    placeholder="#006FEE"
+                    value={draftHex}
+                    onChange={(event) => setDraftHex(event.target.value)}
+                    onBlur={() => commitColor()}
+                />
+                <Description>用于比赛页面的按钮、标签、链接和高亮色，例如 #D946EF</Description>
+            </TextField>
+        </div>
+    );
+}
+
 export const TournamentInfoForm = ({formData, errMsg, setFormData}: {
     formData: TournamentInfo,
     errMsg: string,
@@ -197,6 +250,12 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {
                     />
                     <Description>推荐尺寸 16:9，作为比赛主页的封面图</Description>
                 </TextField>
+
+                <ThemeColorField
+                    key={formData.theme_color ?? DEFAULT_TOURNAMENT_THEME_COLOR}
+                    value={formData.theme_color}
+                    onChange={(value) => setFormData({...formData, theme_color: value})}
+                />
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <RequiredTextField

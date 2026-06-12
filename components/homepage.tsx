@@ -4,6 +4,7 @@ import {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
 import NextImage from "next/image";
 import {
     Alert,
@@ -192,6 +193,16 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         : null;
     const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
     const bgSrc = tournament_info.pic_url || fallbackImage;
+    const themeColor = normalizeTournamentThemeColor(tournament_info.theme_color);
+    const themeStyle = themeColor
+        ? {
+            "--accent": themeColor,
+            "--tournament-hero-border": `color-mix(in srgb, ${themeColor} 38%, transparent)`,
+            "--tournament-hero-shadow": `0 20px 70px color-mix(in srgb, ${themeColor} 20%, transparent)`,
+            "--tournament-panel-bg": `linear-gradient(135deg, color-mix(in srgb, ${themeColor} 12%, rgb(250 250 250)) 0%, rgb(250 250 250 / 0.96) 52%, rgb(250 250 250 / 0.92) 100%)`,
+            "--tournament-panel-bg-dark": `linear-gradient(135deg, color-mix(in srgb, ${themeColor} 16%, rgb(9 9 11)) 0%, rgb(9 9 11 / 0.96) 58%, rgb(9 9 11 / 0.92) 100%)`,
+        } as React.CSSProperties
+        : undefined;
     const iconModalState = {
         isOpen: isIconOpen,
         setOpen: onIconOpenChange,
@@ -207,7 +218,10 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         toggle: () => handleOpenChange(!isOpen),
     };
     return (
-        <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10">
+        <div
+            className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10"
+            style={themeStyle}
+        >
             {tournament_info.status !== 'approved' && (
                 <div className={`
                     w-full p-4 rounded-xl border flex flex-col gap-3 shadow-sm transition-all
@@ -249,7 +263,13 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 </div>
             )}
 
-            <div className="relative w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-50 shadow-[0_16px_38px_rgba(15,23,42,0.08)] group dark:border-white/[0.10] dark:bg-zinc-950 dark:shadow-[0_18px_45px_rgba(0,0,0,0.34)]">
+            <div
+                className="relative w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-50 shadow-[0_16px_38px_rgba(15,23,42,0.08)] group dark:border-white/[0.10] dark:bg-zinc-950 dark:shadow-[0_18px_45px_rgba(0,0,0,0.34)]"
+                style={themeColor ? {borderColor: "var(--tournament-hero-border)", boxShadow: "var(--tournament-hero-shadow)"} : undefined}
+            >
+                {themeColor && (
+                    <div className="absolute inset-x-0 top-0 z-40 h-1 bg-primary" />
+                )}
 
                 <div className="absolute inset-0 z-0">
                     <NextImage
@@ -289,7 +309,9 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                     md:border-t-0                        /* 移除分割线 */
                     md:bg-zinc-50/95 md:dark:bg-zinc-950/95
                     md:flex-row md:items-end             /* 左右布局，底部对齐 */
-                ">
+                    [background:var(--tournament-panel-bg)] dark:[background:var(--tournament-panel-bg-dark)]
+                "
+                >
 
                     {/* 左侧：标题与信息 */}
                     <div className="flex flex-col gap-2 w-full md:w-auto flex-1 min-w-0">
@@ -337,7 +359,8 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 </div>
             </div>
 
-            <Card className="overflow-hidden border border-zinc-200/80 bg-white/95 shadow-[0_14px_34px_rgba(15,23,42,0.07)] dark:border-white/[0.06] dark:bg-zinc-900/70 dark:shadow-[0_14px_34px_rgba(0,0,0,0.24)]">
+            <Card className="relative overflow-hidden border border-zinc-200/80 bg-white/95 shadow-[0_14px_34px_rgba(15,23,42,0.07)] dark:border-white/[0.06] dark:bg-zinc-900/70 dark:shadow-[0_14px_34px_rgba(0,0,0,0.24)]">
+                {themeColor && <div className="absolute inset-x-0 top-0 z-10 h-1 bg-primary" />}
                 <Card.Content className="p-0">
                     <section className="px-6 py-6 md:px-8 md:py-7">
                         <div className="flex items-center justify-between gap-3">
@@ -777,6 +800,7 @@ export interface TournamentInfo {
     start_date: string
     end_date: string
     pic_url: string;
+    theme_color?: string;
     links: Link[];
     is_group: boolean;
     description?: string;

@@ -181,6 +181,8 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
     return (
         <nav className={navShellClass}>
             <NavProgress isLoading={isLoading}/>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+            <div className="pointer-events-none absolute left-1/2 top-0 h-16 w-72 -translate-x-1/2 bg-primary/10 blur-3xl" />
             <div className={contentClass}>
                 <div className="flex min-w-0 items-center gap-4">
                     <MobileMenuButton open={isMenuOpen} onClick={() => setIsMenuOpen((value) => !value)}/>
