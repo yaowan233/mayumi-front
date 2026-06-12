@@ -64,3 +64,63 @@ export const description_container = tv({
         fullWidth: true
     }
 });
+
+export const panel = tv({
+    base: "rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/[0.08] dark:bg-zinc-950",
+    variants: {
+        tone: {
+            default: "",
+            soft: "bg-zinc-50/80 dark:bg-white/[0.04]",
+            flat: "shadow-none",
+        },
+        padding: {
+            none: "p-0",
+            sm: "p-3",
+            md: "p-4",
+            lg: "p-5",
+        },
+    },
+    defaultVariants: {
+        tone: "default",
+        padding: "md",
+    },
+});
+
+export const sectionTitle = tv({
+    base: "flex items-center gap-2 font-black tracking-normal text-zinc-950 dark:text-white",
+    variants: {
+        size: {
+            sm: "text-base",
+            md: "text-lg",
+            lg: "text-xl",
+        },
+    },
+    defaultVariants: {
+        size: "md",
+    },
+});
+
+export const sectionAccent = tv({
+    base: "h-4 w-1 rounded-full bg-primary",
+});
+
+export const statLabel = tv({
+    base: "text-xs font-bold uppercase tracking-wide text-zinc-500 dark:text-zinc-400",
+});
+
+export const statValue = tv({
+    base: "truncate font-mono text-sm font-black text-zinc-950 transition-colors dark:text-white",
+    variants: {
+        size: {
+            sm: "text-sm",
+            md: "text-base",
+            lg: "text-2xl",
+        },
+        accent: {
+            true: "text-primary",
+        },
+    },
+    defaultVariants: {
+        size: "sm",
+    },
+});

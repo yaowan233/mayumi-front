@@ -6,6 +6,7 @@ import {User} from "@/app/user-info/types";
 import CurrentUserContext from "@/app/user_context";
 import GameModeIcon, {GameMode} from "@/components/gamemode_icon";
 import {SearchIcon} from "@/components/icons";
+import {panel, sectionAccent, sectionTitle, statLabel, statValue} from "@/components/primitives";
 import UserLevel from "@/components/user_level";
 import {siteConfig} from "@/config/site";
 import {Button, Input, Spinner} from "@heroui/react";
@@ -24,7 +25,6 @@ const MODE_LIST: ModeData[] = [
     {name: "mania", color: "#6cf", label: "mania"},
 ];
 
-const surfaceClass = "rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/[0.08] dark:bg-zinc-950";
 const mutedClass = "text-zinc-500 dark:text-zinc-400";
 
 export default function TournamentHomePage() {
@@ -73,7 +73,7 @@ export default function TournamentHomePage() {
 
     return (
         <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6">
-            <section className={`${surfaceClass} flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between`}>
+            <section className={`${panel({padding: "sm"})} flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}>
                 <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-white/[0.05]">
                     {MODE_LIST.map((mode) => {
                         const selected = selectedMode === mode.name;
@@ -120,7 +120,7 @@ export default function TournamentHomePage() {
             </section>
 
             {!userInfo && (
-                <section className={`${surfaceClass} grid min-h-[360px] place-items-center p-8 text-center`}>
+                <section className={`${panel({padding: "lg"})} grid min-h-[360px] place-items-center text-center`}>
                     <div className="max-w-md">
                         <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-xl bg-primary/10 text-primary">
                             <SearchIcon />
@@ -133,7 +133,7 @@ export default function TournamentHomePage() {
 
             {userInfo && stats && (
                 <section
-                    className={`${surfaceClass} overflow-hidden`}
+                    className={`${panel({padding: "none"})} overflow-hidden`}
                     style={{"--mode-color": selectedModeData.color} as React.CSSProperties}
                 >
                     <div
@@ -204,8 +204,8 @@ export default function TournamentHomePage() {
                             <div className="grid gap-5 pt-4 lg:grid-cols-[minmax(0,1fr)_290px]">
                                 <div className="min-w-0">
                                     <div className="mb-3 flex items-center justify-between">
-                                        <h2 className="flex items-center gap-2 text-lg font-black text-zinc-950 dark:text-white">
-                                            <span className="h-4 w-1 rounded-full bg-[var(--mode-color)]" />
+                                        <h2 className={sectionTitle()}>
+                                            <span className={sectionAccent()} style={{backgroundColor: selectedModeData.color}} />
                                             成绩
                                         </h2>
                                         <span
@@ -252,8 +252,8 @@ export default function TournamentHomePage() {
 
                                     <div className="border-t border-zinc-200 pt-4 dark:border-white/[0.08]">
                                         <div className="mb-2 flex items-center justify-between">
-                                            <h2 className="flex items-center gap-2 text-lg font-black text-zinc-950 dark:text-white">
-                                                <span className="h-4 w-1 rounded-full bg-[var(--mode-color)]" />
+                                            <h2 className={sectionTitle()}>
+                                                <span className={sectionAccent()} style={{backgroundColor: selectedModeData.color}} />
                                                 徽章
                                             </h2>
                                             <span className={`text-sm font-bold ${mutedClass}`}>{userInfo.badges?.length || 0}</span>
@@ -305,8 +305,8 @@ const CompactMetric = ({
     accent?: boolean;
 }) => (
     <div className="group min-w-0">
-        <p className={`text-xs font-bold uppercase tracking-wide ${mutedClass}`}>{label}</p>
-        <div className={`mt-1 truncate text-2xl font-black tabular-nums transition-transform duration-150 group-hover:translate-x-0.5 ${accent ? "text-primary" : "text-zinc-950 dark:text-white"}`}>
+        <p className={statLabel()}>{label}</p>
+        <div className={`${statValue({size: "lg", accent})} mt-1 transition-transform duration-150 group-hover:translate-x-0.5`}>
             {value || 0}
             {suffix && <span className={`ml-1 text-xs font-bold ${mutedClass}`}>{suffix}</span>}
         </div>
@@ -322,8 +322,8 @@ const GradeItem = ({icon, count}: {icon: React.ReactNode; count?: number}) => (
 
 const SmallStat = ({label, value}: {label: string; value?: string | number}) => (
     <div className="group">
-        <p className={`text-xs font-bold uppercase tracking-wide ${mutedClass}`}>{label}</p>
-        <p className="mt-0.5 truncate font-mono text-sm font-black text-zinc-950 transition-colors group-hover:text-[var(--mode-color)] dark:text-white">{value || 0}</p>
+        <p className={statLabel()}>{label}</p>
+        <p className={`${statValue()} mt-0.5 group-hover:text-[var(--mode-color)]`}>{value || 0}</p>
     </div>
 );
 

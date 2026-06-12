@@ -31,6 +31,8 @@ const modeClassName = (mode: string) => {
     }
 };
 
+const modeLabel = (mode: string) => mode.toLowerCase() === "all" ? "多模式" : mode;
+
 export const TournamentComponent = ({tournament, priority = false}: { tournament: Tournament; priority?: boolean }) => {
     const tournamentHref = `/tournaments/${tournament.abbreviation}/home`;
     const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
@@ -49,7 +51,7 @@ export const TournamentComponent = ({tournament, priority = false}: { tournament
             <span
                 className={`absolute right-3 top-3 z-30 inline-flex items-center justify-center rounded-full border border-white/15 px-2.5 py-1 text-center text-[11px] font-medium uppercase leading-none tracking-wide shadow-md backdrop-blur-sm ${modeClassName(tournament.mode || "")}`}
             >
-                {tournament.mode}
+                {modeLabel(tournament.mode || "")}
             </span>
 
             <div className="absolute inset-0 z-0">

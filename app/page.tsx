@@ -5,12 +5,21 @@ import TournamentListClient from "@/components/tournament_list_client";
 
 export const revalidate = 60;
 
-const SectionTitle = ({ title }: { title: string }) => (
-    <div className="relative flex flex-col items-center justify-center mb-12 mt-6">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-12 bg-primary/20 dark:bg-primary/40 blur-[40px] rounded-full pointer-events-none" />
-        <h2 className="relative z-10 text-3xl sm:text-4xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-zinc-800 via-zinc-800 to-zinc-500 dark:from-white dark:via-white dark:to-white/50 drop-shadow-sm italic px-2">
+const SectionTitle = ({ title, count }: { title: string; count?: number }) => (
+    <div className="mb-6 mt-4 flex items-center gap-2 sm:mb-8 sm:justify-center sm:gap-4">
+        <div className="hidden h-px w-12 bg-zinc-300 dark:bg-white/15 sm:block" />
+        <h2 className="shrink-0 whitespace-nowrap text-xl font-black tracking-tight text-zinc-900 dark:text-white sm:text-2xl">
             {title}
         </h2>
+        {typeof count === "number" && (
+            <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-bold text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                {count}
+            </span>
+        )}
+        <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+            Live
+        </span>
+        <div className="h-px min-w-6 flex-1 bg-zinc-300 dark:bg-white/15 sm:w-12 sm:flex-none" />
     </div>
 );
 
