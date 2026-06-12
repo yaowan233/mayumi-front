@@ -107,7 +107,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                             className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
                             <Accordion.Heading>
-                                <Accordion.Trigger className="w-full py-1">
+                                <Accordion.Trigger className="w-full bg-transparent py-1 hover:!bg-transparent data-[hover=true]:!bg-transparent data-[hovered=true]:!bg-transparent">
                                     <VSInfoComp match_info={match_info}/>
                                     <Accordion.Indicator className="ml-3 h-4 w-4 shrink-0" />
                                 </Accordion.Trigger>
@@ -135,7 +135,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                                 className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                             >
                                 <Accordion.Heading>
-                                    <Accordion.Trigger className="w-full py-1">
+                                    <Accordion.Trigger className="w-full bg-transparent py-1 hover:!bg-transparent data-[hover=true]:!bg-transparent data-[hovered=true]:!bg-transparent">
                                         <VSInfoComp match_info={match_info}/>
                                         <Accordion.Indicator className="ml-3 h-4 w-4 shrink-0" />
                                     </Accordion.Trigger>
@@ -656,16 +656,16 @@ const ParticipantJoinHere = ({tournament_name, stage_name, lobbyInfo, role, setS
 // ---------------------- 地图卡片美化 MapComp ----------------------
 const MapComp = ({map}: { map: map }) => {
   return (
-    <Card className="w-full h-[110px] sm:h-[120px] shadow-sm group border-none">
+    <Card className="group w-full h-[110px] sm:h-[120px] overflow-hidden rounded-xl border-none shadow-sm">
 
       <img
         alt="Beatmap Cover"
-        className="z-0 w-full h-full object-cover absolute top-0 left-0 brightness-[0.55] group-hover:scale-105 transition-transform duration-500"
+        className="absolute left-0 top-0 z-0 h-full w-full rounded-xl object-cover brightness-[0.7] transition-[filter] duration-300 group-hover:brightness-[0.85] group-focus-within:brightness-[0.85] dark:brightness-[0.55] dark:group-hover:brightness-[0.72] dark:group-focus-within:brightness-[0.72]"
         src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
       />
 
       {/* 渐变层 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent z-10 pointer-events-none dark:from-black/90 dark:via-black/40" />
 
       {/* 内容层 */}
       <div className="z-20 relative h-full flex flex-col justify-between p-3 text-white">

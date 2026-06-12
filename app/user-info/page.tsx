@@ -1,31 +1,31 @@
-"use client";
-import { ScoreRankA, ScoreRankS, ScoreRankSS, ScoreRankX, ScoreRankXH } from "@/app/user-info/score-rank";
-import UserLevel from "@/components/user_level";
-import { User } from "@/app/user-info/types";
-import { useCallback, useContext, useEffect, useState } from "react";
-import CurrentUserContext from "@/app/user_context";
-import GameModeIcon, { GameMode } from "@/components/gamemode_icon";
-import {Button, Input, Spinner, Tooltip} from "@heroui/react";
-import { SearchIcon } from "@/components/icons";
-import { siteConfig } from "@/config/site";
-import RankDisplay from "@/app/user-info/rank-display";
+﻿"use client";
 
+import {ScoreRankA, ScoreRankS, ScoreRankSS, ScoreRankX, ScoreRankXH} from "@/app/user-info/score-rank";
+import RankDisplay from "@/app/user-info/rank-display";
+import {User} from "@/app/user-info/types";
+import CurrentUserContext from "@/app/user_context";
+import GameModeIcon, {GameMode} from "@/components/gamemode_icon";
+import {SearchIcon} from "@/components/icons";
+import UserLevel from "@/components/user_level";
+import {siteConfig} from "@/config/site";
+import {Button, Input, Spinner} from "@heroui/react";
+import {useCallback, useContext, useEffect, useMemo, useState} from "react";
 
 interface ModeData {
     name: GameMode;
     color: string;
+    label: string;
 }
-const MODE_DEFAULTS: Record<Exclude<GameMode, 'all'>, ModeData> = {
-    osu: { name: 'osu', color: '#ff66aa' },
-    taiko: { name: 'taiko', color: '#f33' },
-    fruits: { name: 'fruits', color: '#ffa500' },
-    mania: { name: 'mania', color: '#6cf' },
-};
-const MODE_LIST = Object.values(MODE_DEFAULTS);
 
+const MODE_LIST: ModeData[] = [
+    {name: "osu", color: "#ff66aa", label: "osu!"},
+    {name: "taiko", color: "#f33", label: "taiko"},
+    {name: "fruits", color: "#ffa500", label: "catch"},
+    {name: "mania", color: "#6cf", label: "mania"},
+];
 
-const GLASS_CLASS = "bg-white/60 dark:bg-black/60 backdrop-blur-md border border-white/20 dark:border-white/5 shadow-sm text-zinc-800 dark:text-white";
-const TEXT_MUTED = "text-zinc-500 dark:text-zinc-400"; // 次要文字颜色
+const surfaceClass = "rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-white/[0.08] dark:bg-zinc-950";
+const mutedClass = "text-zinc-500 dark:text-zinc-400";
 
 export default function TournamentHomePage() {
     const currentUser = useContext(CurrentUserContext);
@@ -35,11 +35,12 @@ export default function TournamentHomePage() {
     const [isSearching, setIsSearching] = useState(false);
 
     const handleSearch = useCallback(async (name: string) => {
-        if (!name) return;
+        const trimmedName = name.trim();
+        if (!trimmedName) return;
+
         setIsSearching(true);
         try {
-            const data = await getUserInfo(selectedMode, name);
-            setUserInfo(data);
+            setUserInfo(await getUserInfo(selectedMode, trimmedName));
         } catch (error) {
             console.error(error);
         } finally {
@@ -54,293 +55,295 @@ export default function TournamentHomePage() {
 
     useEffect(() => {
         if (!initialUsername) return;
-
-        const timer = window.setTimeout(() => {
-            void handleSearch(initialUsername);
-        }, 0);
-
+        const timer = window.setTimeout(() => void handleSearch(initialUsername), 0);
         return () => window.clearTimeout(timer);
     }, [handleSearch, initialUsername]);
 
     useEffect(() => {
         if (!currentUsername) return;
-
-        const timer = window.setTimeout(() => {
-            void handleSearch(currentUsername);
-        }, 0);
-
+        const timer = window.setTimeout(() => void handleSearch(currentUsername), 0);
         return () => window.clearTimeout(timer);
     }, [currentUsername, handleSearch, selectedMode]);
 
-    const hasBadges = userInfo?.badges && userInfo.badges.length > 0;
+    const stats = userInfo?.statistics;
+    const selectedModeData = useMemo(
+        () => MODE_LIST.find((mode) => mode.name === selectedMode) ?? MODE_LIST[0],
+        [selectedMode],
+    );
 
     return (
-        <div className="flex flex-col items-center gap-6 w-full py-8 px-2 md:px-4">
-
-            {/* 1. 顶部控制栏 (搜索 & 模式) */}
-            <div className={`flex flex-col sm:flex-row gap-4 items-center p-3 rounded-2xl w-full max-w-xl transition-colors ${GLASS_CLASS}`}>
-                {/* 模式选择 - 强制正方形 */}
-                <div className="flex justify-center gap-2 w-full sm:w-auto">
-                    {MODE_LIST.map((modeData) => {
-                        const isSelected = selectedMode === modeData.name;
+        <main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-6">
+            <section className={`${surfaceClass} flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between`}>
+                <div className="flex items-center gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-white/[0.05]">
+                    {MODE_LIST.map((mode) => {
+                        const selected = selectedMode === mode.name;
                         return (
-                            <div
-                                key={modeData.name}
-                                onClick={() => setSelectedMode(modeData.name)}
-                                className={`
-                                    w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer transition-all duration-300
-                                    ${isSelected 
-                                        ? 'bg-white dark:bg-zinc-800 shadow-md scale-110 ring-1 ring-black/5 dark:ring-white/10' // 选中态：亮色变白，暗色变黑，加一点微弱描边增加层次
-                                        : 'text-zinc-500 dark:text-zinc-400 hover:bg-black/5 dark:hover:bg-white/10' // 未选中态
-                                    }
-                                `}
+                            <button
+                                key={mode.name}
+                                type="button"
+                                aria-pressed={selected}
+                                className={`inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-3 text-sm font-bold transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                                    selected
+                                        ? "bg-primary text-white shadow-sm shadow-primary/20"
+                                        : "text-zinc-600 hover:bg-white hover:text-primary dark:text-zinc-300 dark:hover:bg-white/[0.08]"
+                                }`}
+                                onClick={() => setSelectedMode(mode.name)}
                             >
-                                <GameModeIcon
-                                    mode={modeData.name}
-                                    size={20}
-                                    // 选中时使用模式原本的颜色（粉/红/蓝/绿），未选中时跟随文字颜色
-                                    color={isSelected ? modeData.color : "currentColor"}
-                                />
-                            </div>
+                                <GameModeIcon mode={mode.name} size={17} color={selected ? mode.color : "currentColor"} />
+                                <span>{mode.label}</span>
+                            </button>
                         );
                     })}
                 </div>
 
-                {/* 分割线 */}
-                <div className="w-full h-[1px] sm:w-[1px] sm:h-8 bg-zinc-300 dark:bg-white/10"></div>
-
-                {/* 搜索框 */}
-                <div className="flex gap-2 w-full">
+                <div className="flex min-w-0 gap-2 sm:w-[360px]">
                     <Input
-                        placeholder="搜索用户名..."
+                        placeholder="搜索 osu! 用户名"
                         value={searchName}
-                        className="h-10 rounded-lg border border-zinc-200 bg-white/50 px-3 text-sm text-zinc-800 shadow-none placeholder:text-zinc-500 dark:border-white/5 dark:bg-black/30 dark:text-white"
+                        className="h-9"
                         onChange={(event) => setSearchName(event.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchName)}
+                        onKeyDown={(event) => {
+                            if (event.key === "Enter") void handleSearch(searchName);
+                        }}
                     />
                     <Button
                         isIconOnly
                         size="sm"
                         variant="primary"
-                        className="h-10 w-10 min-w-10 rounded-lg shadow-md font-bold text-white"
+                        className="h-9 w-9 min-w-9 rounded-lg"
                         isPending={isSearching}
                         onPress={() => handleSearch(searchName)}
                     >
-                        {({isPending}) => (
-                            <>
-                                {isPending ? <Spinner color="current" size="sm" /> : <SearchIcon />}
-                            </>
-                        )}
+                        {({isPending}) => isPending ? <Spinner color="current" size="sm" /> : <SearchIcon />}
                     </Button>
                 </div>
-            </div>
+            </section>
 
-            {/* 2. 核心卡片 */}
-            {userInfo && (
-                <div className="relative w-full max-w-4xl rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-200 dark:border-white/10 group bg-zinc-100 dark:bg-[#0a0a0a]">
-
-                    {/* A. 背景层 */}
-                    <div
-                        className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-700 group-hover:scale-105"
-                        style={{ backgroundImage: `url('${"https://www.loliapi.com/acg"}')` }}
-                    />
-                    {/* 背景遮罩：亮色模式用白雾，暗色模式用黑雾 */}
-                    <div className="absolute inset-0 bg-white/40 dark:bg-black/50 z-0 backdrop-blur-[2px]" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/60 to-white/90 dark:from-transparent dark:via-black/60 dark:to-black/90 z-0" />
-
-                    {/* B. 内容层 */}
-                    <div className="relative z-10 flex flex-col gap-3 p-4 sm:p-6">
-
-                        {/* --- Header: 信息聚合 (应用 GLASS_CLASS) --- */}
-                        <div className={`flex flex-col md:flex-row gap-5 items-center md:items-stretch rounded-2xl p-5 ${GLASS_CLASS}`}>
-                            <div className="shrink-0">
-                                <img
-                                    src={`https://a.ppy.sh/${userInfo.id}`}
-                                    alt="avatar"
-                                    className="w-24 h-24 rounded-2xl border-2 border-white/50 dark:border-white/20 shadow-lg"
-                                />
-                            </div>
-
-                            <div className="flex flex-col justify-center min-w-0 gap-1 flex-grow text-center md:text-left">
-                                <div className="text-3xl font-black tracking-tight drop-shadow-sm text-zinc-900 dark:text-white">
-                                    {userInfo.username}
-                                </div>
-                                <div className="flex flex-wrap justify-center md:justify-start gap-2 text-xs font-bold text-zinc-600 dark:text-white/80">
-                                    {userInfo.team && (
-                                        <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md border border-black/5 dark:border-white/5">
-                                            <img src={userInfo.team.flag_url} alt="flag" className="w-4 h-3" />
-                                            <span>{userInfo.team.name}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md border border-black/5 dark:border-white/5">
-                                        <img src={flagUrl(userInfo.country_code)} alt={userInfo.country_code} className="w-4 h-auto" />
-                                        <span>#{userInfo.statistics?.country_rank || 0}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col justify-center items-center md:items-end">
-                                <div className="text-5xl font-black leading-none drop-shadow-sm scale-110 origin-right">
-                                    <RankDisplay user={userInfo} type="global" />
-                                </div>
-                                <div className={`text-lg font-bold tabular-nums mt-1 ${TEXT_MUTED}`}>
-                                    {Math.round(userInfo.statistics?.pp || 0)} <span className="text-xs font-normal opacity-70">pp</span>
-                                </div>
-                            </div>
+            {!userInfo && (
+                <section className={`${surfaceClass} grid min-h-[360px] place-items-center p-8 text-center`}>
+                    <div className="max-w-md">
+                        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-xl bg-primary/10 text-primary">
+                            <SearchIcon />
                         </div>
-
-                        {/* --- 进度条 + 等级 --- */}
-                        <div className={`flex items-center gap-5 rounded-2xl p-4 ${GLASS_CLASS}`}>
-                            <div className="flex flex-col w-full gap-1.5">
-                                <div className={`flex justify-between text-xs font-bold tracking-wider ${TEXT_MUTED}`}>
-                                    <span>等级 (LEVEL)</span>
-                                    <span>{userInfo.statistics?.level.progress}%</span>
-                                </div>
-                                <div
-                                    className="h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/10"
-                                    role="progressbar"
-                                    aria-label="Level"
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                    aria-valuenow={userInfo.statistics?.level.progress ?? 0}
-                                >
-                                    <div
-                                        className="h-full rounded-full bg-[#0099FF] shadow-sm transition-[width]"
-                                        style={{width: `${userInfo.statistics?.level.progress ?? 0}%`}}
-                                    />
-                                </div>
-                            </div>
-                            <div className="shrink-0 flex items-center justify-center scale-110">
-                                <UserLevel level={userInfo.statistics?.level.current || 0}/>
-                            </div>
-                        </div>
-
-                        {/* --- 数据面板 --- */}
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
-
-                        <div className={`
-                            md:col-span-2 flex flex-col justify-center
-                            rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm
-                            ${GLASS_CLASS}
-                        `}>
-
-                            <div className="flex flex-col w-full gap-5 py-6">
-
-                                {/* 1. 徽章区域 */}
-                                {hasBadges && (
-                                    <div className="flex flex-col items-center gap-2">
-                                        {/* 标题 */}
-                                        <div className="flex items-center gap-2 opacity-40 mb-1">
-                                            <span className="text-[10px] font-black tracking-[0.2em] uppercase">Badges</span>
-                                            <span className="bg-zinc-200 dark:bg-white/10 text-zinc-600 dark:text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                                {userInfo.badges?.length}
-                                            </span>
-                                        </div>
-
-                                        {/* 列表 */}
-                                        <div className="flex flex-wrap gap-2 justify-center px-4">
-                                            {userInfo.badges?.map((badge, i) => (
-                                                <Tooltip key={i} closeDelay={0}>
-                                                    <Tooltip.Trigger>
-                                                        <img
-                                                            src={badge.image_url}
-                                                            alt="badge"
-                                                            className="h-10 w-auto rounded-md hover:scale-110 transition-transform cursor-pointer shadow-sm border border-black/5 dark:border-white/10"
-                                                        />
-                                                    </Tooltip.Trigger>
-                                                    <Tooltip.Content>{badge.description}</Tooltip.Content>
-                                                </Tooltip>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {hasBadges && <div className="w-4/5 h-[1px] bg-zinc-300/30 dark:bg-white/10 mx-auto" />}
-
-                                {/* 2. 成绩分布区域 */}
-                                <div className={`flex flex-col gap-5 px-2 transition-all duration-300 ${!hasBadges ? 'scale-110' : ''}`}>
-                                    <div className="flex justify-between px-6"> {/* 增加 px-6 让两边留白多一点，聚焦中间 */}
-                                        <GradeItem icon={<ScoreRankXH />} count={userInfo.statistics?.grade_counts.ssh} size={!hasBadges ? "lg" : "md"} />
-                                        <GradeItem icon={<ScoreRankSS />} count={userInfo.statistics?.grade_counts.ss} size={!hasBadges ? "lg" : "md"} />
-                                        <GradeItem icon={<ScoreRankX />} count={userInfo.statistics?.grade_counts.sh} size={!hasBadges ? "lg" : "md"} />
-                                    </div>
-                                    <div className="flex justify-center gap-16">
-                                        <GradeItem icon={<ScoreRankS />} count={userInfo.statistics?.grade_counts.s} size={!hasBadges ? "lg" : "md"} />
-                                        <GradeItem icon={<ScoreRankA />} count={userInfo.statistics?.grade_counts.a} size={!hasBadges ? "lg" : "md"} />
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div className={`
-                            md:col-span-3 rounded-2xl p-6 md:p-8 flex flex-col justify-between gap-4 text-sm h-full min-h-[360px]
-                            border border-zinc-200 dark:border-white/10 shadow-sm
-                            ${GLASS_CLASS}
-                        `}>
-                            <StatRow label="Ranked 总分" value={userInfo.statistics?.ranked_score.toLocaleString()} />
-                            <StatRow label="准确率" value={`${(userInfo.statistics?.hit_accuracy || 0).toFixed(2)}%`} />
-                            <StatRow label="游玩次数" value={userInfo.statistics?.play_count.toLocaleString()} />
-                            <StatRow label="总分" value={userInfo.statistics?.total_score.toLocaleString()} />
-                            <StatRow label="总点击数" value={userInfo.statistics?.total_hits.toLocaleString()} />
-                            <StatRow label="游玩时长" value={`${Math.floor((userInfo.statistics?.play_time || 0) / 3600)}小时 ${Math.floor(((userInfo.statistics?.play_time || 0) % 3600) / 60)}分`} />
-                            <StatRow label="最大连击" value={userInfo.statistics?.maximum_combo.toLocaleString()} />
-                            <StatRow label="回放观看数" value={userInfo.statistics?.replays_watched_by_others.toLocaleString()} />
-                        </div>
+                        <h1 className="text-3xl font-black tracking-normal text-zinc-950 dark:text-white">玩家资料</h1>
+                        <p className={`mt-3 text-sm leading-6 ${mutedClass}`}>搜索玩家，查看一张简洁的个人资料卡。</p>
                     </div>
-
-                    </div>
-                </div>
+                </section>
             )}
-        </div>
+
+            {userInfo && stats && (
+                <section
+                    className={`${surfaceClass} overflow-hidden`}
+                    style={{"--mode-color": selectedModeData.color} as React.CSSProperties}
+                >
+                    <div
+                        className="relative h-44 bg-cover bg-center sm:h-56"
+                        style={{backgroundImage: `url('${userInfo.cover_url || "https://www.loliapi.com/acg"}')`}}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/65 to-white/10 dark:from-zinc-950 dark:via-zinc-950/70 dark:to-zinc-950/10" />
+                        <div className="absolute bottom-0 left-8 h-1 w-24 rounded-full bg-[var(--mode-color)]" />
+                        <div className="absolute bottom-0 left-36 h-1 w-8 rounded-full bg-[var(--mode-color)] opacity-40" />
+                        <div className="absolute right-8 top-8 hidden h-16 w-16 rounded-full border border-white/45 bg-white/10 backdrop-blur-sm dark:border-white/10 sm:block" />
+                        <div className="absolute right-16 top-20 hidden h-2 w-24 rounded-full bg-[var(--mode-color)] opacity-70 sm:block" />
+                    </div>
+
+                    <div className="relative px-5 pb-5 sm:px-8 sm:pb-6">
+                        <div className="-mt-14 flex flex-col gap-4 sm:-mt-16 sm:flex-row sm:items-end sm:justify-between">
+                            <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
+                                <img
+                                    src={userInfo.avatar_url || `https://a.ppy.sh/${userInfo.id}`}
+                                    alt={userInfo.username}
+                                    className="h-24 w-24 rounded-2xl border-4 border-white object-cover shadow-xl ring-1 ring-black/5 transition-transform duration-200 hover:-translate-y-0.5 dark:border-zinc-950 dark:ring-white/10 sm:h-28 sm:w-28"
+                                />
+                                <div className="min-w-0 pb-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h1 className="truncate text-3xl font-black tracking-normal text-zinc-950 dark:text-white sm:text-4xl">
+                                            {userInfo.username}
+                                        </h1>
+                                        <span className="rounded-md bg-[var(--mode-color)] px-2 py-1 text-xs font-bold text-white shadow-sm">
+                                            {selectedModeData.label}
+                                        </span>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold text-zinc-700 dark:text-zinc-200">
+                                        {userInfo.team?.flag_url && (
+                                            <Badge>
+                                                <img src={userInfo.team.flag_url} alt={userInfo.team.name} className="h-3 w-4 object-cover" />
+                                                {userInfo.team.name}
+                                            </Badge>
+                                        )}
+                                        <Badge>
+                                            <img src={flagUrl(userInfo.country_code)} alt={userInfo.country_code} className="h-auto w-4" />
+                                            地区排名 #{stats.country_rank || 0}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <a
+                                href={`https://osu.ppy.sh/users/${userInfo.id}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-200 px-4 text-sm font-bold text-zinc-700 transition-colors hover:border-[var(--mode-color)] hover:text-[var(--mode-color)] dark:border-white/10 dark:text-zinc-200"
+                            >
+                                osu! 主页
+                            </a>
+                        </div>
+
+                        <div className="relative mt-5 overflow-hidden rounded-xl bg-zinc-50/80 p-4 dark:bg-white/[0.04]">
+                            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--mode-color)] to-transparent opacity-60" />
+                            <div className="pointer-events-none absolute right-0 top-0 h-20 w-20 border-r-4 border-t-4 border-[var(--mode-color)] opacity-25" />
+                            <div className="pointer-events-none absolute bottom-0 left-0 h-16 w-16 border-b-4 border-l-4 border-[var(--mode-color)] opacity-15" />
+                            <div className="pointer-events-none absolute -right-10 bottom-8 h-24 w-24 rounded-full bg-[var(--mode-color)] opacity-10 blur-2xl" />
+                            <div className="grid gap-3 border-b border-zinc-200 pb-4 dark:border-white/[0.08] sm:grid-cols-4">
+                                <CompactMetric label="全球排名" value={<RankDisplay user={userInfo} type="global" />} accent />
+                                <CompactMetric label="PP" value={Math.round(stats.pp || 0).toLocaleString()} suffix="pp" />
+                                <CompactMetric label="准确率" value={`${(stats.hit_accuracy || 0).toFixed(2)}%`} />
+                                <CompactMetric label="游玩次数" value={stats.play_count?.toLocaleString()} />
+                            </div>
+
+                            <div className="grid gap-5 pt-4 lg:grid-cols-[minmax(0,1fr)_290px]">
+                                <div className="min-w-0">
+                                    <div className="mb-3 flex items-center justify-between">
+                                        <h2 className="flex items-center gap-2 text-lg font-black text-zinc-950 dark:text-white">
+                                            <span className="h-4 w-1 rounded-full bg-[var(--mode-color)]" />
+                                            成绩
+                                        </h2>
+                                        <span
+                                            className="rounded-md px-2 py-1 text-xs font-bold"
+                                            style={{backgroundColor: `${selectedModeData.color}1A`, color: selectedModeData.color}}
+                                        >
+                                            {selectedModeData.label}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-5 gap-2">
+                                        <GradeItem icon={<ScoreRankXH />} count={stats.grade_counts.ssh} />
+                                        <GradeItem icon={<ScoreRankSS />} count={stats.grade_counts.ss} />
+                                        <GradeItem icon={<ScoreRankX />} count={stats.grade_counts.sh} />
+                                        <GradeItem icon={<ScoreRankS />} count={stats.grade_counts.s} />
+                                        <GradeItem icon={<ScoreRankA />} count={stats.grade_counts.a} />
+                                    </div>
+
+                                    <div className="mt-4 grid gap-x-6 gap-y-3 border-t border-zinc-200 pt-4 dark:border-white/[0.08] sm:grid-cols-2">
+                                        <SmallStat label="Ranked 总分" value={stats.ranked_score?.toLocaleString()} />
+                                        <SmallStat label="总分" value={stats.total_score?.toLocaleString()} />
+                                        <SmallStat label="总点击数" value={stats.total_hits?.toLocaleString()} />
+                                        <SmallStat label="回放观看" value={stats.replays_watched_by_others?.toLocaleString()} />
+                                    </div>
+                                </div>
+
+                                <div className="flex min-w-0 flex-col gap-4 border-t border-zinc-200 pt-4 dark:border-white/[0.08] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+                                    <div className="flex items-center gap-4">
+                                        <UserLevel level={stats.level.current || 0} />
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center justify-between text-sm font-bold">
+                                                <span className="text-zinc-950 dark:text-white">等级 {stats.level.current || 0}</span>
+                                                <span className={mutedClass}>{stats.level.progress || 0}%</span>
+                                            </div>
+                                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/10">
+                                                <div className="h-full rounded-full bg-[var(--mode-color)]" style={{width: `${stats.level.progress || 0}%`}} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <SmallStat label="最大连击" value={stats.maximum_combo?.toLocaleString()} />
+                                        <SmallStat label="游玩时长" value={formatPlayTime(stats.play_time || 0)} />
+                                    </div>
+
+                                    <div className="border-t border-zinc-200 pt-4 dark:border-white/[0.08]">
+                                        <div className="mb-2 flex items-center justify-between">
+                                            <h2 className="flex items-center gap-2 text-lg font-black text-zinc-950 dark:text-white">
+                                                <span className="h-4 w-1 rounded-full bg-[var(--mode-color)]" />
+                                                徽章
+                                            </h2>
+                                            <span className={`text-sm font-bold ${mutedClass}`}>{userInfo.badges?.length || 0}</span>
+                                        </div>
+                                        {userInfo.badges?.length ? (
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {userInfo.badges.map((badge) => (
+                                                    <a
+                                                        key={`${badge.description}-${badge.awarded_at}`}
+                                                        href={badge.url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        title={badge.description}
+                                                        className="rounded-md bg-white p-1 transition-colors hover:ring-1 hover:ring-[var(--mode-color)] dark:bg-zinc-950"
+                                                    >
+                                                        <img src={badge.image_url} alt={badge.description} className="h-9 w-full rounded object-contain" />
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className={`text-sm ${mutedClass}`}>暂无徽章</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
+        </main>
     );
 }
 
+const Badge = ({children}: {children: React.ReactNode}) => (
+    <span className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white/80 px-2 py-1 dark:border-white/10 dark:bg-black/30">
+        {children}
+    </span>
+);
 
-const GradeItem = ({
-    icon,
-    count,
-    size = "md"
+const CompactMetric = ({
+    label,
+    value,
+    suffix,
+    accent,
 }: {
-    icon: React.ReactNode,
-    count?: number,
-    label?: string, // 这里的 label 实际上不需要显示，因为图标本身就是 SS/S
-    size?: "md" | "lg"
+    label: string;
+    value?: React.ReactNode;
+    suffix?: string;
+    accent?: boolean;
 }) => (
-    <div className="flex flex-col items-center justify-center gap-1">
-        <div className={`transition-transform duration-300 origin-bottom ${size === "lg" ? "scale-125 mb-1" : "scale-100"}`}>
-            {icon}
-        </div>
-
-        <span className={`
-            font-black tabular-nums leading-none tracking-tight text-zinc-800 dark:text-white
-            ${size === "lg" ? "text-2xl" : "text-lg"}
-        `}>
-            {count?.toLocaleString() || 0}
-        </span>
-    </div>
-);
-
-const StatRow = ({ label, value, highlight }: { label: string, value?: string | number, highlight?: boolean }) => (
-    <div className="flex justify-between items-center border-b border-zinc-200 dark:border-white/5 last:border-0 pb-1.5 last:pb-0">
-        <span className={`${TEXT_MUTED} font-bold text-xs tracking-wide`}>{label}</span>
-        <span className={`font-mono font-bold text-right ${highlight ? 'text-[#0099FF] text-lg' : 'text-zinc-800 dark:text-white/90 text-base'}`}>
+    <div className="group min-w-0">
+        <p className={`text-xs font-bold uppercase tracking-wide ${mutedClass}`}>{label}</p>
+        <div className={`mt-1 truncate text-2xl font-black tabular-nums transition-transform duration-150 group-hover:translate-x-0.5 ${accent ? "text-primary" : "text-zinc-950 dark:text-white"}`}>
             {value || 0}
-        </span>
+            {suffix && <span className={`ml-1 text-xs font-bold ${mutedClass}`}>{suffix}</span>}
+        </div>
     </div>
 );
+
+const GradeItem = ({icon, count}: {icon: React.ReactNode; count?: number}) => (
+    <div className="group flex min-w-0 flex-col items-center rounded-lg bg-white/70 px-2 py-2.5 transition-all duration-150 hover:-translate-y-0.5 hover:bg-white hover:shadow-sm dark:bg-zinc-950/60 dark:hover:bg-zinc-950">
+        <div className="flex h-6 items-center">{icon}</div>
+        <span className="mt-1.5 text-sm font-black tabular-nums text-zinc-950 transition-colors group-hover:text-[var(--mode-color)] dark:text-white">{count?.toLocaleString() || 0}</span>
+    </div>
+);
+
+const SmallStat = ({label, value}: {label: string; value?: string | number}) => (
+    <div className="group">
+        <p className={`text-xs font-bold uppercase tracking-wide ${mutedClass}`}>{label}</p>
+        <p className="mt-0.5 truncate font-mono text-sm font-black text-zinc-950 transition-colors group-hover:text-[var(--mode-color)] dark:text-white">{value || 0}</p>
+    </div>
+);
+
+function formatPlayTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours.toLocaleString()}h ${minutes}m`;
+}
 
 function flagUrl(countryCode: string): string {
     if (!countryCode) return "";
-    const chars = countryCode.toUpperCase().split('');
-    const hexEmojiChars = chars.map(chr => (chr.codePointAt(0)! + 127397).toString(16));
-    return `https://osu.ppy.sh/assets/images/flags/${hexEmojiChars.join('-')}.svg`;
+    const chars = countryCode.toUpperCase().split("");
+    const hexEmojiChars = chars.map((chr) => (chr.codePointAt(0)! + 127397).toString(16));
+    return `https://osu.ppy.sh/assets/images/flags/${hexEmojiChars.join("-")}.svg`;
 }
 
 async function getUserInfo(mode: string, username: string): Promise<User> {
     const res = await fetch(`${siteConfig.backend_url}/api/user-info?mode=${mode}&username=${username}`, {
-        method: 'POST',
-        credentials: 'include'
+        method: "POST",
+        credentials: "include",
     });
     return await res.json();
 }
