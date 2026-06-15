@@ -5,6 +5,7 @@ import CurrentUserContext from "@/app/user_context";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {siteConfig} from "@/config/site";
 import {useRouter} from "next/navigation";
+import {resolveManagedTournamentName} from "@/lib/tournament_management";
 import {
     Autocomplete,
     Avatar,
@@ -56,9 +57,10 @@ const TrashIcon = () => (
 
 export default function EditTeamPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
-    const tournament_name = decodeURIComponent(params.tournament);
+    const tournament_abbr = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
     const router = useRouter();
+    const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({players: []});
     const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +73,9 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const data = await getPlayers(tournament_name);
+                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    setTournamentName(managedTournamentName);
+                    const data = await getPlayers(managedTournamentName);
                     setTournamentPlayers(data);
                 } finally {
                     setIsLoading(false);
@@ -79,7 +83,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_abbr]);
 
     const handleSave = async () => {
         // --- 新增：校验逻辑 ---
@@ -106,7 +110,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
             // 所以直接使用页面 props 中获取到的 tournament_name 变量
             const res = await fetch(
                 siteConfig.backend_url +
-                `/api/update-teams?tournament_name=${encodeURIComponent(tournament_name)}`,
+                `/api/update-teams?tournament_name=${encodeURIComponent(tournamentName)}`,
                 {
                     method: 'POST',
                     body: JSON.stringify(teams),
@@ -142,7 +146,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
                     <span>管理控制台</span>
                     <span>/</span>
-                    <span>{tournament_name}</span>
+                    <span>{tournament_abbr}</span>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                     <TeamIcon/>
@@ -177,7 +181,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                 <button
                     onClick={() => {
                         const newTeam = {
-                            tournament_name: tournament_name,
+                            tournament_name: tournamentName,
                             name: '',
                             icon_url: '',
                             captains: [],

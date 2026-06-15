@@ -6,6 +6,7 @@ import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {Button, Card, Spinner} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {siteConfig} from "@/config/site";
+import {resolveManagedTournamentName} from "@/lib/tournament_management";
 
 const SaveIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -25,13 +26,14 @@ const EditIcon = () => (
 
 export default function EditTournamentMetaPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
-    const tournament_name = decodeURIComponent(params.tournament);
+    const tournament_abbr = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
     const router = useRouter();
 
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [errMsg, setErrMsg] = useState('');
+    const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     const [formData, setFormData] = useState<TournamentInfo>({
         name: '',
@@ -69,7 +71,9 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const data = await getTournamentInfo(tournament_name);
+                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    setTournamentName(managedTournamentName);
+                    const data = await getTournamentInfo(managedTournamentName);
                     setFormData(data);
                 } catch (e) {
                     setErrMsg("无法加载赛事信息，请刷新重试");
@@ -79,7 +83,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_abbr]);
 
     const handleUpdateTournament = async () => {
         setErrMsg('');
@@ -91,7 +95,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
 
         setIsSaving(true);
         try {
-            const url = `${siteConfig.backend_url}/api/update-tournament?original_name=${encodeURIComponent(tournament_name)}`;
+            const url = `${siteConfig.backend_url}/api/update-tournament?original_name=${encodeURIComponent(tournamentName)}`;
 
             const res = await fetch(url, {
                 'method': 'POST',
@@ -118,7 +122,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
             }
 
             alert('修改成功');
-            const targetAbbr = formData.abbreviation || tournament_name;
+            const targetAbbr = formData.abbreviation || tournament_abbr;
             router.push(`/tournament-management/${targetAbbr}`);
             router.refresh();
         } catch (e) {
@@ -144,7 +148,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
                     <span>管理控制台</span>
                     <span>/</span>
-                    <span>{tournament_name}</span>
+                    <span>{tournament_abbr}</span>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                     <EditIcon/>

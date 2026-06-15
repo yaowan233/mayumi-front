@@ -3,9 +3,15 @@ import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentManagementInfo} from "@/app/(home)/tournament-management/page";
 import Link from "next/link";
-import {siteConfig} from "@/config/site";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {Card, Chip, Skeleton} from "@heroui/react";
+import {siteConfig} from "@/config/site";
+import {
+    ADMIN_ROLE,
+    getAdminTournamentManagementInfo,
+    getTournamentManagementInfo,
+    isAdminUser,
+} from "@/lib/tournament_management";
 
 // --- 图标 (无需修改) ---
 const MetaIcon = () => (
@@ -80,7 +86,10 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
             if (currentUser?.currentUser?.uid) {
                 try {
                     // 1. 先获取所有管理权限信息 (包含简称和全称的对应关系)
-                    const manageData = await getTournamentManagementInfo(currentUser.currentUser.uid);
+                    const isAdmin = isAdminUser(currentUser.currentUser.uid);
+                    const manageData = isAdmin
+                        ? await getAdminTournamentManagementInfo()
+                        : await getTournamentManagementInfo(currentUser.currentUser.uid);
 
                     // 2. 在本地查找当前比赛 (通过 URL 参数的简称匹配)
                     const currentTournament = manageData.find(
@@ -91,9 +100,9 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
                         // 找到比赛了，设置权限
                         setMyRoles(currentTournament.roles || []);
 
-                        // 3. 【关键修改】拿到全称 (tournament_name) 后，再去请求 getPlayers
+                        // 3. 后端比赛管理接口使用 abbreviation 作为 tournament_name 参数
                         try {
-                            const playersData = await getPlayers(currentTournament.tournament_name, 120);
+                            const playersData = await getPlayers(currentTournament.abbreviation, 120);
                             setTournamentPlayers(playersData);
                         } catch (err) {
                             console.error("Failed to load players:", err);
@@ -114,6 +123,8 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
         fetchData();
     }, [currentUser, tournament_abbr]);
 
+    const hasAdminAccess = myRoles.includes(ADMIN_ROLE);
+
     // 定义菜单配置
     const menuItems = [
         {
@@ -121,49 +132,49 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
             desc: "修改比赛基本设置、规则与简介",
             href: `${link_prefix}/meta`,
             icon: <MetaIcon/>,
-            allowed: myRoles.includes('主办')
+            allowed: hasAdminAccess || myRoles.includes('主办')
         },
         {
             title: "轮次管理",
             desc: "配置每个阶段的图池、时间与规则",
             href: `${link_prefix}/round`,
             icon: <RoundIcon/>,
-            allowed: myRoles.includes('主办')
+            allowed: hasAdminAccess || myRoles.includes('主办')
         },
         {
             title: "成员管理",
             desc: "管理 Staff 权限与名单",
             href: `${link_prefix}/member`,
             icon: <MemberIcon/>,
-            allowed: myRoles.includes('主办')
+            allowed: hasAdminAccess || myRoles.includes('主办')
         },
         {
             title: "图池管理",
             desc: "添加、修改比赛用图",
             href: `${link_prefix}/mappool`,
             icon: <MapIcon/>,
-            allowed: myRoles.includes('主办') || myRoles.includes('选图')
+            allowed: hasAdminAccess || myRoles.includes('主办') || myRoles.includes('选图')
         },
         {
             title: "赛程管理",
             desc: "安排比赛对阵与时间表",
             href: `${link_prefix}/scheduler`,
             icon: <ScheduleIcon/>,
-            allowed: myRoles.includes('主办') || myRoles.includes('时间安排')
+            allowed: hasAdminAccess || myRoles.includes('主办') || myRoles.includes('时间安排')
         },
         {
             title: "数据统计",
             desc: "进行比赛数据分析",
             href: `${link_prefix}/statistics`,
             icon: <DataIcon/>,
-            allowed: myRoles.includes('主办')
+            allowed: hasAdminAccess || myRoles.includes('主办')
         },
         {
             title: "队伍管理",
             desc: "管理参赛队伍信息",
             href: `${link_prefix}/team`,
             icon: <TeamIcon/>,
-            allowed: myRoles.includes('主办'),
+            allowed: hasAdminAccess || myRoles.includes('主办'),
             disabled: !tournamentPlayers.groups, // 团队赛才可用
             disabledReason: "仅团队赛可用"
         },
@@ -283,12 +294,6 @@ const DashboardSkeleton = () => (
 )
 
 // --- 数据获取 ---
-async function getTournamentManagementInfo(uid: number): Promise<TournamentManagementInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-management-info?uid=${uid}`,
-        {next: {revalidate: 10}});
-    return await data.json();
-}
-
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
         {next: {revalidate: revalidate_time}})

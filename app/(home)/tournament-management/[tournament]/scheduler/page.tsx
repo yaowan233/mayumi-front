@@ -26,6 +26,7 @@ import {
 import {siteConfig} from "@/config/site";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {TournamentInfo} from "@/components/homepage";
+import {resolveManagedTournamentName} from "@/lib/tournament_management";
 
 // --- 图标 ---
 const SaveIcon = () => (
@@ -54,8 +55,9 @@ const ScheduleIcon = () => (
 
 export default function SchedulerPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
-    const tournament_name = decodeURIComponent(params.tournament);
+    const tournament_abbr = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
+    const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     // State
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
@@ -72,11 +74,13 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
+                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    setTournamentName(managedTournamentName);
                     const [rounds, schedules, players, info] = await Promise.all([
-                        getRoundInfo(tournament_name),
-                        getSchedule(tournament_name),
-                        getPlayers(tournament_name),
-                        getTournamentInfo(tournament_name) // 新增获取比赛信息
+                        getRoundInfo(managedTournamentName),
+                        getSchedule(managedTournamentName),
+                        getPlayers(managedTournamentName),
+                        getTournamentInfo(managedTournamentName) // 新增获取比赛信息
                     ]);
                     setRoundInfo(rounds);
                     setScheduleInfo(schedules);
@@ -91,7 +95,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_abbr]);
 
     // 核心逻辑修改：根据比赛类型决定下拉框显示谁
     // 1. 获取所有 Staff (裁判/解说等) - 这部分始终是人
@@ -153,7 +157,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         if (!selectedRound) return;
         const currentRoundInfo = roundInfo.find(r => r.stage_name === selectedRound);
         const newSchedule: Schedule = {
-            tournament_name: tournament_name,
+            tournament_name: tournamentName,
             stage_name: selectedRound,
             match_id: crypto.randomUUID(),
             match_url: [""],
@@ -180,7 +184,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
                     <span>管理控制台</span>
                     <span>/</span>
-                    <span>{tournament_name}</span>
+                    <span>{tournament_abbr}</span>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                     <ScheduleIcon/>

@@ -22,6 +22,7 @@ import {
 import {RegistrationInfo} from "@/components/homepage";
 import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {resolveManagedTournamentName} from "@/lib/tournament_management";
 
 // --- 配置 ---
 const ROLES = [
@@ -76,7 +77,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const modalState = useOverlayState();
-    const tournament_name = decodeURIComponent(params.tournament);
+    const tournament_abbr = decodeURIComponent(params.tournament);
+    const [tournamentName, setTournamentName] = useState(tournament_abbr);
     const players = tournamentPlayers.players || [];
     const teams = tournamentPlayers.groups;
     const playerNameByUid = new Map(players.map((player) => [player.uid, player.name]));
@@ -86,9 +88,11 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             if (currentUser?.currentUser?.uid) {
                 setIsLoading(true);
                 try {
+                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    setTournamentName(managedTournamentName);
                     const [data, regInfo] = await Promise.all([
-                        getPlayers(tournament_name),
-                        getRegistrationInfo(tournament_name)
+                        getPlayers(managedTournamentName),
+                        getRegistrationInfo(managedTournamentName)
                     ]);
                     setTournamentPlayers(data);
                     setRegistrationInfo(regInfo);
@@ -98,19 +102,19 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_abbr]);
 
     const handleRefreshStats = async () => {
         setIsRefreshing(true);
         try {
             const res = await fetch(
-                `${siteConfig.backend_url}/api/refresh-members-stats?tournament_name=${encodeURIComponent(tournament_name)}`,
+                `${siteConfig.backend_url}/api/refresh-members-stats?tournament_name=${encodeURIComponent(tournamentName)}`,
                 {method: 'POST', credentials: 'include'}
             );
             if (res.ok) {
                 const data = await res.json();
                 alert(`刷新成功：已更新 ${data.updated} / ${data.total} 名选手数据`);
-                const updated = await getPlayers(tournament_name);
+                const updated = await getPlayers(tournamentName);
                 setTournamentPlayers(updated);
             } else {
                 alert(await res.text());
@@ -253,7 +257,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                                         teams={teams}
                                         setTournamentPlayers={setTournamentPlayers}
                                         currentUid={currentUser?.currentUser?.uid}
-                                        tournamentName={tournament_name}
+                                        tournamentName={tournamentName}
                                     />
                                 </Card.Content>
                             </Card>

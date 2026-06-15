@@ -2,7 +2,11 @@
 import {Button, Card, Chip, Skeleton, Tooltip} from "@heroui/react";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {siteConfig} from "@/config/site";
+import {
+    getAdminTournamentManagementInfo,
+    getTournamentManagementInfo,
+    isAdminUser,
+} from "@/lib/tournament_management";
 
 const PlusIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -85,7 +89,9 @@ export default function TournamentManagementPage() {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const data = await getTournamentManagementInfo(currentUser.currentUser.uid);
+                    const data = isAdminUser(currentUser.currentUser.uid)
+                        ? await getAdminTournamentManagementInfo()
+                        : await getTournamentManagementInfo(currentUser.currentUser.uid);
                     data.sort((a, b) => new Date(b.start_date ?? 0).getTime() - new Date(a.start_date ?? 0).getTime());
                     setTournamentManagementInfo(data);
                 } catch (e) {
@@ -247,12 +253,6 @@ export default function TournamentManagementPage() {
             )}
         </div>
     );
-}
-
-async function getTournamentManagementInfo(uid: number): Promise<TournamentManagementInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-management-info?uid=${uid}`,
-        {next: {revalidate: 10}});
-    return await data.json();
 }
 
 export type TournamentStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'hidden';

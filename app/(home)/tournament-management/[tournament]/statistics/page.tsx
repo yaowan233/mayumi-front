@@ -6,6 +6,7 @@ import CurrentUserContext from "@/app/user_context";
 import {Button, Card, Chip, Spinner, Tabs} from "@heroui/react";
 import { siteConfig } from "@/config/site";
 import Link from "next/link";
+import {resolveManagedTournamentName} from "@/lib/tournament_management";
 
 // --- 图标 ---
 const DataIcon = () => (
@@ -77,8 +78,9 @@ interface TournamentScore {
 
 export default function EditStatisticsPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
-    const tournament_name = decodeURIComponent(params.tournament);
+    const tournament_abbr = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
+    const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     // Round Info State
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
@@ -103,7 +105,9 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const data = await getRoundInfo(tournament_name);
+                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    setTournamentName(managedTournamentName);
+                    const data = await getRoundInfo(managedTournamentName);
                     setRoundInfo(data);
                     if (data.length > 0) {
                         setSelectedRound(data[data.length - 1].stage_name);
@@ -116,13 +120,13 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_abbr]);
 
     // Fetch ALL scores for the tournament (Cache)
     const fetchAllScores = useCallback(async () => {
         setIsScoresLoading(true);
         try {
-            const res = await fetch(siteConfig.backend_url + `/api/scores?tournament_name=${tournament_name}`);
+            const res = await fetch(siteConfig.backend_url + `/api/scores?tournament_name=${tournamentName}`);
             if (res.ok) {
                 const data = await res.json();
                 setAllScores(data);
@@ -135,7 +139,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         } finally {
             setIsScoresLoading(false);
         }
-    }, [tournament_name]);
+    }, [tournamentName]);
 
     // Initial fetch of scores
     useEffect(() => {
@@ -158,7 +162,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         setIsUpdating(true);
         try {
             const res = await fetch(
-                siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${encodeURIComponent(tournament_name)}&stage_name=${encodeURIComponent(selectedRound)}`,
+                siteConfig.backend_url + `/api/get-stage-plays?tournament_name=${encodeURIComponent(tournamentName)}&stage_name=${encodeURIComponent(selectedRound)}`,
                 { method: 'POST', credentials: 'include', next: { revalidate: 0 } }
             )
 
@@ -183,7 +187,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         try {
             const scorePayload = {
                 ...newScore,
-                tournament_name: tournament_name,
+                tournament_name: tournamentName,
                 stage_name: selectedRound,
                 start_time: newScore.start_time || new Date().toISOString(),
                 acc: (newScore.acc || 0) / 100, // Convert to decimal for backend
@@ -248,7 +252,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
                     <span>管理控制台</span>
                     <span>/</span>
-                    <span>{tournament_name}</span>
+                    <span>{tournament_abbr}</span>
                 </div>
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                     <DataIcon />
@@ -483,7 +487,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                 <div
                     className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-default-200 dark:border-white/10 rounded-xl">
                     <p className="text-default-500">暂无轮次信息，请先前往“轮次管理”添加。</p>
-                    <Link href={`/tournament-management/${tournament_name}/round`} className="mt-4 no-underline"><Button variant="primary">去添加轮次</Button></Link>
+                    <Link href={`/tournament-management/${tournament_abbr}/round`} className="mt-4 no-underline"><Button variant="primary">去添加轮次</Button></Link>
                 </div>
             )}
         </div>

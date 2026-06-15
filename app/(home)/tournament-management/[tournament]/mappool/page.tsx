@@ -7,6 +7,7 @@ import CurrentUserContext from "@/app/user_context";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {siteConfig} from "@/config/site";
 import {TournamentInfo} from "@/components/homepage";
+import {resolveManagedTournamentName} from "@/lib/tournament_management";
 
 const MapIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -40,8 +41,9 @@ const TrashIcon = () => (
 
 export default function EditTournamentMapPoolPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
-    const tournament_name = decodeURIComponent(params.tournament);
+    const tournament_abbr = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
+    const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -57,10 +59,12 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
+                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    setTournamentName(managedTournamentName);
                     const [rounds, maps, info] = await Promise.all([
-                        getRoundInfo(tournament_name),
-                        getTournamentMaps(tournament_name),
-                        getTournamentInfo(tournament_name),
+                        getRoundInfo(managedTournamentName),
+                        getTournamentMaps(managedTournamentName),
+                        getTournamentInfo(managedTournamentName),
                     ]);
                     setRoundInfo(rounds);
                     setTournamentMaps(maps);
@@ -75,7 +79,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
             }
         };
         fetchData();
-    }, [currentUser, tournament_name]);
+    }, [currentUser, tournament_abbr]);
 
     const handleUpdateTournament = async () => {
         setErrMsg("");
@@ -114,7 +118,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         setIsSyncing(true);
         try {
             const res = await fetch(
-                siteConfig.backend_url + `/api/sync-tournament-maps?tournament_name=${encodeURIComponent(tournament_name)}`,
+                siteConfig.backend_url + `/api/sync-tournament-maps?tournament_name=${encodeURIComponent(tournamentName)}`,
                 {
                     method: "POST",
                     credentials: "include",
@@ -150,7 +154,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         setTournamentMaps([
             ...tournamentMaps,
             {
-                tournament_name,
+                tournament_name: tournamentName,
                 stage_name: selectedRound,
                 mod: "",
                 map_id: undefined,
@@ -175,7 +179,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                 <div className="mb-1 flex items-center gap-3 text-sm text-default-500">
                     <span>管理控制台</span>
                     <span>/</span>
-                    <span>{tournament_name}</span>
+                    <span>{tournament_abbr}</span>
                 </div>
                 <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight text-foreground">
                     <MapIcon/>
@@ -231,7 +235,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
             ) : (
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-default-200 py-20">
                     <p className="text-default-500">暂无轮次信息，请先前往“轮次管理”添加。</p>
-                    <Button variant="primary" className="mt-4" onPress={() => window.location.assign(`/tournament-management/${tournament_name}/round`)}>
+                    <Button variant="primary" className="mt-4" onPress={() => window.location.assign(`/tournament-management/${tournament_abbr}/round`)}>
                         去添加轮次
                     </Button>
                 </div>

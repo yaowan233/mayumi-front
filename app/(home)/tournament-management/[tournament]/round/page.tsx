@@ -5,6 +5,7 @@ import {siteConfig} from "@/config/site";
 import {Button, Card, FieldError, Input, Label, Spinner, Switch, TextField} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {TournamentInfo} from "@/components/homepage";
+import {resolveManagedTournamentName} from "@/lib/tournament_management";
 
 const SaveIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -38,9 +39,10 @@ const RoundIcon = () => (
 
 export default function EditRoundPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
-    const tournament_name = decodeURIComponent(params.tournament);
+    const tournament_abbr = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
     const router = useRouter();
+    const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     const [formData, setFormData] = useState<TournamentRoundInfo[]>([]);
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
@@ -49,22 +51,30 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     const [errMsg, setErrMsg] = useState('');
 
     const createInitialFormData = useCallback((): TournamentRoundInfo => ({
-        tournament_name: tournament_name,
+        tournament_name: tournamentName,
         stage_name: '',
         start_time: undefined,
         end_time: undefined,
         is_lobby: false
-    }), [tournament_name]);
+    }), [tournamentName]);
 
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
+                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    setTournamentName(managedTournamentName);
                     const [data, info] = await Promise.all([
-                        getRoundInfo(tournament_name),
-                        getTournamentInfo(tournament_name),
+                        getRoundInfo(managedTournamentName),
+                        getTournamentInfo(managedTournamentName),
                     ]);
-                    setFormData(data.length > 0 ? data : [createInitialFormData()]);
+                    setFormData(data.length > 0 ? data : [{
+                        tournament_name: managedTournamentName,
+                        stage_name: '',
+                        start_time: undefined,
+                        end_time: undefined,
+                        is_lobby: false
+                    }]);
                     setTournamentInfo(info);
                 } catch (e) {
                     setErrMsg("加载失败，请刷新重试");
@@ -74,7 +84,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
             }
         };
         fetchData();
-    }, [currentUser, tournament_name, createInitialFormData]);
+    }, [currentUser, tournament_abbr]);
 
     const handleUpdateTournament = async () => {
         setErrMsg('');
@@ -133,7 +143,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
                     <span>管理控制台</span>
                     <span>/</span>
-                    <span>{tournament_name}</span>
+                    <span>{tournament_abbr}</span>
                 </div>
                 {/* 修复：text-white -> text-foreground */}
                 <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
