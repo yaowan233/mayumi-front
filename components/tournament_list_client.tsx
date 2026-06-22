@@ -4,13 +4,13 @@ import { useContext, useState } from "react";
 import NextImage from "next/image";
 import NextLink from "next/link";
 import useSWR from "swr";
-import { TournamentComponent, Tournament } from "@/components/tournament_pic";
+import { TournamentComponent, Tournament, modeLabel } from "@/components/tournament_pic";
 import { SectionTitle } from "@/app/page";
 import CurrentUserContext from "@/app/user_context";
 import { siteConfig } from "@/config/site";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(r => r.json());
-const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
+const fallbackImage = "/icon0.svg";
 
 function splitTournaments(list: Tournament[]) {
     const sorted = [...list].sort((a, b) =>
@@ -21,23 +21,6 @@ function splitTournaments(list: Tournament[]) {
         finished: sorted.filter(t => new Date(t.end_date) < new Date()),
     };
 }
-
-const modeLabel = (mode: string) => {
-    switch (mode.toLowerCase()) {
-        case "osu":
-            return "osu!";
-        case "taiko":
-            return "Taiko";
-        case "fruits":
-            return "Fruits";
-        case "mania":
-            return "Mania";
-        case "all":
-            return "多模式";
-        default:
-            return mode || "其他";
-    }
-};
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString("zh-CN", {
     month: "2-digit",
@@ -50,7 +33,7 @@ const FeaturedTournament = ({ tournament }: { tournament: Tournament }) => {
     return (
         <NextLink
             href={`/tournaments/${tournament.abbreviation}/home`}
-            className="group grid overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 shadow-sm shadow-zinc-200/70 outline-none transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-zinc-200/80 focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/60 dark:shadow-black/25 dark:hover:border-primary/60 dark:hover:shadow-black/35 md:grid-cols-[1.55fr_1fr]"
+            className="group grid overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 shadow-sm shadow-zinc-200/70 outline-none transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-zinc-200/80 focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/60 dark:shadow-black/25 dark:hover:border-primary/60 dark:hover:shadow-black/35 md:grid-cols-[1.55fr_1fr]"
         >
             <div className="relative aspect-video overflow-hidden bg-zinc-100 dark:bg-zinc-950">
                 <div className="absolute inset-0">
@@ -138,7 +121,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
     return (
         <>
             <section className="flex flex-col mb-16">
-                <SectionTitle title="正在进行的比赛" count={ongoing.length} />
+                <SectionTitle title="正在进行的比赛" count={ongoing.length} live />
                 {ongoing.length > 0 ? (
                     ongoing.length === 1 ? (
                         <FeaturedTournament tournament={featuredOngoing} />
@@ -159,8 +142,8 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                         </div>
                     )
                 ) : (
-                    <div className="w-full flex justify-center items-center py-12 opacity-50">
-                        <span className="text-sm font-medium tracking-[0.2em] text-default-500">
+                    <div className="w-full flex justify-center items-center py-12">
+                        <span className="text-sm font-medium tracking-[0.2em] text-zinc-400 dark:text-zinc-500">
                             — 近期暂无赛事 —
                         </span>
                     </div>
@@ -180,14 +163,22 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                         </div>
                         <label className="relative block w-full md:max-w-xs">
                             <span className="sr-only">搜索历史赛事</span>
-                            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
-                                搜索
-                            </span>
+                            <svg
+                                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                            >
+                                <circle cx="9" cy="9" r="6" />
+                                <path d="m18 18-4.5-4.5" />
+                            </svg>
                             <input
                                 value={searchQuery}
                                 onChange={(event) => setSearchQuery(event.target.value)}
-                                placeholder="名称 / 简称 / 描述"
-                                className="h-10 w-full rounded-full border border-zinc-200 bg-white/70 pl-12 pr-4 text-sm font-medium text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-primary/60 focus:bg-white focus:ring-2 focus:ring-primary/15 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-white/10"
+                                placeholder="搜索名称 / 简称 / 描述"
+                                className="h-10 w-full rounded-full border border-zinc-200 bg-white/70 pl-10 pr-4 text-sm font-medium text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-primary/60 focus:bg-white focus:ring-2 focus:ring-primary/15 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-white/10"
                             />
                         </label>
                     </div>
@@ -198,7 +189,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                             onClick={() => setSelectedMode("__all__")}
                             className={`h-8 cursor-pointer rounded-full px-3 text-xs font-bold transition hover:-translate-y-0.5 active:scale-95 ${
                                 selectedMode === "__all__"
-                                    ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-950"
+                                    ? "bg-primary text-white shadow-sm shadow-primary/30"
                                     : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
                             }`}
                         >
@@ -211,7 +202,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                                 onClick={() => setSelectedMode(mode)}
                                 className={`h-8 cursor-pointer rounded-full px-3 text-xs font-bold transition hover:-translate-y-0.5 active:scale-95 ${
                                     selectedMode === mode
-                                        ? "bg-zinc-900 text-white shadow-sm dark:bg-white dark:text-zinc-950"
+                                        ? "bg-primary text-white shadow-sm shadow-primary/30"
                                         : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
                                 }`}
                             >
@@ -228,8 +219,8 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                         ))}
                     </div>
                 ) : (
-                    <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50/70 px-4 text-sm font-medium text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
-                        没有找到相关比赛
+                    <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-50/70 px-4 text-sm font-medium text-zinc-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-500">
+                        {finished.length === 0 ? "— 暂无历史赛事 —" : "没有找到相关比赛"}
                     </div>
                 )}
             </section>

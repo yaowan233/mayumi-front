@@ -19,7 +19,6 @@ import {
     Radio,
     RadioGroup,
     Separator,
-    Spinner,
     TextArea,
     Tooltip,
 } from "@heroui/react";
@@ -85,6 +84,217 @@ const statusLabelMap: Record<string, string> = {
     hidden: "已隐藏",
 };
 
+const SectionEmpty = ({ text }: { text: string }) => (
+    <div className="mt-4 flex items-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50/60 px-4 py-3 text-sm font-medium text-zinc-400 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-500">
+        <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="10" cy="10" r="8" />
+            <path d="M10 6v4M10 14h.01" strokeLinecap="round" />
+        </svg>
+        {text}
+    </div>
+);
+
+const RegistrationCountdown = ({ deadline }: { deadline: string }) => {
+    const [remaining, setRemaining] = useState(() => calcRemaining(deadline));
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setRemaining(calcRemaining(deadline));
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [deadline]);
+
+    if (remaining === null) return null;
+    if (remaining.expired) {
+        return (
+            <div className="flex items-center gap-2 rounded-lg border-l-[3px] border-l-red-400 bg-red-50/80 px-4 py-3 text-sm font-bold text-red-700 dark:bg-red-400/[0.08] dark:text-red-200">
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                </svg>
+                报名已截止
+            </div>
+        );
+    }
+
+    const units = [
+        { value: remaining.days, label: "天" },
+        { value: remaining.hours, label: "时" },
+        { value: remaining.minutes, label: "分" },
+        { value: remaining.seconds, label: "秒" },
+    ];
+
+    const isUrgent = remaining.days === 0 && remaining.hours < 12;
+
+    return (
+        <div className={`flex flex-col gap-2 rounded-lg border-l-[3px] px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${
+            isUrgent
+                ? "border-l-red-400 bg-red-50/80 dark:bg-red-400/[0.08]"
+                : "border-l-primary bg-primary/10 dark:bg-primary/[0.10]"
+        }`}>
+            <div className={`flex items-center gap-2 text-sm font-bold ${isUrgent ? "text-red-700 dark:text-red-200" : "text-primary"}`}>
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                </svg>
+                {isUrgent ? "报名即将截止" : "距报名截止还有"}
+            </div>
+            <div className="flex items-center gap-1.5">
+                {units.map((u, i) => (
+                    <span key={u.label} className="flex items-center gap-1.5">
+                        <span className={`inline-flex h-9 min-w-8 items-center justify-center rounded-md px-2 font-mono text-lg font-black tabular-nums ${
+                            isUrgent
+                                ? "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-200"
+                                : "bg-primary/15 text-primary dark:bg-primary/20"
+                        }`}>
+                            {String(u.value).padStart(2, "0")}
+                        </span>
+                        <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">{u.label}</span>
+                        {i < units.length - 1 && <span className="text-zinc-300 dark:text-white/20">:</span>}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+function calcRemaining(deadline: string) {
+    const target = new Date(deadline).getTime();
+    if (isNaN(target)) return null;
+    const diff = target - Date.now();
+    if (diff <= 0) return { expired: true };
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return { expired: false, days, hours, minutes, seconds };
+}
+
+const formatRank = (rank: number | string) => {
+    if (typeof rank === "number") {
+        return `#${rank.toLocaleString("en-US")}`;
+    }
+    return `#${rank}`;
+};
+
+const RankLimitCard = ({
+    rankMin,
+    rankMax,
+    userRank,
+    mode,
+}: {
+    rankMin?: number;
+    rankMax?: number;
+    userRank: number;
+    mode: string;
+}) => {
+    if (!rankMin && !rankMax) return null;
+
+    const hasMin = !!rankMin;
+    const hasMax = !!rankMax;
+    const hasUserRank = userRank > 0;
+
+    const min = rankMin ?? 1;
+    const max = rankMax ?? 999999;
+    const isInRange = hasUserRank && userRank >= min && userRank <= max;
+
+    const modeIcon = (mode || "").toLowerCase();
+    const modeIconClass = `fa-extra fa-extra-mode-${modeIcon}`;
+
+    const rangeText = hasMin && hasMax
+        ? (
+            <div className="flex items-baseline gap-2">
+                <span className="font-mono text-lg font-black tabular-nums text-zinc-900 dark:text-white">{formatRank(rankMin!)}</span>
+                <span className="text-sm font-bold text-zinc-400">—</span>
+                <span className="font-mono text-lg font-black tabular-nums text-zinc-900 dark:text-white">{formatRank(rankMax!)}</span>
+            </div>
+        )
+        : hasMin
+            ? (
+                <div className="flex items-baseline gap-1.5">
+                    <span className="font-mono text-lg font-black tabular-nums text-zinc-900 dark:text-white">{formatRank(rankMin!)}</span>
+                    <span className="text-sm font-bold text-zinc-400">及以下</span>
+                </div>
+            )
+            : (
+                <div className="flex items-baseline gap-1.5">
+                    <span className="font-mono text-lg font-black tabular-nums text-zinc-900 dark:text-white">{formatRank(rankMax!)}</span>
+                    <span className="text-sm font-bold text-zinc-400">及以上</span>
+                </div>
+            );
+
+    const showBar = hasMin && hasMax && hasUserRank;
+    const rangeSpan = max - min;
+    let barPos = -1;
+    if (showBar) {
+        const clamped = Math.max(min, Math.min(max, userRank));
+        barPos = ((clamped - min) / rangeSpan) * 100;
+    }
+
+    return (
+        <div className="relative overflow-hidden rounded-xl border border-zinc-200/80 bg-gradient-to-br from-zinc-50 to-white p-4 dark:border-white/10 dark:from-zinc-900/80 dark:to-zinc-900/40">
+            <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="m7 14 4-4 4 4 5-5" />
+                    </svg>
+                </div>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">排名限制</span>
+                    <div className="flex items-baseline gap-2">
+                        {rangeText}
+                        {modeIconClass && (
+                            <i className={`${modeIconClass} ml-1 text-sm text-zinc-400 dark:text-zinc-500`} />
+                        )}
+                    </div>
+                </div>
+                {hasUserRank && (
+                    <div className={`ml-auto flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${
+                        isInRange
+                            ? "bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                            : "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-300"
+                    }`}>
+                        {isInRange ? (
+                            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-8 8a1 1 0 01-1.42 0l-4-4a1 1 0 011.42-1.42L8 12.58l7.29-7.29a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                        ) : (
+                            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                        )}
+                        您当前 {formatRank(userRank)}
+                    </div>
+                )}
+            </div>
+
+            {showBar && (
+                <div className="mt-3.5">
+                    <div className="relative h-2 rounded-full bg-zinc-200 dark:bg-white/10">
+                        <div
+                            className={`absolute inset-y-0 left-0 rounded-full ${
+                                isInRange ? "bg-emerald-500/40" : "bg-red-500/40"
+                            }`}
+                            style={{ width: "100%" }}
+                        />
+                        <div
+                            className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900 ${
+                                isInRange ? "bg-emerald-500" : "bg-red-500"
+                            }`}
+                            style={{ left: `${Math.max(0, Math.min(100, barPos))}%` }}
+                        />
+                    </div>
+                    <div className="mt-1.5 flex justify-between text-[11px] font-medium text-zinc-400 dark:text-zinc-500">
+                        <span>排名更高</span>
+                        <span>排名更低</span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
     // ... 状态逻辑保持不变 ...
@@ -108,6 +318,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         additionalComments: ''
     });
     const [members, setMembers] = useState<Player[]>([]);
+    const [qqCopied, setQqCopied] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -191,7 +402,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     const myTeam = tournament_info.is_group
         ? teams.find(t => t.captains.includes(currentUser?.currentUser?.uid ?? -1))
         : null;
-    const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
+    const fallbackImage = "/icon0.svg";
     const bgSrc = tournament_info.pic_url || fallbackImage;
     const themeColor = normalizeTournamentThemeColor(tournament_info.theme_color);
     const themeStyle = themeColor
@@ -219,7 +430,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     };
     return (
         <div
-            className="flex flex-col gap-6 w-full max-w-6xl mx-auto px-2 pb-10"
+            className="flex flex-col gap-6 w-full max-w-7xl mx-auto px-2 pb-10"
             style={themeStyle}
         >
             {tournament_info.status !== 'approved' && (
@@ -320,6 +531,12 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                             {tournament_info.name}
                         </h1>
 
+                        {tournament_info.description && (
+                            <p className="text-sm text-zinc-500 leading-relaxed line-clamp-2 dark:text-zinc-400">
+                                {tournament_info.description}
+                            </p>
+                        )}
+
                         {/* 标签组 */}
                         <div className="flex flex-wrap gap-2 items-center mt-1">
                             <Chip color="accent" size="sm" variant="primary" className="uppercase shadow-sm md:text-md">
@@ -369,6 +586,11 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300 text-sm sm:text-base">
                             {tournament_info.staff_registration_info}
                         </div>
+                        {!hasRegistrationEnded && (
+                            <div className="mt-4">
+                                <RegistrationCountdown deadline={tournament_info.start_date} />
+                            </div>
+                        )}
                         <div className="mt-5">
                             {hasRegistrationEnded ? (
                                 <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
@@ -394,18 +616,24 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
                     <section className="px-6 py-6 md:px-8 md:py-7">
                         <h2 className="font-bold text-lg">赛程</h2>
-                        <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300 font-mono">
-                            {tournament_info.tournament_schedule_info || "暂无赛程信息"}
-                        </div>
+                        {tournament_info.tournament_schedule_info
+                            ? <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300 font-mono">
+                                {tournament_info.tournament_schedule_info}
+                              </div>
+                            : <SectionEmpty text="暂无赛程信息" />
+                        }
                     </section>
 
                     <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
 
                     <section className="px-6 py-6 md:px-8 md:py-7">
                         <h2 className="font-bold text-lg">奖金</h2>
-                        <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300">
-                            {tournament_info.prize_info || "暂无奖金信息"}
-                        </div>
+                        {tournament_info.prize_info
+                            ? <div className="mt-4 whitespace-pre-wrap text-zinc-600 leading-relaxed dark:text-zinc-300">
+                                {tournament_info.prize_info}
+                              </div>
+                            : <SectionEmpty text="暂无奖金信息" />
+                        }
                     </section>
 
                     <Separator className="bg-zinc-200/80 dark:bg-white/[0.06]" />
@@ -414,12 +642,17 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         <h2 className="font-bold text-lg">选手报名</h2>
 
                         <div className="mt-4 flex flex-col gap-4">
+                            {!hasRegistrationEnded && (
+                                <RegistrationCountdown deadline={tournament_info.start_date} />
+                            )}
+
                             {(tournament_info.rank_max || tournament_info.rank_min) && (
-                                <Alert status="default" className={`${alertToneClass.accent} rounded-lg border-l-[3px] px-4 py-3`}>
-                                    <Alert.Content>
-                                        <Alert.Title>{`排名限制：${tournament_info.rank_min || 0} - ${tournament_info.rank_max || "∞"}`}</Alert.Title>
-                                    </Alert.Content>
-                                </Alert>
+                                <RankLimitCard
+                                    rankMin={tournament_info.rank_min}
+                                    rankMax={tournament_info.rank_max}
+                                    userRank={userRank}
+                                    mode={tournament_info.mode}
+                                />
                             )}
 
                             {tournament_info.registration_info && (
@@ -434,11 +667,19 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                     <button
                                         type="button"
                                         className="rounded-lg bg-emerald-500/15 px-2 py-1 text-sm font-bold text-emerald-700 transition-all duration-150 hover:bg-emerald-500/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 dark:text-emerald-200"
-                                        onClick={() => navigator.clipboard.writeText(tournament_info.qq_group!.toString())}
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(tournament_info.qq_group!.toString());
+                                            setQqCopied(true);
+                                            setTimeout(() => setQqCopied(false), 2000);
+                                        }}
                                     >
                                         {tournament_info.qq_group.toString()}
                                     </button>
-                                    <span className="text-xs text-success-600">(报名后请务必加群)</span>
+                                    {qqCopied ? (
+                                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-300">已复制</span>
+                                    ) : (
+                                        <span className="text-xs text-success-600">(报名后请务必加群)</span>
+                                    )}
                                 </div>
                             )}
 

@@ -31,17 +31,32 @@ const modeClassName = (mode: string) => {
     }
 };
 
-const modeLabel = (mode: string) => mode.toLowerCase() === "all" ? "多模式" : mode;
+export const modeLabel = (mode: string) => {
+    switch (mode.toLowerCase()) {
+        case "osu":
+            return "osu!";
+        case "taiko":
+            return "Taiko";
+        case "fruits":
+            return "Fruits";
+        case "mania":
+            return "Mania";
+        case "all":
+            return "多模式";
+        default:
+            return mode || "其他";
+    }
+};
 
 export const TournamentComponent = ({tournament, priority = false}: { tournament: Tournament; priority?: boolean }) => {
     const tournamentHref = `/tournaments/${tournament.abbreviation}/home`;
-    const fallbackImage = "https://nextui.org/images/card-example-4.jpeg";
+    const fallbackImage = "/icon0.svg";
     const imgSrc = tournament.pic_url || fallbackImage;
 
     return (
         <NextLink
             href={tournamentHref}
-            className="group relative block aspect-video w-full overflow-hidden rounded-xl border border-transparent bg-zinc-100 shadow-sm shadow-zinc-200/70 outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/80 dark:shadow-xl dark:shadow-black/35"
+            className="group relative block aspect-video w-full overflow-hidden rounded-xl border border-transparent bg-zinc-100 shadow-sm shadow-zinc-200/70 outline-none transition hover:-translate-y-1 hover:shadow-lg hover:shadow-zinc-300/60 focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/80 dark:shadow-black/25 dark:ring-1 dark:ring-white/10 dark:hover:ring-primary/40"
         >
             {tournament.status && tournament.status !== "approved" && (
                 <span className="absolute left-3 top-3 z-30 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black uppercase text-amber-950 shadow-lg shadow-amber-400/30">
@@ -81,7 +96,7 @@ export const TournamentComponent = ({tournament, priority = false}: { tournament
                 <h4 className="line-clamp-1 text-lg font-bold leading-tight text-white drop-shadow-md transition-colors group-hover:text-primary">
                     {tournament.name}
                 </h4>
-                <p className="line-clamp-2 text-[11px] font-normal leading-snug text-zinc-300">
+                <p className="line-clamp-2 text-xs font-normal leading-relaxed text-zinc-300">
                     {tournament.description || "暂无详细描述..."}
                 </p>
             </div>
