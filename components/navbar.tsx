@@ -137,15 +137,15 @@ export const Navbar = () => {
                         ))}
                     </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-4">
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                     <a
                         href={siteConfig.links.github}
                         target="_blank"
                         rel="noreferrer"
                         aria-label="Github"
-                        className="text-zinc-600 transition-colors hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
+                        className="hidden h-9 w-9 items-center justify-center rounded-md text-zinc-600 transition-colors hover:bg-zinc-900/[0.06] hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/[0.06] dark:hover:text-white sm:inline-flex"
                     >
-                        <GithubIcon/>
+                        <GithubIcon size={22}/>
                     </a>
                     <ThemeSwitch/>
                     <UserStatus/>
@@ -198,15 +198,15 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                         ))}
                     </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-4">
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
                     <a
                         href={siteConfig.links.github}
                         target="_blank"
                         rel="noreferrer"
                         aria-label="Github"
-                        className="text-zinc-600 transition-colors hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
+                        className="hidden h-9 w-9 items-center justify-center rounded-md text-zinc-600 transition-colors hover:bg-zinc-900/[0.06] hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/[0.06] dark:hover:text-white sm:inline-flex"
                     >
-                        <GithubIcon/>
+                        <GithubIcon size={22}/>
                     </a>
                     <ThemeSwitch/>
                     <UserStatus/>

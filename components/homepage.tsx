@@ -128,7 +128,7 @@ const RegistrationCountdown = ({ deadline }: { deadline: string }) => {
     const isUrgent = remaining.days === 0 && remaining.hours < 12;
 
     return (
-        <div className={`flex flex-col gap-2 rounded-lg border-l-[3px] px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${
+        <div className={`flex w-full max-w-full flex-col gap-2 overflow-hidden rounded-lg border-l-[3px] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 ${
             isUrgent
                 ? "border-l-red-400 bg-red-50/80 dark:bg-red-400/[0.08]"
                 : "border-l-primary bg-primary/10 dark:bg-primary/[0.10]"
@@ -140,18 +140,18 @@ const RegistrationCountdown = ({ deadline }: { deadline: string }) => {
                 </svg>
                 {isUrgent ? "报名即将截止" : "距报名截止还有"}
             </div>
-            <div className="flex items-center gap-1 sm:gap-1.5">
+            <div className="grid w-full min-w-0 grid-cols-4 gap-1.5 sm:flex sm:w-auto sm:items-center sm:gap-1.5">
                 {units.map((u, i) => (
-                    <span key={u.label} className="flex items-center gap-1 sm:gap-1.5">
-                        <span className={`inline-flex h-8 min-w-7 items-center justify-center rounded-md px-1.5 font-mono text-base font-black tabular-nums sm:h-9 sm:min-w-8 sm:px-2 sm:text-lg ${
+                    <span key={u.label} className="flex min-w-0 items-center justify-center gap-1 sm:gap-1.5">
+                        <span className={`inline-flex h-8 min-w-0 flex-1 items-center justify-center rounded-md px-1 font-mono text-sm font-black tabular-nums sm:h-9 sm:min-w-8 sm:flex-none sm:px-2 sm:text-lg ${
                             isUrgent
                                 ? "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-200"
                                 : "bg-primary/15 text-primary dark:bg-primary/20"
                         }`}>
                             {String(u.value).padStart(2, "0")}
                         </span>
-                        <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400">{u.label}</span>
-                        {i < units.length - 1 && <span className="text-zinc-300 dark:text-white/20">:</span>}
+                        <span className="shrink-0 text-xs font-bold text-zinc-500 dark:text-zinc-400">{u.label}</span>
+                        {i < units.length - 1 && <span className="hidden text-zinc-300 dark:text-white/20 sm:inline">:</span>}
                     </span>
                 ))}
             </div>
