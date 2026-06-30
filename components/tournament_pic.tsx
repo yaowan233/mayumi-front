@@ -48,10 +48,34 @@ export const modeLabel = (mode: string) => {
     }
 };
 
+const gradientForName = (name: string) => {
+    const charCode = name.charCodeAt(0) || 0;
+    const palettes = [
+        "from-violet-500 via-purple-500 to-fuchsia-500",
+        "from-sky-500 via-blue-500 to-indigo-500",
+        "from-rose-500 via-pink-500 to-purple-500",
+        "from-emerald-500 via-teal-500 to-cyan-500",
+        "from-amber-500 via-orange-500 to-red-500",
+    ];
+    return palettes[charCode % palettes.length];
+};
+
+export const TournamentFallback = ({ name, className }: { name: string; className?: string }) => {
+    const initial = name?.[0]?.toUpperCase() || "?";
+    return (
+        <div
+            className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${gradientForName(name)} ${className || ""}`}
+        >
+            <span className="select-none text-5xl font-black text-white/30 drop-shadow-lg sm:text-6xl md:text-7xl">
+                {initial}
+            </span>
+        </div>
+    );
+};
+
 export const TournamentComponent = ({tournament, priority = false}: { tournament: Tournament; priority?: boolean }) => {
     const tournamentHref = `/tournaments/${tournament.abbreviation}/home`;
-    const fallbackImage = "/icon0.svg";
-    const imgSrc = tournament.pic_url || fallbackImage;
+    const hasImage = !!tournament.pic_url;
 
     return (
         <NextLink
@@ -69,26 +93,33 @@ export const TournamentComponent = ({tournament, priority = false}: { tournament
                 {modeLabel(tournament.mode || "")}
             </span>
 
-            <div className="absolute inset-0 z-0">
-                <NextImage
-                    className="object-cover opacity-50 blur-2xl saturate-200"
-                    src={imgSrc}
-                    alt=""
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
-            </div>
-
-            <div className="absolute inset-0 z-10">
-                <NextImage
-                    className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-[1.06]"
-                    src={imgSrc}
-                    alt={tournament.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    priority={priority}
-                />
-            </div>
+            {hasImage ? (
+                <>
+                    <div className="absolute inset-0 z-0">
+                        <NextImage
+                            className="object-cover opacity-50 blur-2xl saturate-200"
+                            src={tournament.pic_url}
+                            alt=""
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
+                    </div>
+                    <div className="absolute inset-0 z-10">
+                        <NextImage
+                            className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-[1.06]"
+                            src={tournament.pic_url}
+                            alt={tournament.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            priority={priority}
+                        />
+                    </div>
+                </>
+            ) : (
+                <div className="absolute inset-0 z-10 transition-transform duration-500 group-hover:scale-[1.06]">
+                    <TournamentFallback name={tournament.name} />
+                </div>
+            )}
 
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-2/3 bg-gradient-to-t from-black/95 via-black/55 to-transparent"/>
 

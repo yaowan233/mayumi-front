@@ -5,6 +5,7 @@ import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
+import {TournamentFallback} from "@/components/tournament_pic";
 import NextImage from "next/image";
 import {
     Alert,
@@ -139,10 +140,10 @@ const RegistrationCountdown = ({ deadline }: { deadline: string }) => {
                 </svg>
                 {isUrgent ? "报名即将截止" : "距报名截止还有"}
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5">
                 {units.map((u, i) => (
-                    <span key={u.label} className="flex items-center gap-1.5">
-                        <span className={`inline-flex h-9 min-w-8 items-center justify-center rounded-md px-2 font-mono text-lg font-black tabular-nums ${
+                    <span key={u.label} className="flex items-center gap-1 sm:gap-1.5">
+                        <span className={`inline-flex h-8 min-w-7 items-center justify-center rounded-md px-1.5 font-mono text-base font-black tabular-nums sm:h-9 sm:min-w-8 sm:px-2 sm:text-lg ${
                             isUrgent
                                 ? "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-200"
                                 : "bg-primary/15 text-primary dark:bg-primary/20"
@@ -402,8 +403,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     const myTeam = tournament_info.is_group
         ? teams.find(t => t.captains.includes(currentUser?.currentUser?.uid ?? -1))
         : null;
-    const fallbackImage = "/icon0.svg";
-    const bgSrc = tournament_info.pic_url || fallbackImage;
+    const bgSrc = tournament_info.pic_url;
     const themeColor = normalizeTournamentThemeColor(tournament_info.theme_color);
     const themeStyle = themeColor
         ? {
@@ -478,35 +478,41 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                 className="relative w-full overflow-hidden rounded-2xl border border-zinc-200/70 bg-zinc-50 shadow-[0_16px_38px_rgba(15,23,42,0.08)] group dark:border-white/[0.10] dark:bg-zinc-950 dark:shadow-[0_18px_45px_rgba(0,0,0,0.34)]"
                 style={themeColor ? {borderColor: "var(--tournament-hero-border)", boxShadow: "var(--tournament-hero-shadow)"} : undefined}
             >
-                {themeColor && (
+{themeColor && (
                     <div className="absolute inset-x-0 top-0 z-40 h-1 bg-primary" />
                 )}
 
-                <div className="absolute inset-0 z-0">
-                    <NextImage
-                        src={bgSrc}
-                        alt=""
-                        fill
-                        sizes="100vw"
-                        className="object-cover blur-[60px] opacity-50 scale-125"
-                        quality={10}
-                    />
-                    {/* 黑色遮罩，增强文字对比度 */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-zinc-50/20 dark:bg-none dark:bg-black/20" />
-                </div>
+                {bgSrc && (
+                    <div className="absolute inset-0 z-0">
+                        <NextImage
+                            src={bgSrc}
+                            alt=""
+                            fill
+                            sizes="100vw"
+                            className="object-cover blur-[60px] opacity-50 scale-125"
+                            quality={10}
+                        />
+                        {/* 黑色遮罩，增强文字对比度 */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-zinc-50/20 dark:bg-none dark:bg-black/20" />
+                    </div>
+                )}
 
                 {/* --- 主体层 --- */}
                 <div className="relative z-10 w-full aspect-video md:aspect-[21/9] flex items-center justify-center">
-                    <NextImage
-                        src={bgSrc}
-                        alt={tournament_info.name}
-                        width={1200}
-                        height={600}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) calc(100vw - 3rem), 1280px"
-                        style={{ width: '100%', height: '100%' }}
-                        className="w-full h-full object-contain drop-shadow-2xl z-10"
-                        priority
-                    />
+                    {bgSrc ? (
+                        <NextImage
+                            src={bgSrc}
+                            alt={tournament_info.name}
+                            width={1200}
+                            height={600}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) calc(100vw - 3rem), 1280px"
+                            style={{ width: '100%', height: '100%' }}
+                            className="w-full h-full object-contain drop-shadow-2xl z-10"
+                            priority
+                        />
+                    ) : (
+                        <TournamentFallback name={tournament_info.name} className="aspect-video md:aspect-[21/9]" />
+                    )}
                 </div>
 
                 <div className="
@@ -947,7 +953,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                 <Modal.Heading>报名 Staff - {tournament_info.abbreviation}</Modal.Heading>
                             </Modal.Header>
                             <Separator />
-                            <Modal.Body className="py-6 flex flex-col gap-6">
+                            <Modal.Body className="py-6 flex flex-col gap-6 max-h-[70vh] overflow-y-auto">
                                 <Alert status="default" className={`${alertToneClass.default} rounded-lg border-l-[3px] px-4 py-3`}>
                                     <Alert.Content>
                                         <Alert.Title>请务必填写真实有效的信息，以便我们与您联系。</Alert.Title>

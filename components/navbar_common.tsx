@@ -6,6 +6,8 @@ import {useContext, useEffect, useRef, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 
+const ADMIN_UID = 3162675;
+
 export const UserStatus = () => {
     const currentUser = useContext(CurrentUserContext);
     const [open, setOpen] = useState(false);
@@ -71,13 +73,25 @@ export const UserStatus = () => {
                     >
                         个人信息
                     </NextLink>
-                    <NextLink
+<NextLink
                         className="block px-4 py-2 font-medium hover:bg-zinc-100 dark:hover:bg-white/[0.06]"
                         href="/tournament-management"
                         onClick={() => setOpen(false)}
                     >
                         管理后台
                     </NextLink>
+                    {user.uid === ADMIN_UID && (
+                        <NextLink
+                            className="flex items-center gap-2 px-4 py-2 font-bold text-primary hover:bg-primary/10 dark:hover:bg-primary/15"
+                            href="/admin"
+                            onClick={() => setOpen(false)}
+                        >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                            Admin 面板
+                        </NextLink>
+                    )}
                     <button
                         type="button"
                         className="mt-1 block w-full border-t border-zinc-200 px-4 py-2 text-left font-bold text-red-500 transition-colors active:bg-red-500/20 hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 dark:border-white/[0.08] dark:text-red-400"

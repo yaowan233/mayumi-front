@@ -4,13 +4,12 @@ import { useContext, useState } from "react";
 import NextImage from "next/image";
 import NextLink from "next/link";
 import useSWR from "swr";
-import { TournamentComponent, Tournament, modeLabel } from "@/components/tournament_pic";
+import { TournamentComponent, Tournament, modeLabel, TournamentFallback } from "@/components/tournament_pic";
 import { SectionTitle } from "@/app/page";
 import CurrentUserContext from "@/app/user_context";
 import { siteConfig } from "@/config/site";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(r => r.json());
-const fallbackImage = "/icon0.svg";
 
 function splitTournaments(list: Tournament[]) {
     const sorted = [...list].sort((a, b) =>
@@ -28,7 +27,7 @@ const formatDate = (date: string) => new Date(date).toLocaleDateString("zh-CN", 
 });
 
 const FeaturedTournament = ({ tournament }: { tournament: Tournament }) => {
-    const imgSrc = tournament.pic_url || fallbackImage;
+    const imgSrc = tournament.pic_url;
 
     return (
         <NextLink
@@ -36,24 +35,32 @@ const FeaturedTournament = ({ tournament }: { tournament: Tournament }) => {
             className="group grid overflow-hidden rounded-2xl border border-zinc-200/80 bg-white/80 shadow-sm shadow-zinc-200/70 outline-none transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-zinc-200/80 focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/60 dark:shadow-black/25 dark:hover:border-primary/60 dark:hover:shadow-black/35 md:grid-cols-[1.55fr_1fr]"
         >
             <div className="relative aspect-video overflow-hidden bg-zinc-100 dark:bg-zinc-950">
-                <div className="absolute inset-0">
-                    <NextImage
-                        src={imgSrc}
-                        alt=""
-                        fill
-                        sizes="(max-width: 768px) 100vw, 720px"
-                        className="object-cover opacity-45 blur-2xl saturate-150"
-                        priority
-                    />
-                </div>
-                <NextImage
-                    src={imgSrc}
-                    alt={tournament.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 720px"
-                    className="relative z-10 object-contain drop-shadow-xl transition duration-500 group-hover:scale-[1.03]"
-                    priority
-                />
+                {imgSrc ? (
+                    <>
+                        <div className="absolute inset-0">
+                            <NextImage
+                                src={imgSrc}
+                                alt=""
+                                fill
+                                sizes="(max-width: 768px) 100vw, 720px"
+                                className="object-cover opacity-45 blur-2xl saturate-150"
+                                priority
+                            />
+                        </div>
+                        <NextImage
+                            src={imgSrc}
+                            alt={tournament.name}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 720px"
+                            className="relative z-10 object-contain drop-shadow-xl transition duration-500 group-hover:scale-[1.03]"
+                            priority
+                        />
+                    </>
+                ) : (
+                    <div className="absolute inset-0 z-10 transition duration-500 group-hover:scale-[1.03]">
+                        <TournamentFallback name={tournament.name} />
+                    </div>
+                )}
             </div>
 
             <div className="flex flex-col justify-between gap-6 p-5 md:p-6">
