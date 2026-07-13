@@ -13,6 +13,8 @@ type SortDescriptor = {
     direction: "ascending" | "descending";
 };
 
+type LeaderboardRow = Record<string, unknown>;
+
 const getKeyValue = (item: any, key: React.Key) => item?.[key as keyof typeof item];
 
 // --- 常量与辅助函数 ---
@@ -126,8 +128,9 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
 }
 
 const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
-    const [leaderboard, setLeaderboard] = useState<any[]>([]);
+    const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
         column: "平均排名",
@@ -135,22 +138,49 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
     });
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchData = async () => {
             setLoading(true);
+            setLoadError(null);
+            setLeaderboard([]);
+
             try {
-                const res = await fetch(`${siteConfig.backend_url}/api/cal_rank?tournament_name=${round.tournament_name}&stage_name=${round.stage_name}`,
-                    {next: {revalidate: 60}});
-                if (res.ok) {
-                    setLeaderboard(await res.json());
+                const params = new URLSearchParams({
+                    tournament_name: round.tournament_name,
+                    stage_name: round.stage_name,
+                });
+                const res = await fetch(`${siteConfig.backend_url}/api/cal_rank?${params}`, {
+                    signal: controller.signal,
+                });
+
+                if (!res.ok) {
+                    throw new Error(`排行榜接口请求失败 (${res.status})`);
                 }
+
+                const data: unknown = await res.json();
+                if (!Array.isArray(data)) {
+                    throw new Error("排行榜接口返回了无效的数据格式");
+                }
+
+                const rows = data.filter(
+                    (item): item is LeaderboardRow =>
+                        typeof item === "object" && item !== null && !Array.isArray(item),
+                );
+                setLeaderboard(rows);
             } catch (e) {
+                if (controller.signal.aborted) return;
                 console.error("Failed to load leaderboard", e);
+                setLoadError(e instanceof Error ? e.message : "排行榜加载失败");
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) setLoading(false);
             }
         };
+
         fetchData();
-    }, [round]);
+
+        return () => controller.abort();
+    }, [round.stage_name, round.tournament_name]);
 
     const handleSortChange = (descriptor: SortDescriptor) => {
         const newDescriptor = { ...descriptor };
@@ -181,14 +211,14 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
             const first = a[sortDescriptor.column as keyof typeof a];
             const second = b[sortDescriptor.column as keyof typeof b];
 
-            const firstNum = parseFloat(first);
-            const secondNum = parseFloat(second);
+            const firstNum = Number.parseFloat(String(first ?? ""));
+            const secondNum = Number.parseFloat(String(second ?? ""));
 
             let cmp = 0;
             if (!isNaN(firstNum) && !isNaN(secondNum)) {
-                cmp = firstNum < secondNum ? -1 : 1;
+                cmp = firstNum === secondNum ? 0 : firstNum < secondNum ? -1 : 1;
             } else {
-                cmp = (first || "").toString().localeCompare(second || "");
+                cmp = String(first ?? "").localeCompare(String(second ?? ""));
             }
 
             if (sortDescriptor.direction === "descending") {
@@ -206,7 +236,9 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
 
         columns.forEach(col => {
             if (col === 'name' || col === '#') return;
-            const values = leaderboard.map(row => parseFloat(row[col])).filter(v => !isNaN(v));
+            const values = leaderboard
+                .map(row => Number.parseFloat(String(row[col] ?? "")))
+                .filter(v => !Number.isNaN(v));
             if (values.length === 0) return;
             const uniqueValues = Array.from(new Set(values));
 
@@ -249,6 +281,7 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
             <span>加载排行榜...</span>
         </div>
     );
+    if (loadError) return <div className="p-4 text-danger">{loadError}</div>;
     if (leaderboard.length === 0) return <div className="text-default-400 p-4">暂无排行数据</div>;
 
     return (
