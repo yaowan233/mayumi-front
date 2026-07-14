@@ -28,14 +28,14 @@ const NavProgress = ({isLoading}: { isLoading: boolean }) => (
     ) : null
 );
 
-const NavBrand = ({onClick}: { onClick?: () => void }) => (
+const NavBrand = ({onClick}: { onClick?: React.MouseEventHandler<HTMLAnchorElement> }) => (
     <NextLink className="flex shrink-0 items-center gap-2" href="/" onClick={onClick}>
         <Logo className="h-8 w-8 text-primary"/>
         <span className="text-xl font-black tracking-normal text-zinc-950 dark:text-white">Mayumi</span>
     </NextLink>
 );
 
-const DesktopNavLink = ({item, active, onClick}: { item: NavItem; active: boolean; onClick: () => void }) => (
+const DesktopNavLink = ({item, active, onClick}: { item: NavItem; active: boolean; onClick: React.MouseEventHandler<HTMLAnchorElement> }) => (
     <NextLink
         className={clsx(
             "rounded-md px-3 py-2 text-sm font-bold transition-colors",
@@ -77,7 +77,7 @@ const MobileMenu = ({
     open: boolean;
     items: NavItem[];
     pathname: string;
-    onClick: (href: string) => void;
+    onClick: (href: string, event: React.MouseEvent<HTMLAnchorElement>) => void;
     children?: React.ReactNode;
 }) => {
     if (!open) return null;
@@ -96,7 +96,7 @@ const MobileMenu = ({
                                 active ? "bg-primary/15 text-primary" : "text-zinc-800 hover:bg-zinc-900/[0.06] dark:text-zinc-100 dark:hover:bg-white/[0.06]"
                             )}
                             href={item.href}
-                            onClick={() => onClick(item.href)}
+                            onClick={(event) => onClick(item.href, event)}
                         >
                             {item.label}
                         </NextLink>
@@ -113,9 +113,11 @@ export const Navbar = () => {
     const pathname = usePathname();
     const isLoading = pendingPath !== null && pendingPath !== pathname;
 
-    const handleNavClick = (href: string) => {
+    const handleNavClick = (href: string, event?: React.MouseEvent<HTMLAnchorElement>) => {
         setIsMenuOpen(false);
-        setPendingPath(href === pathname ? null : href);
+        const opensAnotherContext = event && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+
+        setPendingPath(opensAnotherContext || href === pathname ? null : href);
     };
 
     return (
@@ -124,7 +126,7 @@ export const Navbar = () => {
             <div className={contentClass}>
                 <div className="flex min-w-0 items-center gap-4">
                     <MobileMenuButton open={isMenuOpen} onClick={() => setIsMenuOpen((value) => !value)}/>
-                    <NavBrand onClick={() => handleNavClick("/")}/>
+                    <NavBrand onClick={(event) => handleNavClick("/", event)}/>
                     <div className="hidden h-6 w-px bg-zinc-300 dark:bg-white/20 sm:block"/>
                     <div className="hidden items-center gap-1 sm:flex">
                         {siteConfig.navItems.map((item) => (
@@ -132,7 +134,7 @@ export const Navbar = () => {
                                 key={item.href}
                                 item={item}
                                 active={pathname === item.href}
-                                onClick={() => handleNavClick(item.href)}
+                                onClick={(event) => handleNavClick(item.href, event)}
                             />
                         ))}
                     </div>
@@ -173,9 +175,11 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
         href: `${tournamentHrefStart}${item.href}`,
     }));
 
-    const handleNavClick = (href: string) => {
+    const handleNavClick = (href: string, event?: React.MouseEvent<HTMLAnchorElement>) => {
         setIsMenuOpen(false);
-        setPendingPath(href === pathname ? null : href);
+        const opensAnotherContext = event && (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
+
+        setPendingPath(opensAnotherContext || href === pathname ? null : href);
     };
 
     return (
@@ -186,14 +190,14 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
             <div className={contentClass}>
                 <div className="flex min-w-0 items-center gap-4">
                     <MobileMenuButton open={isMenuOpen} onClick={() => setIsMenuOpen((value) => !value)}/>
-                    <NavBrand onClick={() => handleNavClick("/")}/>
+                    <NavBrand onClick={(event) => handleNavClick("/", event)}/>
                     <div className="hidden items-center gap-1 lg:flex">
                         {items.map((item) => (
                             <DesktopNavLink
                                 key={item.href}
                                 item={item}
                                 active={pathname === item.href}
-                                onClick={() => handleNavClick(item.href)}
+                                onClick={(event) => handleNavClick(item.href, event)}
                             />
                         ))}
                     </div>
@@ -216,7 +220,7 @@ export const TournamentNavbar = ({tournament_name}: { tournament_name: string })
                 <NextLink
                     className="rounded-lg px-3 py-2 text-base font-bold text-primary hover:bg-primary/10"
                     href="/"
-                    onClick={() => handleNavClick("/")}
+                    onClick={(event) => handleNavClick("/", event)}
                 >
                     返回首页
                 </NextLink>
