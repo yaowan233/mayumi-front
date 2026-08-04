@@ -190,12 +190,16 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
 
     const handleDownloadAll = async (stage: Stage, source: DownloadSource) => {
         const mapsToDownload: { map_set_id: string; filename: string }[] = [];
+        const queuedMapSetIds = new Set<string>();
 
         stage.mod_bracket.forEach((bracket) => {
             bracket.maps.forEach((map, index) => {
-                if (!map.map_set_id || map.map_set_id === "0") return;
+                const mapSetId = map.map_set_id?.trim();
+                if (!mapSetId || mapSetId === "0" || queuedMapSetIds.has(mapSetId)) return;
+
+                queuedMapSetIds.add(mapSetId);
                 mapsToDownload.push({
-                    map_set_id: map.map_set_id,
+                    map_set_id: mapSetId,
                     filename: `[${bracket.mod} ${index + 1}] ${sanitizeFilename(map.map_name || `Map_${map.map_id}`)}.osz`,
                 });
             });
