@@ -194,7 +194,7 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
 
         stage.mod_bracket.forEach((bracket) => {
             bracket.maps.forEach((map, index) => {
-                const mapSetId = map.map_set_id?.trim();
+                const mapSetId = String(map.map_set_id ?? "").trim();
                 if (!mapSetId || mapSetId === "0" || queuedMapSetIds.has(mapSetId)) return;
 
                 queuedMapSetIds.add(mapSetId);
