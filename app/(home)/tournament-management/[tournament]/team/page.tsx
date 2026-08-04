@@ -6,6 +6,7 @@ import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/pag
 import {siteConfig} from "@/config/site";
 import {useRouter} from "next/navigation";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {ImageUploadField} from "@/components/image_upload_field";
 import {
     Autocomplete,
     Avatar,
@@ -315,14 +316,13 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                             {isInvalid && <FieldError>{errorMessage}</FieldError>}
                         </TextField>
 
-                        <TextField>
-                            <Label className="text-xs font-semibold text-default-500">图标链接 (URL)</Label>
-                            <Input
-                                variant="secondary"
-                                value={team.icon_url}
-                                onChange={(event) => onUpdate({...team, icon_url: event.target.value})}
-                            />
-                        </TextField>
+                        <ImageUploadField
+                            label="队伍图标"
+                            value={team.icon_url || ""}
+                            onChange={(value) => onUpdate({...team, icon_url: value})}
+                            purpose="team-icon"
+                            description="推荐使用正方形图片"
+                        />
                     </div>
                 </div>
             </Card.Header>

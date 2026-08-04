@@ -6,6 +6,7 @@ import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
 import {TournamentFallback} from "@/components/tournament_pic";
+import {ImageUploadField} from "@/components/image_upload_field";
 import NextImage from "next/image";
 import {
     Alert,
@@ -881,11 +882,13 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                     <span className="font-bold text-zinc-700 dark:text-zinc-300">队伍名称</span>
                                     <Input value={teamName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTeamName(e.target.value)} />
                                 </label>
-                                <label className="flex flex-col gap-1 text-sm">
-                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">头像图片链接 (URL)</span>
-                                    <Input placeholder="https://..." value={iconUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIconUrl(e.target.value)} />
-                                    <span className="text-xs text-zinc-500 dark:text-zinc-400">请填写图片的直链地址</span>
-                                </label>
+                                <ImageUploadField
+                                    label="队伍图标"
+                                    value={iconUrl}
+                                    onChange={setIconUrl}
+                                    purpose="team-icon"
+                                    description="推荐使用正方形图片"
+                                />
                                 {iconErrMsg && (
                                     <Alert status="danger" className={`${alertToneClass.danger} rounded-lg border-l-[3px] px-4 py-3`}>
                                         <Alert.Content>

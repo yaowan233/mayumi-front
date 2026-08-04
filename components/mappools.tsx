@@ -119,8 +119,7 @@ const DownloadMenu = ({
     }, [open]);
 
     const options: { key: DownloadSource; title: string; desc: string }[] = [
-        {key: "sayobot", title: "Sayobot 镜像（推荐）", desc: "国内首选，速度较快"},
-        {key: "osu-direct", title: "osu.direct 镜像", desc: "覆盖率较高"},
+        {key: "osu-direct", title: "osu.direct 镜像（推荐）", desc: "默认下载源，覆盖率较高"},
         {key: "beatconnect", title: "Beatconnect 镜像", desc: "缺图时可尝试"},
         {key: "official-txt", title: "导出官网链接 (.txt)", desc: "生成链接列表，手动下载"},
     ];
@@ -159,7 +158,7 @@ const DownloadMenu = ({
     );
 };
 
-type DownloadSource = "sayobot" | "beatconnect" | "osu-direct" | "official-txt";
+type DownloadSource = "beatconnect" | "osu-direct" | "official-txt";
 
 export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
     const searchParams = useSearchParams();
@@ -218,8 +217,7 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
             return;
         }
 
-        let sourceName = "Sayobot";
-        if (source === "osu-direct") sourceName = "osu.direct";
+        let sourceName = "osu.direct";
         if (source === "beatconnect") sourceName = "Beatconnect";
 
         setDownloadState({
@@ -242,7 +240,6 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
                 if (!task) break;
 
                 let url = "";
-                if (source === "sayobot") url = `https://dl.sayobot.cn/beatmaps/download/novideo/${task.map_set_id}`;
                 if (source === "osu-direct") url = `https://osu.direct/api/d/${task.map_set_id}`;
                 if (source === "beatconnect") url = `https://beatconnect.io/b/${task.map_set_id}/${task.map_set_id}/`;
 
@@ -451,7 +448,7 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
                     >
                         <span className="text-sm font-bold">{copiedAction === "mp" ? "已复制" : "MP"}</span>
                     </IconButton>
-                    <IconButton label="Download" href={`https://dl.sayobot.cn/beatmaps/download/novideo/${map.map_set_id}`}>
+                    <IconButton label="Download" href={`https://osu.direct/api/d/${map.map_set_id}`}>
                         <DownloadIcon className="text-xl"/>
                     </IconButton>
                 </div>

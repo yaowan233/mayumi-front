@@ -1,12 +1,13 @@
 "use client"
 
 import NextLink from "next/link";
-import React, {Dispatch, SetStateAction, useContext, useEffect, useRef, useState} from "react";
+import React, {Dispatch, SetStateAction, useContext, useEffect, useRef, useState, useSyncExternalStore} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {LinkIcon} from "@/components/icons"; // 假设你有这个图标，或者用 lucide-react
 import {usePathname, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
+import {formatUtcDateTime, getLocalDateTimeParts, parseUtcDateTime} from "@/lib/datetime";
 import {
     Accordion,
     Avatar,
@@ -15,6 +16,7 @@ import {
     Chip,
     Input,
     Separator,
+    Tooltip,
 } from "@heroui/react";
 
 function isPlayerReserved(playerUID: number | undefined, schedule_stage: ScheduleStage): boolean {
@@ -23,9 +25,8 @@ function isPlayerReserved(playerUID: number | undefined, schedule_stage: Schedul
     return schedule_stage.lobby_info.some((stage_schedule) => (stage_schedule.participants?.some((info) => info.uid.includes(playerUID))));
 }
 
-function formatTime(s: string) {
-    return s.length === 1 ? '0' + s : s;
-}
+const subscribeToHydration = () => () => undefined;
+const useHasMounted = () => useSyncExternalStore(subscribeToHydration, () => true, () => false);
 
 export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
     tabs: ScheduleStage[],
@@ -158,37 +159,44 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
 
 
 const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
+    const hasMounted = useHasMounted();
     const score1 = match_info.team1_score ? match_info.team1_score : 0;
     const score2 = match_info.team2_score ? match_info.team2_score : 0;
     const isTeam1Win = score1 > score2;
     const isTeam2Win = score2 > score1;
     const notStarted = score1 === 0 && score2 === 0;
 
-    // 时间处理
-    const date = new Date(match_info.datetime);
-    const dateStr = `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
-    const timeStr = `${formatTime(date.getUTCHours().toString())}:${formatTime(date.getUTCMinutes().toString())}`;
+    const localDateTime = hasMounted ? getLocalDateTimeParts(match_info.datetime) : null;
+    const dateStr = localDateTime?.date ?? "--/--";
+    const timeStr = localDateTime?.time ?? "--:--";
+    const utcTimeStr = formatUtcDateTime(match_info.datetime) ?? "UTC 时间格式无效";
 
     return (
         <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-[100px_1fr_auto_1fr_100px] items-center gap-y-2 md:gap-x-4 py-2 w-full">
 
                 {/* 1. 左侧：时间区域 (PC端显示，移动端隐藏或变样式) */}
-                <div className="hidden md:flex flex-col items-center justify-center min-w-[80px]">
-                    <Chip size="sm" variant="soft" color="accent" className="mb-1 border-none">
-                        {dateStr}
-                    </Chip>
-                    <span className="text-xl font-mono  text-default-700 leading-none">
-                        {timeStr}
-                    </span>
-                </div>
+                <Tooltip>
+                    <Tooltip.Trigger className="hidden min-w-[80px] cursor-help flex-col items-center justify-center md:flex">
+                        <Chip size="sm" variant="soft" color="accent" className="mb-1 border-none">
+                            {dateStr}
+                        </Chip>
+                        <span className="text-xl font-mono text-default-700 leading-none">
+                            {timeStr}
+                        </span>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>{utcTimeStr}</Tooltip.Content>
+                </Tooltip>
 
                 {/* 移动端的时间显示 (仅在小屏幕显示) */}
                 <div className="flex md:hidden items-center justify-center w-full px-2 mb-2 gap-2">
-                    <div className="flex gap-2 items-center">
-                        <Chip size="sm" variant="soft" color="accent">{dateStr}</Chip>
-                        <span className="text-lg font-mono  text-default-700">{timeStr}</span>
-                    </div>
+                    <Tooltip>
+                        <Tooltip.Trigger className="flex cursor-help items-center gap-2">
+                            <Chip size="sm" variant="soft" color="accent">{dateStr}</Chip>
+                            <span className="text-lg font-mono text-default-700">{timeStr}</span>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>{utcTimeStr}</Tooltip.Content>
+                    </Tooltip>
                     {/* 移动端把链接放这里 */}
                     <div className="flex gap-2">
                          {match_info.match_url?.filter(u => u !== "").map((url, i) => (
@@ -350,6 +358,7 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
     tournamentPlayers: TournamentPlayers,
     setSchedule: Dispatch<SetStateAction<ScheduleStage[]>>
 }) => {
+    const hasMounted = useHasMounted();
     const currentUser = useContext(CurrentUserContext);
     const playerUID = currentUser?.currentUser?.uid;
     const info = tournamentPlayers.players.find(player => player.uid === playerUID);
@@ -357,11 +366,12 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
     return (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {schedule.lobby_info?.map((lobby) => {
-                 const date = new Date(lobby.datetime);
                  const canJoinPlayer = info?.player && !isPlayerReserved(playerUID, schedule) && !(lobby.participants?.some((p) => playerUID && p.uid.includes(playerUID)));
                  const canJoinRef = info?.referee && !(lobby.referee?.some((r) => playerUID && r.uid.includes(playerUID)));
-                 const dateStr = `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
-                 const timeStr = `${formatTime(date.getUTCHours().toString())}:${formatTime(date.getUTCMinutes().toString())}`;
+                 const localDateTime = hasMounted ? getLocalDateTimeParts(lobby.datetime) : null;
+                 const dateStr = localDateTime?.date ?? "--/--";
+                 const timeStr = localDateTime?.time ?? "--:--";
+                 const utcTimeStr = formatUtcDateTime(lobby.datetime) ?? "UTC 时间格式无效";
                  return (
                     <Card
                         key={lobby.lobby_name}
@@ -370,9 +380,14 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                         <Card.Header className="!flex-row items-center justify-between gap-3 !px-4 !py-3">
                             <h3 className="min-w-0 truncate text-lg font-black text-zinc-900 dark:text-zinc-100">{lobby.lobby_name}</h3>
                             <div className="flex shrink-0 items-center gap-2">
-                                <Chip size="sm" variant="soft" color="accent" className="border-none font-mono">
-                                    {dateStr} · {timeStr}
-                                </Chip>
+                                <Tooltip>
+                                    <Tooltip.Trigger className="cursor-help">
+                                        <Chip size="sm" variant="soft" color="accent" className="border-none font-mono">
+                                            {dateStr} · {timeStr}
+                                        </Chip>
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content>{utcTimeStr}</Tooltip.Content>
+                                </Tooltip>
                                 {lobby.match_url && lobby.match_url.filter(u => u !== "").length > 0 && (
                                     <a
                                         className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary transition-colors hover:bg-primary/30"
@@ -771,7 +786,8 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
         }, 600);
     }, [invalidMapId, map_id]);
 
-    if (!uid.includes(currentUser?.currentUser?.uid) || new Date(start_time) < new Date()) {
+    const startDate = parseUtcDateTime(start_time);
+    if (!uid.includes(currentUser?.currentUser?.uid) || (startDate !== null && startDate < new Date())) {
         return null
     }
     return (

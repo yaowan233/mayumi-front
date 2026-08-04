@@ -1,6 +1,6 @@
 "use client";
 
-import React, {type Key, useContext, useEffect, useState} from "react";
+import React, {type Key, useContext, useEffect, useState, useSyncExternalStore} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
 import {
@@ -21,12 +21,23 @@ import {
     Switch,
     Tabs,
     TextField,
+    Tooltip,
     useFilter,
 } from "@heroui/react";
 import {siteConfig} from "@/config/site";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {TournamentInfo} from "@/components/homepage";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {
+    formatLocalDateTime,
+    formatUtcDateTime,
+    localDateTimeInputToUtc,
+    toUtcISOString,
+    utcDateTimeToLocalInput,
+} from "@/lib/datetime";
+
+const subscribeToHydration = () => () => undefined;
+const useHasMounted = () => useSyncExternalStore(subscribeToHydration, () => true, () => false);
 
 // --- 图标 ---
 const SaveIcon = () => (
@@ -123,15 +134,20 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
 
         setIsSaving(true);
         try {
+            const payload = scheduleInfo.map((schedule) => ({
+                ...schedule,
+                match_time: toUtcISOString(schedule.match_time) ?? schedule.match_time,
+            }));
             const res = await fetch(siteConfig.backend_url + '/api/update-schedule', {
                 'method': 'POST',
-                'body': JSON.stringify(scheduleInfo),
+                'body': JSON.stringify(payload),
                 'headers': {'Content-Type': 'application/json'},
                 credentials: 'include'
             });
             if (res.status != 200) {
                 setErrMsg(await res.text());
             } else {
+                setScheduleInfo(payload);
                 alert('保存成功');
             }
         } catch (e) {
@@ -274,15 +290,20 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
     onDelete: () => void;
     isTeamMode?: boolean;
 }) => {
+    const hasMounted = useHasMounted();
+
     const title = schedule.is_lobby
         ? (schedule.name || "未命名 Lobby")
         : `${schedule.team1 || "TBD"} vs ${schedule.team2 || "TBD"}`;
-    const subtitle = schedule.match_time ? new Date(schedule.match_time).toLocaleString('zh-CN', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    }) : "时间未定";
+    const subtitle = hasMounted && schedule.match_time
+        ? formatLocalDateTime(schedule.match_time, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }) ?? "时间格式无效"
+        : "时间未定";
+    const utcTime = formatUtcDateTime(schedule.match_time) ?? "UTC 时间格式无效";
 
     return (
         <Card
@@ -294,7 +315,12 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                             <div className="flex w-full items-center justify-between gap-4 pr-2">
                                 <div className="flex flex-col">
                                     <span className="text-lg font-bold text-foreground">{title}</span>
-                                    <span className="mt-1 font-mono text-xs text-default-400">{subtitle}</span>
+                                    <Tooltip>
+                                        <Tooltip.Trigger className="mt-1 w-fit cursor-help font-mono text-xs text-default-400">
+                                            {subtitle}
+                                        </Tooltip.Trigger>
+                                        <Tooltip.Content>{utcTime}</Tooltip.Content>
+                                    </Tooltip>
                                 </div>
                                 {!schedule.is_lobby && (
                                     <Chip size="sm" color={schedule.is_winner_bracket ? "success" : "danger"} variant="soft"
@@ -336,31 +362,20 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                             )}
                             <div className="flex gap-2 lg:col-span-2">
                                 <TextField isRequired className="w-full">
-                                    <Label>比赛时间 (UTC)</Label>
+                                    <Label>比赛时间</Label>
                                     <Input
                                         type="datetime-local"
                                         variant="secondary"
-                                        value={(() => {
-                                            if (!schedule.match_time) return "";
-                                            const date = new Date(schedule.match_time);
-                                            if (isNaN(date.getTime())) return "";
-
-                                            const pad = (n: number) => n.toString().padStart(2, '0');
-                                            return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
-                                        })()}
+                                        value={hasMounted ? utcDateTimeToLocalInput(schedule.match_time) : ""}
                                         onChange={e => {
                                             const val = e.target.value;
-                                            if (!val) return;
+                                            if (!val) {
+                                                onChange({...schedule, match_time: ""});
+                                                return;
+                                            }
 
-                                            const [datePart, timePart] = val.split('T');
-                                            const [year, month, day] = datePart.split('-').map(Number);
-                                            const [hours, minutes] = timePart.split(':').map(Number);
-
-                                            const utcDate = new Date();
-                                            utcDate.setUTCFullYear(year, month - 1, day);
-                                            utcDate.setUTCHours(hours, minutes, 0, 0);
-
-                                            onChange({...schedule, match_time: utcDate.toISOString()});
+                                            const utcValue = localDateTimeInputToUtc(val);
+                                            if (utcValue) onChange({...schedule, match_time: utcValue});
                                         }}
                                     />
                                 </TextField>
