@@ -30,7 +30,7 @@
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.1.6",
     "file-saver": "^2.0.5",
-    "intl-messageformat": "^10.7.16",
+    "intl-messageformat": "^11.2.8",
     "jszip": "^3.10.1",
     "next": "^16.2.6",
     "next-themes": "^0.4.6",
