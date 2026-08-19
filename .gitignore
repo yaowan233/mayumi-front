@@ -40,3 +40,6 @@ next-env.d.ts
 .env.*
 .idea/
 .vscode/
+
+# local npm config (registry mirror)
+.npmrc
