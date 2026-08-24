@@ -266,9 +266,9 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                 </Tabs>
             </div>
 
-            {/* Sticky Footer: 修复背景色 */}
+            {/* Footer */}
             <Card
-                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
+                className="border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <Card.Content className="flex flex-row items-center justify-between px-6 py-4">
                     <div className="text-default-500 text-sm">
                         * 修改后请务必点击保存

@@ -200,9 +200,9 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
                 </button>
             </div>
 
-            {/* Sticky Footer */}
+            {/* Footer */}
             <Card
-                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
+                className="border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl">
                 <Card.Content className="flex flex-row justify-between items-center py-4 px-6">
                     <Button variant="ghost" onPress={() => router.back()}>取消</Button>
                     <Button

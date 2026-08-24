@@ -74,7 +74,7 @@ export default function CreateTournamentPage() {
                 // 修复：背景色、边框适配亮/暗模式
                 // 亮色: bg-background/90 border-default-200
                 // 暗色: dark:bg-zinc-900/90 dark:border-white/10
-                className="sticky bottom-6 z-50 border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl"
+                className="border border-default-200 dark:border-white/10 bg-background/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-2xl"
             >
                 <Card.Content className="flex flex-row justify-between items-center py-4 px-6">
 

@@ -180,7 +180,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
 
             <Card
                 variant="secondary"
-                className="sticky bottom-6 z-50 border border-default-200 bg-background/90 backdrop-blur-md shadow-2xl dark:border-white/10 dark:bg-zinc-900/90">
+                className="border border-default-200 bg-background/90 backdrop-blur-md shadow-2xl dark:border-white/10 dark:bg-zinc-900/90">
                 <Card.Content className="flex flex-row items-center justify-between gap-4 px-6 py-4">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" onPress={() => router.back()}>取消</Button>

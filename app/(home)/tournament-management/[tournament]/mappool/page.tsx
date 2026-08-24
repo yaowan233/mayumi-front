@@ -241,7 +241,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                 </div>
             )}
 
-            <Card variant="secondary" className="sticky bottom-6 z-50 border border-default-200 bg-background/90 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/90">
+            <Card variant="secondary" className="border border-default-200 bg-background/90 shadow-2xl backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/90">
                 <Card.Content className="flex flex-row items-center justify-between px-6 py-4">
                     <div className="text-sm font-medium text-danger animate-pulse">
                         {errMsg && <span>⚠️ {errMsg}</span>}
