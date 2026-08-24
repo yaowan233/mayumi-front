@@ -287,25 +287,37 @@ const RoundCard = ({index, roundData, isGroup, onChange, onDelete}: RoundCardPro
                         <div className="flex flex-col gap-2">
                             <span className="text-small text-default-500">类型设置</span>
                             <Switch
-                                isSelected={roundData.is_lobby}
+                                aria-label="小组赛 (Lobby)"
+                                className="py-2"
+                                isSelected={Boolean(roundData.is_lobby)}
                                 size="sm"
-                                onChange={(isSelected) => onChange({...roundData, is_lobby: isSelected})}
+                                onChange={(isSelected) =>
+                                    onChange({...roundData, is_lobby: isSelected})
+                                }
                             >
                                 <Switch.Control>
                                     <Switch.Thumb/>
                                 </Switch.Control>
-                                <Label className="text-small text-foreground">小组赛 (Lobby)</Label>
+                                <Switch.Content>
+                                    <span className="text-small text-foreground">小组赛 (Lobby)</span>
+                                </Switch.Content>
                             </Switch>
                             {isGroup && (
                                 <Switch
-                                    isSelected={roundData.is_solo_qualifier ?? false}
+                                    aria-label="单人预选赛"
+                                    className="py-2"
+                                    isSelected={Boolean(roundData.is_solo_qualifier)}
                                     size="sm"
-                                    onChange={(isSelected) => onChange({...roundData, is_solo_qualifier: isSelected})}
+                                    onChange={(isSelected) =>
+                                        onChange({...roundData, is_solo_qualifier: isSelected})
+                                    }
                                 >
                                     <Switch.Control>
                                         <Switch.Thumb/>
                                     </Switch.Control>
-                                    <Label className="text-small text-foreground">单人预选赛</Label>
+                                    <Switch.Content>
+                                        <span className="text-small text-foreground">单人预选赛</span>
+                                    </Switch.Content>
                                 </Switch>
                             )}
                         </div>

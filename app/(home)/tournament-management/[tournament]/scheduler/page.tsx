@@ -347,15 +347,23 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                 </TextField>
                             ) : (
                                 <div className="flex items-center gap-2 lg:col-span-2">
-                                    <Switch size="sm" isSelected={schedule.is_winner_bracket} onChange={(isSelected) => onChange({
-                                        ...schedule,
-                                        is_winner_bracket: isSelected
-                                    })}>
+                                    <Switch
+                                        size="sm"
+                                        className="py-2"
+                                        aria-label="胜者组 Match"
+                                        isSelected={Boolean(schedule.is_winner_bracket)}
+                                        onChange={(isSelected) => {
+                                            onChange({
+                                                ...schedule,
+                                                is_winner_bracket: isSelected
+                                            });
+                                        }}
+                                    >
                                         <Switch.Control>
                                             <Switch.Thumb/>
                                         </Switch.Control>
                                         <Switch.Content>
-                                            <Label>胜者组 Match</Label>
+                                            <span className="text-sm">胜者组 Match</span>
                                         </Switch.Content>
                                     </Switch>
                                 </div>
