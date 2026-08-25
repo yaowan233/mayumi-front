@@ -84,9 +84,12 @@ export async function saveDraftSection<T>(
 
 export async function publishTournamentDraft(
     tournamentName: string,
+    sections?: DraftSection[],
 ): Promise<PublishDraftResponse> {
     const response = await fetch(draftUrl(tournamentName, "publish"), {
         method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({sections: sections ?? null}),
         credentials: "include",
     });
     return parseResponse<PublishDraftResponse>(response);

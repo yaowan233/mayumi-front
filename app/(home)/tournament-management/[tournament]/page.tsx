@@ -84,7 +84,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({groups: undefined, players: []});
     const [draftStatus, setDraftStatus] = useState<DraftStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isPublishing, setIsPublishing] = useState(false);
+    const [publishingTarget, setPublishingTarget] = useState<DraftSection | "all" | null>(null);
     const [publishError, setPublishError] = useState("");
     const router = useRouter();
 
@@ -142,11 +142,11 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     const hasAdminAccess = myRoles.includes(ADMIN_ROLE);
     const canPublish = hasAdminAccess || myRoles.includes('主办');
 
-    const handlePublish = async () => {
+    const handlePublish = async (sections?: DraftSection[]) => {
         setPublishError("");
-        setIsPublishing(true);
+        setPublishingTarget(sections?.[0] ?? "all");
         try {
-            const result = await publishTournamentDraft(tournament_abbr);
+            const result = await publishTournamentDraft(tournament_abbr, sections);
             alert(result.message);
             if (result.new_abbr !== tournament_abbr) {
                 router.replace(`/tournament-management/${encodeURIComponent(result.new_abbr)}`);
@@ -157,7 +157,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
         } catch (error) {
             setPublishError(error instanceof Error ? error.message : "发布失败，请稍后重试");
         } finally {
-            setIsPublishing(false);
+            setPublishingTarget(null);
         }
     };
 
@@ -252,15 +252,33 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
                             {!canPublish && draftStatus.has_changes && (
                                 <p className="text-xs text-default-500">草稿需由赛事主办统一发布。</p>
                             )}
+                            {canPublish && draftStatus.has_changes && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {draftStatus.changed_sections.map(section => (
+                                        <Button
+                                            key={section}
+                                            size="sm"
+                                            variant="outline"
+                                            isDisabled={publishingTarget !== null && publishingTarget !== section}
+                                            isPending={publishingTarget === section}
+                                            onPress={() => handlePublish([section])}
+                                        >
+                                            {draftStatus.tournament_status === "approved"
+                                                ? `单独发布${draftSectionLabels[section]}`
+                                                : `单独提交${draftSectionLabels[section]}`}
+                                        </Button>
+                                    ))}
+                                </div>
+                            )}
                             {publishError && <p className="text-sm text-danger">{publishError}</p>}
                         </div>
                         {canPublish && (
                             <Button
                                 variant="primary"
                                 className="shrink-0 font-bold"
-                                isDisabled={!draftStatus.has_changes}
-                                isPending={isPublishing}
-                                onPress={handlePublish}
+                                isDisabled={!draftStatus.has_changes || (publishingTarget !== null && publishingTarget !== "all")}
+                                isPending={publishingTarget === "all"}
+                                onPress={() => handlePublish()}
                             >
                                 {draftStatus.tournament_status === "approved" ? "发布全部更改" : "提交审核"}
                             </Button>
