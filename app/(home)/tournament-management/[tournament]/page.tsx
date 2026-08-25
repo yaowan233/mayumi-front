@@ -12,7 +12,13 @@ import {
     getTournamentManagementInfo,
     isAdminUser,
 } from "@/lib/tournament_management";
-import {DraftSection, DraftStatus, getDraftStatus, publishTournamentDraft} from "@/lib/tournament_drafts";
+import {
+    DraftSection,
+    DraftStatus,
+    getDraftStatus,
+    PublishDraftOptions,
+    publishTournamentDraft,
+} from "@/lib/tournament_drafts";
 
 const draftSectionLabels: Record<DraftSection, string> = {
     meta: "赛事信息",
@@ -84,7 +90,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({groups: undefined, players: []});
     const [draftStatus, setDraftStatus] = useState<DraftStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [publishingTarget, setPublishingTarget] = useState<DraftSection | "all" | null>(null);
+    const [publishingTarget, setPublishingTarget] = useState<string | null>(null);
     const [publishError, setPublishError] = useState("");
     const router = useRouter();
 
@@ -142,11 +148,11 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     const hasAdminAccess = myRoles.includes(ADMIN_ROLE);
     const canPublish = hasAdminAccess || myRoles.includes('主办');
 
-    const handlePublish = async (sections?: DraftSection[]) => {
+    const handlePublish = async (options?: PublishDraftOptions, target = "all") => {
         setPublishError("");
-        setPublishingTarget(sections?.[0] ?? "all");
+        setPublishingTarget(target);
         try {
-            const result = await publishTournamentDraft(tournament_abbr, sections);
+            const result = await publishTournamentDraft(tournament_abbr, options);
             alert(result.message);
             if (result.new_abbr !== tournament_abbr) {
                 router.replace(`/tournament-management/${encodeURIComponent(result.new_abbr)}`);
@@ -261,13 +267,44 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
                                             variant="outline"
                                             isDisabled={publishingTarget !== null && publishingTarget !== section}
                                             isPending={publishingTarget === section}
-                                            onPress={() => handlePublish([section])}
+                                            onPress={() => handlePublish({sections: [section]}, section)}
                                         >
                                             {draftStatus.tournament_status === "approved"
                                                 ? `单独发布${draftSectionLabels[section]}`
                                                 : `单独提交${draftSectionLabels[section]}`}
                                         </Button>
                                     ))}
+                                </div>
+                            )}
+                            {canPublish && (draftStatus.changed_stages ?? []).length > 0 && (
+                                <div className="mt-3 flex flex-col gap-2">
+                                    <p className="text-xs font-semibold text-default-600">按轮次发布整套内容</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(draftStatus.changed_stages ?? []).map(stage => {
+                                            const target = `stage:${stage.stage_name}`;
+                                            const changedLabels = stage.sections
+                                                .map(section => draftSectionLabels[section])
+                                                .join("、");
+                                            return (
+                                                <Button
+                                                    key={stage.stage_name}
+                                                    size="sm"
+                                                    variant="outline"
+                                                    aria-label={`${stage.stage_name}，包含：${changedLabels}`}
+                                                    isDisabled={publishingTarget !== null && publishingTarget !== target}
+                                                    isPending={publishingTarget === target}
+                                                    onPress={() => handlePublish(
+                                                        {stage_name: stage.stage_name},
+                                                        target,
+                                                    )}
+                                                >
+                                                    {draftStatus.tournament_status === "approved"
+                                                        ? `发布 ${stage.stage_name} 整套内容`
+                                                        : `提交 ${stage.stage_name} 整套内容`}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             )}
                             {publishError && <p className="text-sm text-danger">{publishError}</p>}

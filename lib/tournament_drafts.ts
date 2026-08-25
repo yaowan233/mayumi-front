@@ -3,12 +3,23 @@ import {TournamentStatus} from "@/lib/tournament_management";
 
 export type DraftSection = "meta" | "rounds" | "mappool" | "schedule";
 
+export interface ChangedDraftStage {
+    stage_name: string;
+    sections: Exclude<DraftSection, "meta">[];
+}
+
+export interface PublishDraftOptions {
+    sections?: DraftSection[];
+    stage_name?: string;
+}
+
 export interface DraftStatus {
     tournament_name: string;
     abbreviation: string;
     tournament_status: TournamentStatus;
     reject_reason?: string | null;
     changed_sections: DraftSection[];
+    changed_stages: ChangedDraftStage[];
     has_changes: boolean;
     updated_at?: string | null;
     updated_by?: number | null;
@@ -84,12 +95,15 @@ export async function saveDraftSection<T>(
 
 export async function publishTournamentDraft(
     tournamentName: string,
-    sections?: DraftSection[],
+    options?: PublishDraftOptions,
 ): Promise<PublishDraftResponse> {
     const response = await fetch(draftUrl(tournamentName, "publish"), {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({sections: sections ?? null}),
+        body: JSON.stringify({
+            sections: options?.sections ?? null,
+            stage_name: options?.stage_name ?? null,
+        }),
         credentials: "include",
     });
     return parseResponse<PublishDraftResponse>(response);
