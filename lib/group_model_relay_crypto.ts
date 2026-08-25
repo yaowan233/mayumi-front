@@ -8,6 +8,7 @@ export interface GroupModelPayload {
     api_key: string;
     chat_model: string;
     chat_multimodal: boolean;
+    reply_probability: number | null;
     allow_global_fallback: false;
     created_at: string;
 }

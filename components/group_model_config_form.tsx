@@ -158,6 +158,15 @@ function validateBaseUrl(value: string): string | undefined {
     }
 }
 
+function validateReplyProbability(value: string): string | undefined {
+    if (!value.trim()) return "请输入 0 到 0.1 之间的概率";
+
+    const probability = Number(value);
+    if (!Number.isFinite(probability)) return "请输入有效数字";
+    if (probability < 0 || probability > 0.1) return "主动发言概率必须在 0 到 0.1 之间";
+    return undefined;
+}
+
 export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
     const [pageState, setPageState] = useState<PageState>("loading");
     const [ticket, setTicket] = useState<PublicTicket | null>(null);
@@ -167,8 +176,11 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
     const [apiKey, setApiKey] = useState("");
     const [model, setModel] = useState("");
     const [multimodal, setMultimodal] = useState(true);
+    const [customReplyProbability, setCustomReplyProbability] = useState(false);
+    const [replyProbability, setReplyProbability] = useState("0.01");
     const [showApiKey, setShowApiKey] = useState(false);
     const [baseUrlError, setBaseUrlError] = useState<string>();
+    const [replyProbabilityError, setReplyProbabilityError] = useState<string>();
     const [submitted, setSubmitted] = useState<SubmitResult | null>(null);
     const [now, setNow] = useState(() => Date.now());
     const [copied, setCopied] = useState(false);
@@ -256,10 +268,14 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
         if (!ticket || pageState === "submitting") return;
 
         const nextBaseUrlError = validateBaseUrl(baseUrl.trim());
+        const nextReplyProbabilityError = customReplyProbability
+            ? validateReplyProbability(replyProbability)
+            : undefined;
         setBaseUrlError(nextBaseUrlError);
+        setReplyProbabilityError(nextReplyProbabilityError);
         setErrorMessage("");
 
-        if (nextBaseUrlError || !apiKey.trim() || !model.trim()) return;
+        if (nextBaseUrlError || nextReplyProbabilityError || !apiKey.trim() || !model.trim()) return;
 
         const submitToken = submitTokenRef.current;
         if (!submitToken) {
@@ -277,6 +293,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                 api_key: apiKey.trim(),
                 chat_model: model.trim(),
                 chat_multimodal: multimodal,
+                reply_probability: customReplyProbability ? Number(replyProbability) : null,
                 allow_global_fallback: false,
                 created_at: new Date().toISOString(),
             };
@@ -535,6 +552,47 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                 <Description>填写服务商控制台中显示的完整模型 ID</Description>
                             </TextField>
 
+                            <div className="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                                <div className="flex items-center justify-between gap-5">
+                                    <div>
+                                        <div className="font-medium text-zinc-900 dark:text-white">自定义主动发言概率</div>
+                                        <div className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">关闭时跟随 Bot 的全局配置</div>
+                                    </div>
+                                    <Switch
+                                        isSelected={customReplyProbability}
+                                        onChange={(selected) => {
+                                            setCustomReplyProbability(selected);
+                                            if (!selected) setReplyProbabilityError(undefined);
+                                        }}
+                                        aria-label="自定义主动发言概率"
+                                    >
+                                        <Switch.Control><Switch.Thumb/></Switch.Control>
+                                    </Switch>
+                                </div>
+
+                                {customReplyProbability && (
+                                    <TextField className="mt-4" isRequired isInvalid={Boolean(replyProbabilityError)}>
+                                        <Label>概率（0～0.1）</Label>
+                                        <Input
+                                            fullWidth
+                                            variant="secondary"
+                                            type="number"
+                                            inputMode="decimal"
+                                            min={0}
+                                            max={0.1}
+                                            step={0.001}
+                                            value={replyProbability}
+                                            onChange={(event) => {
+                                                setReplyProbability(event.target.value);
+                                                if (replyProbabilityError) setReplyProbabilityError(undefined);
+                                            }}
+                                        />
+                                        <Description>0 表示关闭；0.01 约为 1%，用户可设置的上限为 0.1（10%）</Description>
+                                        {replyProbabilityError && <FieldError>{replyProbabilityError}</FieldError>}
+                                    </TextField>
+                                )}
+                            </div>
+
                             <div className="flex items-center justify-between gap-5 rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
                                 <div>
                                     <div className="font-medium text-zinc-900 dark:text-white">启用图片理解</div>
@@ -558,7 +616,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                 size="lg"
                                 variant="primary"
                                 className="w-full font-bold"
-                                isDisabled={pageState === "submitting" || remaining === "0:00" || !apiKey.trim() || !model.trim() || !baseUrl.trim()}
+                                isDisabled={pageState === "submitting" || remaining === "0:00" || !apiKey.trim() || !model.trim() || !baseUrl.trim() || (customReplyProbability && !replyProbability.trim())}
                             >
                                 {pageState === "submitting" ? <Spinner color="current" size="sm"/> : <ShieldIcon className="h-5 w-5"/>}
                                 {pageState === "submitting" ? "正在本地加密并提交…" : "加密并生成配置码"}
