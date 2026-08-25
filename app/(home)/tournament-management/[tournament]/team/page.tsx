@@ -294,11 +294,11 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                                     variant="secondary"
                                     className="items-center"
                                 >
-                                    <Checkbox.Control className="size-4 rounded border-default-300 data-[selected=true]:border-primary data-[selected=true]:bg-primary">
-                                        <Checkbox.Indicator/>
-                                    </Checkbox.Control>
                                     <Checkbox.Content>
-                                        <Label htmlFor={`team-${index}-verified`} className="text-xs">已审核</Label>
+                                        <Checkbox.Control className="size-4 rounded border-default-300 data-[selected=true]:border-primary data-[selected=true]:bg-primary">
+                                            <Checkbox.Indicator/>
+                                        </Checkbox.Control>
+                                        <span className="text-xs">已审核</span>
                                     </Checkbox.Content>
                                 </Checkbox>
                                 <Button isIconOnly size="sm" variant="danger-soft"

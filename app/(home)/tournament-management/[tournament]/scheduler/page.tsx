@@ -359,10 +359,10 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                             });
                                         }}
                                     >
-                                        <Switch.Control>
-                                            <Switch.Thumb/>
-                                        </Switch.Control>
                                         <Switch.Content>
+                                            <Switch.Control>
+                                                <Switch.Thumb/>
+                                            </Switch.Control>
                                             <span className="text-sm">胜者组 Match</span>
                                         </Switch.Content>
                                     </Switch>

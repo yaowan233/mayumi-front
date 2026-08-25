@@ -979,12 +979,16 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                             onChange={(value: string) => setFormData({...formData, isFirstTimeStaff: (value !== "")})}
                                         >
                                             <Radio value="1" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
-                                                <Radio.Control><Radio.Indicator /></Radio.Control>
-                                                <Radio.Content>是</Radio.Content>
+                                                <Radio.Content>
+                                                    <Radio.Control><Radio.Indicator /></Radio.Control>
+                                                    是
+                                                </Radio.Content>
                                             </Radio>
                                             <Radio value="" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
-                                                <Radio.Control><Radio.Indicator /></Radio.Control>
-                                                <Radio.Content>否</Radio.Content>
+                                                <Radio.Content>
+                                                    <Radio.Control><Radio.Indicator /></Radio.Control>
+                                                    否
+                                                </Radio.Content>
                                             </Radio>
                                         </RadioGroup>
                                     </div>
@@ -998,14 +1002,14 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                                     <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">选择意向职位</span>
                                     <CheckboxGroup isRequired className="flex flex-wrap gap-4"
                                         onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}>
-                                        {tournament_info.streamer && <Checkbox value="直播" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>直播</Checkbox.Content></Checkbox>}
-                                        {tournament_info.referee && <Checkbox value="裁判" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>裁判</Checkbox.Content></Checkbox>}
-                                        {tournament_info.commentator && <Checkbox value="解说" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>解说</Checkbox.Content></Checkbox>}
-                                        {tournament_info.mappooler && <Checkbox value="选图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>选图</Checkbox.Content></Checkbox>}
-                                        {tournament_info.custom_mapper && <Checkbox value="作图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>作图</Checkbox.Content></Checkbox>}
-                                        {tournament_info.designer && <Checkbox value="设计" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>设计</Checkbox.Content></Checkbox>}
-                                        {tournament_info.scheduler && <Checkbox value="赛程安排" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>赛程安排</Checkbox.Content></Checkbox>}
-                                        {tournament_info.map_tester && <Checkbox value="测图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control><Checkbox.Content>测图</Checkbox.Content></Checkbox>}
+                                        {tournament_info.streamer && <Checkbox value="直播" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>直播</Checkbox.Content></Checkbox>}
+                                        {tournament_info.referee && <Checkbox value="裁判" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>裁判</Checkbox.Content></Checkbox>}
+                                        {tournament_info.commentator && <Checkbox value="解说" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>解说</Checkbox.Content></Checkbox>}
+                                        {tournament_info.mappooler && <Checkbox value="选图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>选图</Checkbox.Content></Checkbox>}
+                                        {tournament_info.custom_mapper && <Checkbox value="作图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>作图</Checkbox.Content></Checkbox>}
+                                        {tournament_info.designer && <Checkbox value="设计" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>设计</Checkbox.Content></Checkbox>}
+                                        {tournament_info.scheduler && <Checkbox value="赛程安排" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>赛程安排</Checkbox.Content></Checkbox>}
+                                        {tournament_info.map_tester && <Checkbox value="测图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>测图</Checkbox.Content></Checkbox>}
                                     </CheckboxGroup>
                                 </div>
                                 <div className="flex flex-col gap-4">

@@ -295,10 +295,10 @@ const RoundCard = ({index, roundData, isGroup, onChange, onDelete}: RoundCardPro
                                     onChange({...roundData, is_lobby: isSelected})
                                 }
                             >
-                                <Switch.Control>
-                                    <Switch.Thumb/>
-                                </Switch.Control>
                                 <Switch.Content>
+                                    <Switch.Control>
+                                        <Switch.Thumb/>
+                                    </Switch.Control>
                                     <span className="text-small text-foreground">小组赛 (Lobby)</span>
                                 </Switch.Content>
                             </Switch>
@@ -312,10 +312,10 @@ const RoundCard = ({index, roundData, isGroup, onChange, onDelete}: RoundCardPro
                                         onChange({...roundData, is_solo_qualifier: isSelected})
                                     }
                                 >
-                                    <Switch.Control>
-                                        <Switch.Thumb/>
-                                    </Switch.Control>
                                     <Switch.Content>
+                                        <Switch.Control>
+                                            <Switch.Thumb/>
+                                        </Switch.Control>
                                         <span className="text-small text-foreground">单人预选赛</span>
                                     </Switch.Content>
                                 </Switch>

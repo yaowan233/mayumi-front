@@ -541,7 +541,9 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                     <div className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">只有模型支持视觉输入时才开启</div>
                                 </div>
                                 <Switch isSelected={multimodal} onChange={setMultimodal} aria-label="启用图片理解">
-                                    <Switch.Control><Switch.Thumb/></Switch.Control>
+                                    <Switch.Content>
+                                        <Switch.Control><Switch.Thumb/></Switch.Control>
+                                    </Switch.Content>
                                 </Switch>
                             </div>
 

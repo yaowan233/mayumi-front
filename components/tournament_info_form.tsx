@@ -379,9 +379,11 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {
                                         onChange={(isSelected) => setFormData({...formData, [role.key]: isSelected})}
                                         aria-label={role.label}
                                     >
-                                        <Switch.Control>
-                                            <Switch.Thumb/>
-                                        </Switch.Control>
+                                        <Switch.Content>
+                                            <Switch.Control>
+                                                <Switch.Thumb/>
+                                            </Switch.Control>
+                                        </Switch.Content>
                                     </Switch>
                                 </Card.Content>
                             </Card>
