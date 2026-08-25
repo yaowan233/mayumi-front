@@ -1,11 +1,11 @@
 "use client";
 import React, {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {siteConfig} from "@/config/site";
 import {Button, Card, FieldError, Input, Label, Spinner, Switch, TextField} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {TournamentInfo} from "@/components/homepage";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {getDraftSection, saveDraftSection} from "@/lib/tournament_drafts";
 
 const SaveIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -64,10 +64,11 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                 try {
                     const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
                     setTournamentName(managedTournamentName);
-                    const [data, info] = await Promise.all([
-                        getRoundInfo(managedTournamentName),
-                        getTournamentInfo(managedTournamentName),
+                    const [roundDraft, metaDraft] = await Promise.all([
+                        getDraftSection<TournamentRoundInfo[]>(managedTournamentName, "rounds"),
+                        getDraftSection<TournamentInfo>(managedTournamentName, "meta"),
                     ]);
+                    const data = roundDraft.data;
                     setFormData(data.length > 0 ? data : [{
                         tournament_name: managedTournamentName,
                         stage_name: '',
@@ -75,7 +76,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                         end_time: undefined,
                         is_lobby: false
                     }]);
-                    setTournamentInfo(info);
+                    setTournamentInfo(metaDraft.data);
                 } catch (e) {
                     setErrMsg("加载失败，请刷新重试");
                 } finally {
@@ -95,20 +96,10 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
 
         setIsSaving(true);
         try {
-            const res = await fetch(siteConfig.backend_url + '/api/update-tournament-round-info', {
-                'method': 'POST',
-                'body': JSON.stringify(formData),
-                'headers': {'Content-Type': 'application/json'},
-                credentials: 'include'
-            })
-            if (res.status != 200) {
-                setErrMsg(await res.text());
-            } else {
-                alert('修改成功');
-                router.refresh();
-            }
+            await saveDraftSection(tournamentName, "rounds", formData);
+            alert('轮次草稿已保存，公开页面尚未更新');
         } catch (e) {
-            setErrMsg("保存失败，网络错误");
+            setErrMsg(e instanceof Error ? e.message : "保存失败，网络错误");
         } finally {
             setIsSaving(false);
         }
@@ -150,7 +141,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                     <RoundIcon/>
                     轮次管理
                 </h1>
-                <p className="text-default-500">配置比赛的各个阶段（如：预选赛、小组赛、淘汰赛）及其时间安排。</p>
+                <p className="text-default-500">配置比赛的各个阶段（如：预选赛、小组赛、淘汰赛）。保存后需在管理首页统一发布。</p>
             </div>
 
             {/* Form List */}
@@ -198,7 +189,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                         {({isPending}) => (
                             <>
                                 {!isPending && <SaveIcon/>}
-                                {isPending ? "正在保存..." : "保存修改"}
+                                {isPending ? "正在保存..." : "保存草稿"}
                             </>
                         )}
                     </Button>
@@ -335,16 +326,4 @@ export interface TournamentRoundInfo {
     end_time?: string;
     is_lobby: boolean;
     is_solo_qualifier?: boolean;
-}
-
-async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 10}});
-    return await data.json();
-}
-
-async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
-    const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        {next: {revalidate: 0}});
-    return await res.json();
 }

@@ -5,8 +5,8 @@ import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {Button, Card, Spinner} from "@heroui/react";
 import {useRouter} from "next/navigation";
-import {siteConfig} from "@/config/site";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {getDraftSection, saveDraftSection} from "@/lib/tournament_drafts";
 
 const SaveIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -73,8 +73,8 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                 try {
                     const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
                     setTournamentName(managedTournamentName);
-                    const data = await getTournamentInfo(managedTournamentName);
-                    setFormData(data);
+                    const draft = await getDraftSection<TournamentInfo>(managedTournamentName, "meta");
+                    setFormData(draft.data);
                 } catch (e) {
                     setErrMsg("无法加载赛事信息，请刷新重试");
                 } finally {
@@ -95,38 +95,11 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
 
         setIsSaving(true);
         try {
-            const url = `${siteConfig.backend_url}/api/update-tournament?original_name=${encodeURIComponent(tournamentName)}`;
-
-            const res = await fetch(url, {
-                'method': 'POST',
-                'body': JSON.stringify(formData), // formData 里包含的是新名字
-                'headers': {'Content-Type': 'application/json'},
-                credentials: 'include'
-            });
-
-            if (!res.ok) {
-                let errorDetail = `保存失败 (Code: ${res.status})`;
-                try {
-                    const errorData = await res.json();
-                    if (errorData.detail) {
-                        errorDetail = typeof errorData.detail === 'string'
-                            ? errorData.detail
-                            : JSON.stringify(errorData.detail);
-                    }
-                } catch (jsonError) {
-                }
-
-                setErrMsg(errorDetail);
-                window.scrollTo({top: 0, behavior: 'smooth'});
-                return;
-            }
-
-            alert('修改成功');
-            const targetAbbr = formData.abbreviation || tournament_abbr;
-            router.push(`/tournament-management/${targetAbbr}`);
-            router.refresh();
+            await saveDraftSection(tournamentName, "meta", formData);
+            alert('草稿已保存，公开页面尚未更新');
         } catch (e) {
-            setErrMsg("保存失败，请检查网络连接");
+            setErrMsg(e instanceof Error ? e.message : "保存失败，请检查网络连接");
+            window.scrollTo({top: 0, behavior: 'smooth'});
         } finally {
             setIsSaving(false);
         }
@@ -154,7 +127,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                     <EditIcon/>
                     编辑赛事信息
                 </h1>
-                <p className="text-default-500">修改比赛的基本设置、规则、介绍等元数据。</p>
+                <p className="text-default-500">修改比赛的基本设置、规则、介绍等元数据。保存后需在管理首页统一发布。</p>
             </div>
 
             <TournamentInfoForm formData={formData} setFormData={setFormData} errMsg={errMsg}/>
@@ -187,7 +160,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
                         {({isPending}) => (
                             <>
                                 {!isPending && <SaveIcon/>}
-                                {isPending ? "正在保存..." : "保存修改"}
+                                {isPending ? "正在保存..." : "保存草稿"}
                             </>
                         )}
                     </Button>
@@ -195,15 +168,4 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
             </Card>
         </div>
     );
-}
-
-// 获取数据 API
-async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
-    const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        {next: {revalidate: 0}, credentials: 'include'})
-    if (res.status === 403) {
-        throw new Error("权限不足：比赛审核中，且您不是举办者或未登录");
-    }
-    if (!res.ok) throw new Error("Failed to fetch");
-    return await res.json()
 }

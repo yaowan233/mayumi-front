@@ -8,6 +8,9 @@ import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournamen
 import {siteConfig} from "@/config/site";
 import {TournamentInfo} from "@/components/homepage";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {getDraftSection, getMappoolDraftPreview, saveDraftSection} from "@/lib/tournament_drafts";
+import {MappoolsComponents, Stage} from "@/components/mappools";
+import {useRouter} from "next/navigation";
 
 const MapIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -43,17 +46,20 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
     const params = React.use(props.params);
     const tournament_abbr = decodeURIComponent(params.tournament);
     const currentUser = useContext(CurrentUserContext);
+    const router = useRouter();
     const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isPreviewing, setIsPreviewing] = useState(false);
     const [errMsg, setErrMsg] = useState("");
 
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
     const [tournamentMaps, setTournamentMaps] = useState<TournamentMap[]>([]);
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
     const [selectedRound, setSelectedRound] = useState<string | undefined>();
+    const [previewStages, setPreviewStages] = useState<Stage[] | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -61,14 +67,15 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                 try {
                     const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
                     setTournamentName(managedTournamentName);
-                    const [rounds, maps, info] = await Promise.all([
-                        getRoundInfo(managedTournamentName),
-                        getTournamentMaps(managedTournamentName),
-                        getTournamentInfo(managedTournamentName),
+                    const [roundDraft, mappoolDraft, metaDraft] = await Promise.all([
+                        getDraftSection<TournamentRoundInfo[]>(managedTournamentName, "rounds"),
+                        getDraftSection<TournamentMap[]>(managedTournamentName, "mappool"),
+                        getDraftSection<TournamentInfo>(managedTournamentName, "meta"),
                     ]);
+                    const rounds = roundDraft.data;
                     setRoundInfo(rounds);
-                    setTournamentMaps(maps);
-                    setTournamentInfo(info);
+                    setTournamentMaps(mappoolDraft.data);
+                    setTournamentInfo(metaDraft.data);
 
                     if (rounds.length > 0) setSelectedRound(rounds[rounds.length - 1].stage_name);
                 } catch {
@@ -95,21 +102,29 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
 
         setIsSaving(true);
         try {
-            const res = await fetch(siteConfig.backend_url + "/api/update-tournament-maps", {
-                method: "POST",
-                body: JSON.stringify(tournamentMaps),
-                headers: {"Content-Type": "application/json"},
-                credentials: "include",
-            });
-            if (res.status !== 200) {
-                setErrMsg(await res.text());
-            } else {
-                alert("保存成功");
-            }
-        } catch {
-            setErrMsg("保存失败，网络错误");
+            await saveDraftSection(tournamentName, "mappool", tournamentMaps);
+            setPreviewStages(null);
+            alert("图池草稿已保存，公开页面尚未更新");
+        } catch (e) {
+            setErrMsg(e instanceof Error ? e.message : "保存失败，网络错误");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handlePreview = async () => {
+        setErrMsg("");
+        setIsPreviewing(true);
+        try {
+            const stages = await getMappoolDraftPreview<Stage[]>(tournamentName);
+            setPreviewStages(stages);
+            if (stages.length === 0) {
+                setErrMsg("已保存的图池草稿暂无可预览地图；请先保存并同步谱面数据");
+            }
+        } catch (e) {
+            setErrMsg(e instanceof Error ? e.message : "预览加载失败");
+        } finally {
+            setIsPreviewing(false);
         }
     };
 
@@ -185,8 +200,23 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                     <MapIcon/>
                     图池管理
                 </h1>
-                <p className="text-default-500">为每个比赛轮次配置地图池 (Mappool)。</p>
+                <p className="text-default-500">为每个比赛轮次配置地图池。草稿可在此预览，公开页面只显示已发布版本。</p>
             </div>
+
+            {previewStages && previewStages.length > 0 && (
+                <Card variant="secondary" className="overflow-hidden border border-primary/20 !p-0">
+                    <Card.Header className="flex flex-row items-center justify-between border-b border-default-200 px-6 py-4 dark:border-white/10">
+                        <div>
+                            <h2 className="text-lg font-bold text-foreground">已保存草稿预览</h2>
+                            <p className="text-sm text-default-500">此区域仅管理人员可见，不代表已经发布。</p>
+                        </div>
+                        <Button size="sm" variant="ghost" onPress={() => setPreviewStages(null)}>关闭预览</Button>
+                    </Card.Header>
+                    <Card.Content className="!p-0">
+                        <MappoolsComponents tabs={previewStages}/>
+                    </Card.Content>
+                </Card>
+            )}
 
             {roundInfo.length > 0 ? (
                 <div className="flex flex-col gap-6">
@@ -235,7 +265,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
             ) : (
                 <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-default-200 py-20">
                     <p className="text-default-500">暂无轮次信息，请先前往“轮次管理”添加。</p>
-                    <Button variant="primary" className="mt-4" onPress={() => window.location.assign(`/tournament-management/${tournament_abbr}/round`)}>
+                    <Button variant="primary" className="mt-4" onPress={() => router.push(`/tournament-management/${tournament_abbr}/round`)}>
                         去添加轮次
                     </Button>
                 </div>
@@ -246,11 +276,14 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                     <div className="text-sm font-medium text-danger animate-pulse">
                         {errMsg && <span>⚠️ {errMsg}</span>}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center justify-end gap-3">
+                        <Button size="lg" variant="outline" className="px-6 font-bold" isPending={isPreviewing} onPress={handlePreview}>
+                            {isPreviewing ? "正在加载..." : "预览已保存草稿"}
+                        </Button>
                         <Button size="lg" variant="secondary" className="px-6 font-bold" isPending={isSyncing} onPress={handleSyncTournamentMaps}>
                             {({isPending}) => (
                                 <>
-                                    {isPending ? "正在同步..." : "同步图池数据"}
+                                    {isPending ? "正在同步..." : "同步草稿谱面数据"}
                                 </>
                             )}
                         </Button>
@@ -258,7 +291,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                             {({isPending}) => (
                                 <>
                                     {!isPending && <SaveIcon/>}
-                                    {isPending ? "正在保存..." : "保存图池"}
+                                    {isPending ? "正在保存..." : "保存草稿"}
                                 </>
                             )}
                         </Button>
@@ -382,13 +415,6 @@ const MapEditCard = ({map, index, onChange, onDelete}: any) => {
     );
 };
 
-async function getTournamentMaps(tournament_name: string): Promise<TournamentMap[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/get_tournament_maps?tournament_name=${tournament_name}`, {
-        next: {revalidate: 10},
-    });
-    return await data.json();
-}
-
 function validateModOrder(tournamentMaps: TournamentMap[]): boolean {
     for (let i = 0; i < tournamentMaps.length; i++) {
         for (let j = i + 1; j < tournamentMaps.length; j++) {
@@ -416,18 +442,4 @@ interface TournamentMap {
     number?: number;
     mode?: string;
     extra?: string[];
-}
-
-async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`, {
-        next: {revalidate: 10},
-    });
-    return await data.json();
-}
-
-async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
-    const res = await fetch(siteConfig.backend_url + "/api/tournament-info?tournament_name=" + tournament_name, {
-        next: {revalidate: 10},
-    });
-    return await res.json();
 }

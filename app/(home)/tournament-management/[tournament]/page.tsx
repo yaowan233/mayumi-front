@@ -1,10 +1,10 @@
 "use client";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {TournamentManagementInfo} from "@/app/(home)/tournament-management/page";
 import Link from "next/link";
+import {useRouter} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Card, Chip, Skeleton} from "@heroui/react";
+import {Button, Card, Chip, Skeleton} from "@heroui/react";
 import {siteConfig} from "@/config/site";
 import {
     ADMIN_ROLE,
@@ -12,6 +12,14 @@ import {
     getTournamentManagementInfo,
     isAdminUser,
 } from "@/lib/tournament_management";
+import {DraftSection, DraftStatus, getDraftStatus, publishTournamentDraft} from "@/lib/tournament_drafts";
+
+const draftSectionLabels: Record<DraftSection, string> = {
+    meta: "赛事信息",
+    rounds: "轮次",
+    mappool: "图池",
+    schedule: "赛程",
+};
 
 // --- 图标 (无需修改) ---
 const MetaIcon = () => (
@@ -74,7 +82,11 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     const currentUser = useContext(CurrentUserContext);
     const [myRoles, setMyRoles] = useState<string[]>([]);
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({groups: undefined, players: []});
+    const [draftStatus, setDraftStatus] = useState<DraftStatus | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isPublishing, setIsPublishing] = useState(false);
+    const [publishError, setPublishError] = useState("");
+    const router = useRouter();
 
     const params = React.use(props.params);
     const tournament_abbr = decodeURIComponent(params.tournament);
@@ -102,10 +114,14 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
 
                         // 3. 后端比赛管理接口使用 abbreviation 作为 tournament_name 参数
                         try {
-                            const playersData = await getPlayers(currentTournament.abbreviation, 120);
+                            const [playersData, currentDraftStatus] = await Promise.all([
+                                getPlayers(currentTournament.abbreviation, 120),
+                                getDraftStatus(currentTournament.abbreviation),
+                            ]);
                             setTournamentPlayers(playersData);
+                            setDraftStatus(currentDraftStatus);
                         } catch (err) {
-                            console.error("Failed to load players:", err);
+                            console.error("Failed to load tournament dashboard status:", err);
                         }
                     } else {
                         console.warn("未找到匹配的比赛权限:", tournament_abbr);
@@ -124,6 +140,26 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
     }, [currentUser, tournament_abbr]);
 
     const hasAdminAccess = myRoles.includes(ADMIN_ROLE);
+    const canPublish = hasAdminAccess || myRoles.includes('主办');
+
+    const handlePublish = async () => {
+        setPublishError("");
+        setIsPublishing(true);
+        try {
+            const result = await publishTournamentDraft(tournament_abbr);
+            alert(result.message);
+            if (result.new_abbr !== tournament_abbr) {
+                router.replace(`/tournament-management/${encodeURIComponent(result.new_abbr)}`);
+                return;
+            }
+            setDraftStatus(await getDraftStatus(tournament_abbr));
+            router.refresh();
+        } catch (error) {
+            setPublishError(error instanceof Error ? error.message : "发布失败，请稍后重试");
+        } finally {
+            setIsPublishing(false);
+        }
+    };
 
     // 定义菜单配置
     const menuItems = [
@@ -200,6 +236,38 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
                     ))}
                 </div>
             </div>
+
+            {draftStatus && (
+                <Card variant="secondary" className="border border-primary/20 bg-primary/[0.04]">
+                    <Card.Content className="flex flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between">
+                        <div className="flex flex-col gap-1">
+                            <h2 className="font-bold text-foreground">
+                                {draftStatus.has_changes ? "有尚未发布的草稿更改" : "当前没有待发布更改"}
+                            </h2>
+                            <p className="text-sm text-default-500">
+                                {draftStatus.has_changes
+                                    ? `已保存：${draftStatus.changed_sections.map(section => draftSectionLabels[section]).join("、")}`
+                                    : "各管理页保存的内容会先进入草稿，不会立即影响公开页面。"}
+                            </p>
+                            {!canPublish && draftStatus.has_changes && (
+                                <p className="text-xs text-default-500">草稿需由赛事主办统一发布。</p>
+                            )}
+                            {publishError && <p className="text-sm text-danger">{publishError}</p>}
+                        </div>
+                        {canPublish && (
+                            <Button
+                                variant="primary"
+                                className="shrink-0 font-bold"
+                                isDisabled={!draftStatus.has_changes}
+                                isPending={isPublishing}
+                                onPress={handlePublish}
+                            >
+                                {draftStatus.tournament_status === "approved" ? "发布全部更改" : "提交审核"}
+                            </Button>
+                        )}
+                    </Card.Content>
+                </Card>
+            )}
 
             {/* Dashboard Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

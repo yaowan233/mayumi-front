@@ -35,6 +35,7 @@ import {
     toUtcISOString,
     utcDateTimeToLocalInput,
 } from "@/lib/datetime";
+import {getDraftSection, saveDraftSection} from "@/lib/tournament_drafts";
 
 const subscribeToHydration = () => () => undefined;
 const useHasMounted = () => useSyncExternalStore(subscribeToHydration, () => true, () => false);
@@ -87,16 +88,17 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                 try {
                     const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
                     setTournamentName(managedTournamentName);
-                    const [rounds, schedules, players, info] = await Promise.all([
-                        getRoundInfo(managedTournamentName),
-                        getSchedule(managedTournamentName),
+                    const [roundDraft, scheduleDraft, players, metaDraft] = await Promise.all([
+                        getDraftSection<TournamentRoundInfo[]>(managedTournamentName, "rounds"),
+                        getDraftSection<Schedule[]>(managedTournamentName, "schedule"),
                         getPlayers(managedTournamentName),
-                        getTournamentInfo(managedTournamentName) // 新增获取比赛信息
+                        getDraftSection<TournamentInfo>(managedTournamentName, "meta"),
                     ]);
+                    const rounds = roundDraft.data;
                     setRoundInfo(rounds);
-                    setScheduleInfo(schedules);
+                    setScheduleInfo(scheduleDraft.data);
                     setMembers(players);
-                    setTournamentInfo(info);
+                    setTournamentInfo(metaDraft.data);
                     if (rounds.length > 0) setSelectedRound(rounds[rounds.length - 1].stage_name);
                 } catch (e) {
                     setErrMsg("加载数据失败");
@@ -138,20 +140,11 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                 ...schedule,
                 match_time: toUtcISOString(schedule.match_time) ?? schedule.match_time,
             }));
-            const res = await fetch(siteConfig.backend_url + '/api/update-schedule', {
-                'method': 'POST',
-                'body': JSON.stringify(payload),
-                'headers': {'Content-Type': 'application/json'},
-                credentials: 'include'
-            });
-            if (res.status != 200) {
-                setErrMsg(await res.text());
-            } else {
-                setScheduleInfo(payload);
-                alert('保存成功');
-            }
+            await saveDraftSection(tournamentName, "schedule", payload);
+            setScheduleInfo(payload);
+            alert('赛程草稿已保存，公开页面尚未更新');
         } catch (e) {
-            setErrMsg("保存失败，网络错误");
+            setErrMsg(e instanceof Error ? e.message : "保存失败，网络错误");
         } finally {
             setIsSaving(false);
         }
@@ -210,7 +203,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     {tournamentInfo?.is_group
                         ? isSoloRound ? "当前轮次：单人预选赛（团队赛）" : "当前为团队赛模式"
                         : "当前为个人赛模式"
-                    } - 安排对阵表、时间及相关人员配置。
+                    } - 安排对阵表、时间及相关人员配置。保存后需在管理首页统一发布。
                 </p>
             </div>
 
@@ -271,7 +264,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     <Button size="lg" variant="primary" className="px-8 font-bold shadow-primary/20" isPending={isSaving}
                             onPress={handleSave}>
                         {!isSaving && <SaveIcon/>}
-                        <span>{isSaving ? "正在保存..." : "保存赛程"}</span>
+                        <span>{isSaving ? "正在保存..." : "保存草稿"}</span>
                     </Button>
                 </Card.Content>
             </Card>
@@ -725,15 +718,6 @@ const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添
     )
 }
 
-async function getSchedule(tournament_name: string): Promise<Schedule[]> {
-    const res = await fetch(siteConfig.backend_url + `/api/get-schedule?tournament_name=${tournament_name}`);
-    if (!res.ok) {
-        throw new Error(res.statusText);
-    }
-    return await res.json();
-}
-
-
 interface Schedule {
     tournament_name: string;
     stage_name: string;
@@ -755,22 +739,8 @@ interface Schedule {
     team2_warmup?: number;
 }
 
-async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
-        {next: {revalidate: 10}});
-    return await data.json();
-}
-
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
         {next: {revalidate: revalidate_time}})
-    return await res.json()
-}
-
-
-async function getTournamentInfo(tournament_name: string): Promise<TournamentInfo> {
-    const res = await fetch(siteConfig.backend_url + '/api/tournament-info?tournament_name=' + tournament_name,
-        {next: {revalidate: 0}})
-    if (!res.ok) throw new Error("Failed to fetch");
     return await res.json()
 }
