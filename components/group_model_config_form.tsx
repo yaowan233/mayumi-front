@@ -54,24 +54,36 @@ const API_FORMATS: ReadonlyArray<{
     label: string;
     description: string;
     defaultBaseUrl: string;
+    apiKeyDescription: string;
+    modelExample: string;
+    setupHint: string;
 }> = [
     {
         key: "openai",
         label: "OpenAI 兼容接口",
         description: "适用于 OpenAI 及兼容 /v1/chat/completions 的服务",
         defaultBaseUrl: "https://api.openai.com/v1",
+        apiKeyDescription: "在服务商的“API Key / 密钥管理”页面创建。它通常以 sk- 开头，但不同服务商可能不同。",
+        modelExample: "gpt-4.1-mini、qwen3.5-plus 或服务商给出的其他模型 ID",
+        setupHint: "如果你使用中转站、OpenRouter、阿里云百炼等服务，也选这一项，并以该服务商文档给出的地址和模型 ID 为准。",
     },
     {
         key: "anthropic",
         label: "Anthropic Messages",
         description: "适用于 Anthropic Claude 官方接口",
         defaultBaseUrl: "https://api.anthropic.com",
+        apiKeyDescription: "在 Anthropic Console 的 API Keys 页面创建，不是 Claude 网页版的账号密码或订阅。",
+        modelExample: "claude-sonnet-4-6",
+        setupHint: "只有直接使用 Anthropic 官方 Messages API 时才选这一项；使用兼容 OpenAI 的中转服务时通常应选“OpenAI 兼容接口”。",
     },
     {
         key: "vertex",
         label: "Google Vertex AI",
         description: "适用于 Google Cloud Vertex AI 模型",
         defaultBaseUrl: "https://aiplatform.googleapis.com",
+        apiKeyDescription: "这里需要 Vertex AI Express Mode 可用的 API Key；普通 Google 登录密码不能使用。",
+        modelExample: "gemini-2.5-flash",
+        setupHint: "这是面向 Google Cloud Vertex AI 的选项。若服务商提供的是 OpenAI 兼容地址，请改选“OpenAI 兼容接口”。",
     },
 ];
 
@@ -469,6 +481,24 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
 
                     <Card.Content className="p-6 sm:p-8">
                         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                            <div className="rounded-xl border border-sky-500/20 bg-sky-500/[0.06] p-4 dark:bg-sky-400/[0.07]">
+                                <div className="font-bold text-zinc-950 dark:text-white">第一次配置？先认识这三个值</div>
+                                <div className="mt-3 grid gap-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300 sm:grid-cols-3">
+                                    <div>
+                                        <span className="font-bold text-sky-700 dark:text-sky-300">Base URL</span>
+                                        <p>大模型服务的“服务器地址”，告诉机器人把请求发到哪里。</p>
+                                    </div>
+                                    <div>
+                                        <span className="font-bold text-sky-700 dark:text-sky-300">API Key</span>
+                                        <p>调用服务的专用密钥，作用类似密码，用来识别账号并计算用量。</p>
+                                    </div>
+                                    <div>
+                                        <span className="font-bold text-sky-700 dark:text-sky-300">模型名称</span>
+                                        <p>要使用的具体模型 ID，决定机器人实际调用哪个模型。</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <Select
                                 fullWidth
                                 isRequired
@@ -493,6 +523,21 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                 </Select.Popover>
                             </Select>
 
+                            <div className="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 text-sm leading-6 text-zinc-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-300">
+                                <div className="font-bold text-zinc-900 dark:text-white">当前选择：{activeFormat.label}</div>
+                                <p className="mt-1">{activeFormat.setupHint}</p>
+                                <div className="mt-3 grid gap-2">
+                                    <div>
+                                        <span className="font-medium text-zinc-800 dark:text-zinc-100">地址示例：</span>{" "}
+                                        <code className="break-all rounded bg-zinc-200/70 px-1.5 py-0.5 font-mono text-xs text-primary dark:bg-white/10">{activeFormat.defaultBaseUrl}</code>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-zinc-800 dark:text-zinc-100">模型示例：</span>{" "}
+                                        {activeFormat.modelExample}
+                                    </div>
+                                </div>
+                            </div>
+
                             <TextField isRequired isInvalid={Boolean(baseUrlError)}>
                                 <Label>API Base URL</Label>
                                 <Input
@@ -507,7 +552,9 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                         if (baseUrlError) setBaseUrlError(undefined);
                                     }}
                                 />
-                                <Description>仅允许 HTTPS，不要包含 API Key、查询参数或 # 锚点</Description>
+                                <Description>
+                                    从服务商 API 文档复制基础地址，通常以 /v1 结尾；不要填写控制台网页地址，也不要加 /chat/completions。仅允许 HTTPS。
+                                </Description>
                                 {baseUrlError && <FieldError>{baseUrlError}</FieldError>}
                             </TextField>
 
@@ -535,7 +582,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                         {showApiKey ? "隐藏" : "显示"}
                                     </button>
                                 </div>
-                                <Description>密钥只在当前页面内存中短暂存在，加密后才会发送</Description>
+                                <Description>{activeFormat.apiKeyDescription} 密钥只在当前页面内存中短暂存在，加密后才会发送。</Description>
                             </TextField>
 
                             <TextField isRequired>
@@ -549,7 +596,9 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                     value={model}
                                     onChange={(event) => setModel(event.target.value)}
                                 />
-                                <Description>填写服务商控制台中显示的完整模型 ID</Description>
+                                <Description>
+                                    填写服务商控制台或模型列表中的完整模型 ID，区分字母、数字、横线和 /；不要填写“GPT”“Claude”等简称。
+                                </Description>
                             </TextField>
 
                             <div className="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
@@ -596,7 +645,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                             <div className="flex items-center justify-between gap-5 rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
                                 <div>
                                     <div className="font-medium text-zinc-900 dark:text-white">启用图片理解</div>
-                                    <div className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">只有模型支持视觉输入时才开启</div>
+                                    <div className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">模型文档明确写有视觉、多模态或图片输入能力时才开启；不确定可以先关闭</div>
                                 </div>
                                 <Switch isSelected={multimodal} onChange={setMultimodal} aria-label="启用图片理解">
                                     <Switch.Content>
@@ -645,6 +694,19 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                             <Alert.Description>不要从陌生人转发的页面填写密钥。该链接提交一次后即失效。</Alert.Description>
                         </Alert.Content>
                     </Alert>
+
+                    <Card variant="secondary" className="border border-zinc-200/80 bg-white/75 backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
+                        <Card.Content className="p-5">
+                            <div className="font-bold text-zinc-900 dark:text-white">去哪里找配置？</div>
+                            <ol className="mt-3 space-y-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                                <li><span className="font-bold text-primary">1.</span> 登录你购买或领取模型额度的服务商控制台。</li>
+                                <li><span className="font-bold text-primary">2.</span> 在“API Key / 密钥管理”中创建并复制密钥。</li>
+                                <li><span className="font-bold text-primary">3.</span> 在“API 文档 / 接口文档”中查找 Base URL。</li>
+                                <li><span className="font-bold text-primary">4.</span> 在“模型列表”中复制模型 ID，并确认是否支持图片。</li>
+                            </ol>
+                            <p className="mt-3 text-xs leading-5 text-zinc-500 dark:text-zinc-400">三个值应来自同一家服务商；网页会员通常不等于 API 额度。</p>
+                        </Card.Content>
+                    </Card>
 
                     <div className="px-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
                         为避免意外调用其他密钥，本群配置不会回退到机器人全局 API。
