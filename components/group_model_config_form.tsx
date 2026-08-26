@@ -615,7 +615,9 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                         }}
                                         aria-label="自定义主动发言概率"
                                     >
-                                        <Switch.Control><Switch.Thumb/></Switch.Control>
+                                        <Switch.Content>
+                                            <Switch.Control><Switch.Thumb/></Switch.Control>
+                                        </Switch.Content>
                                     </Switch>
                                 </div>
 
