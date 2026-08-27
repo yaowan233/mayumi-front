@@ -40,6 +40,7 @@ interface PublicTicket {
     public_key_jwk: JsonWebKey;
     expires_at: string;
     status: "created";
+    scope?: "group" | "private";
 }
 
 interface SubmitResult {
@@ -154,6 +155,7 @@ function isPublicTicket(value: unknown, expectedTicketId: string): value is Publ
         && Boolean(candidate.public_key_jwk)
         && typeof candidate.public_key_jwk === "object"
         && candidate.status === "created"
+        && (candidate.scope === undefined || candidate.scope === "group" || candidate.scope === "private")
         && Number.isFinite(expiresAt)
         && expiresAt > Date.now();
 }
@@ -202,6 +204,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
     const activeFormat = API_FORMATS.find((option) => option.key === format) ?? API_FORMATS[0];
     const activeExpiry = submitted?.expires_at ?? ticket?.expires_at;
     const remaining = activeExpiry ? formatRemaining(activeExpiry, now) : "--:--";
+    const isPrivate = ticket?.scope === "private";
 
     useEffect(() => {
         const interval = window.setInterval(() => setNow(Date.now()), 1000);
@@ -280,7 +283,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
         if (!ticket || pageState === "submitting") return;
 
         const nextBaseUrlError = validateBaseUrl(baseUrl.trim());
-        const nextReplyProbabilityError = customReplyProbability
+        const nextReplyProbabilityError = !isPrivate && customReplyProbability
             ? validateReplyProbability(replyProbability)
             : undefined;
         setBaseUrlError(nextBaseUrlError);
@@ -305,7 +308,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                 api_key: apiKey.trim(),
                 chat_model: model.trim(),
                 chat_multimodal: multimodal,
-                reply_probability: customReplyProbability ? Number(replyProbability) : null,
+                reply_probability: !isPrivate && customReplyProbability ? Number(replyProbability) : null,
                 allow_global_fallback: false,
                 created_at: new Date().toISOString(),
             };
@@ -436,7 +439,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                             <div className="mb-2 text-sm font-bold text-zinc-900 dark:text-white">下一步</div>
                             <ol className="space-y-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                                 <li>1. 返回机器人刚才发来配置链接的 QQ 私聊。</li>
-                                <li>2. 发送：<code className="rounded bg-zinc-200/70 px-1.5 py-0.5 font-mono text-primary dark:bg-white/10">/提交群API {submitted.code}</code></li>
+                                <li>2. 发送：<code className="rounded bg-zinc-200/70 px-1.5 py-0.5 font-mono text-primary dark:bg-white/10">{ticket?.scope === "private" ? "/提交个人API" : "/提交群API"} {submitted.code}</code></li>
                                 <li>3. 等待机器人提示配置成功。</li>
                             </ol>
                         </div>
@@ -470,8 +473,8 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                 <KeyIcon className="h-6 w-6"/>
                             </div>
                             <div>
-                                <Card.Title className="text-xl">配置本群大模型</Card.Title>
-                                <Card.Description>配置只应用于发起链接的群聊</Card.Description>
+                                <Card.Title className="text-xl">{isPrivate ? "配置个人私聊大模型" : "配置本群大模型"}</Card.Title>
+                                <Card.Description>{isPrivate ? "配置只应用于你与机器人的私聊" : "配置只应用于发起链接的群聊"}</Card.Description>
                             </div>
                         </div>
                         <Chip size="sm" variant="soft" color={remaining === "0:00" ? "danger" : "warning"}>
@@ -601,7 +604,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                 </Description>
                             </TextField>
 
-                            <div className="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
+                            {!isPrivate && <div className="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
                                 <div className="flex items-center justify-between gap-5">
                                     <div>
                                         <div className="font-medium text-zinc-900 dark:text-white">自定义主动发言概率</div>
@@ -642,7 +645,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                         {replyProbabilityError && <FieldError>{replyProbabilityError}</FieldError>}
                                     </TextField>
                                 )}
-                            </div>
+                            </div>}
 
                             <div className="flex items-center justify-between gap-5 rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/[0.04]">
                                 <div>
@@ -667,7 +670,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                 size="lg"
                                 variant="primary"
                                 className="w-full font-bold"
-                                isDisabled={pageState === "submitting" || remaining === "0:00" || !apiKey.trim() || !model.trim() || !baseUrl.trim() || (customReplyProbability && !replyProbability.trim())}
+                                isDisabled={pageState === "submitting" || remaining === "0:00" || !apiKey.trim() || !model.trim() || !baseUrl.trim() || (!isPrivate && customReplyProbability && !replyProbability.trim())}
                             >
                                 {pageState === "submitting" ? <Spinner color="current" size="sm"/> : <ShieldIcon className="h-5 w-5"/>}
                                 {pageState === "submitting" ? "正在本地加密并提交…" : "加密并生成配置码"}
@@ -711,7 +714,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                     </Card>
 
                     <div className="px-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                        为避免意外调用其他密钥，本群配置不会回退到机器人全局 API。
+                        为避免意外调用其他密钥，{isPrivate ? "个人私聊" : "本群"}配置不会回退到机器人全局 API。
                     </div>
                 </div>
             </div>
@@ -728,7 +731,7 @@ function ConfigShell({children}: {children: React.ReactNode}) {
                         <Logo className="h-8 w-8"/>
                         <span className="text-xl font-black text-zinc-950 dark:text-white">Mayumi</span>
                         <div className="hidden h-5 w-px bg-zinc-300 dark:bg-white/20 sm:block"/>
-                        <span className="hidden text-sm font-bold text-zinc-500 dark:text-zinc-400 sm:block">群模型安全配置</span>
+                        <span className="hidden text-sm font-bold text-zinc-500 dark:text-zinc-400 sm:block">模型 API 安全配置</span>
                     </div>
                     <ThemeSwitch/>
                 </div>
