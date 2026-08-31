@@ -55,12 +55,13 @@ const getModColor = (mod: string) => {
 
 // --- 主组件 ---
 
-export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
+export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = false}: {
     roundInfo: TournamentRoundInfo[],
     stats: Stats[],
     stage: Stage[],
     scores: Score[],
-    players?: Player[]
+    players?: Player[],
+    preview?: boolean,
 }) => {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -74,12 +75,26 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
     return (
         <div className="w-full flex flex-col gap-6">
 
+            {preview && (
+                <div className="mx-auto mt-4 flex w-[calc(100%-2rem)] max-w-5xl items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-700 dark:text-warning-300">
+                    <span aria-hidden="true" className="mt-0.5">&#128065;</span>
+                    <div>
+                        <p className="font-bold">统计预览</p>
+                        <p className="opacity-80">此页可显示尚未发布的资格赛结果，仅已登录的赛事管理人员可访问。</p>
+                    </div>
+                </div>
+            )}
+
             {/* 1. Tabs 区域 */}
             <div className="w-full">
                 <Tabs
                     className="w-full"
                     selectedKey={currentStageName}
-                    onSelectionChange={(key) => router.replace(`?stage=${encodeURIComponent(String(key))}`)}
+                    onSelectionChange={(key) => {
+                        const query = new URLSearchParams(searchParams.toString());
+                        query.set("stage", String(key));
+                        router.replace(`?${query.toString()}`);
+                    }}
                 >
                     <Tabs.ListContainer className="w-full !rounded-none border-b border-zinc-200 !bg-transparent dark:border-white/[0.08]">
                         <Tabs.List
@@ -103,7 +118,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
                     {(currentRound.is_lobby || currentRound.is_solo_qualifier) && (
                         <div className="flex flex-col gap-4">
                             <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">总排行榜</h2>
-                            <LeaderboardPanel round={currentRound} />
+                            <LeaderboardPanel round={currentRound} preview={preview} />
                         </div>
                     )}
 
@@ -127,7 +142,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
     )
 }
 
-const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
+const LeaderboardPanel = ({round, preview}: { round: TournamentRoundInfo, preview: boolean }) => {
     const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -150,8 +165,11 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
                     tournament_name: round.tournament_name,
                     stage_name: round.stage_name,
                 });
+                if (preview) params.set("preview", "true");
                 const res = await fetch(`${siteConfig.backend_url}/api/cal_rank?${params}`, {
                     signal: controller.signal,
+                    credentials: "include",
+                    cache: "no-store",
                 });
 
                 if (!res.ok) {
@@ -180,7 +198,7 @@ const LeaderboardPanel = ({round}: { round: TournamentRoundInfo }) => {
         fetchData();
 
         return () => controller.abort();
-    }, [round.stage_name, round.tournament_name]);
+    }, [preview, round.stage_name, round.tournament_name]);
 
     const handleSortChange = (descriptor: SortDescriptor) => {
         const newDescriptor = { ...descriptor };

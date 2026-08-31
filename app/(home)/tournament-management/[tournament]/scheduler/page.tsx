@@ -1,6 +1,6 @@
 "use client";
 
-import React, {type Key, useContext, useEffect, useState, useSyncExternalStore} from "react";
+import React, {type Key, useContext, useEffect, useRef, useState, useSyncExternalStore} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import CurrentUserContext from "@/app/user_context";
 import {
@@ -81,6 +81,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [errMsg, setErrMsg] = useState('');
+    const lastSavedSchedulesRef = useRef<Schedule[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -97,6 +98,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     const rounds = roundDraft.data;
                     setRoundInfo(rounds);
                     setScheduleInfo(scheduleDraft.data);
+                    lastSavedSchedulesRef.current = scheduleDraft.data;
                     setMembers(players);
                     setTournamentInfo(metaDraft.data);
                     if (rounds.length > 0) setSelectedRound(rounds[rounds.length - 1].stage_name);
@@ -140,9 +142,34 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                 ...schedule,
                 match_time: toUtcISOString(schedule.match_time) ?? schedule.match_time,
             }));
+            const previousMatchUrls = getStageMatchUrls(lastSavedSchedulesRef.current, selectedRound);
+            const matchUrls = getStageMatchUrls(payload, selectedRound);
+            const matchUrlsChanged = JSON.stringify(previousMatchUrls) !== JSON.stringify(matchUrls);
             await saveDraftSection(tournamentName, "schedule", payload);
             setScheduleInfo(payload);
-            alert('赛程草稿已保存，公开页面尚未更新');
+            lastSavedSchedulesRef.current = payload;
+
+            if (selectedRound && matchUrlsChanged && matchUrls.length > 0) {
+                try {
+                    const syncResult = await syncStagePlays(
+                        tournamentName,
+                        selectedRound,
+                        matchUrls,
+                    );
+                    if (syncResult.matches_processed === 0) {
+                        throw new Error("未识别到有效的 osu! MP 房间地址");
+                    }
+                    alert(
+                        `赛程草稿已保存，已自动同步 ${syncResult.matches_processed} 个 MP 房间的统计。公开页面尚未更新。`,
+                    );
+                } catch (syncError) {
+                    setErrMsg(
+                        `赛程草稿已保存，但统计自动同步失败：${syncError instanceof Error ? syncError.message : "网络错误"}`,
+                    );
+                }
+            } else {
+                alert('赛程草稿已保存，公开页面尚未更新');
+            }
         } catch (e) {
             setErrMsg(e instanceof Error ? e.message : "保存失败，网络错误");
         } finally {
@@ -473,6 +500,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         {/* 4. 链接管理 ... (保持不变) */}
                         <div className="flex flex-col gap-2">
                             <span className="text-sm font-medium text-foreground">比赛链接</span>
+                            <span className="text-xs text-default-500">保存草稿后会自动同步当前轮次的 MP 成绩；资格赛统计仍保持未发布。</span>
                             {(schedule.match_url || [""]).map((url: string, i: number) => (
                                 <div key={i} className="flex items-center gap-2">
                                     <Input className="flex-1" variant="secondary" value={url} placeholder="https://osu.ppy.sh/community/matches/..."
@@ -735,6 +763,48 @@ interface Schedule {
     team2_score?: number;
     team1_warmup?: number;
     team2_warmup?: number;
+}
+
+interface StagePlaySyncResult {
+    ok: boolean;
+    matches_processed: number;
+}
+
+function getStageMatchUrls(schedules: Schedule[], stageName?: string): string[] {
+    return schedules
+        .filter((schedule) => schedule.stage_name === stageName)
+        .flatMap((schedule) => schedule.match_url ?? [])
+        .map((url) => url.trim())
+        .filter(Boolean);
+}
+
+async function syncStagePlays(
+    tournamentName: string,
+    stageName: string,
+    matchUrls: string[],
+): Promise<StagePlaySyncResult> {
+    const query = new URLSearchParams({
+        tournament_name: tournamentName,
+        stage_name: stageName,
+    });
+    const response = await fetch(`${siteConfig.backend_url}/api/get-stage-plays?${query}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({match_urls: matchUrls}),
+        credentials: "include",
+        cache: "no-store",
+    });
+    if (!response.ok) {
+        let message = `请求失败 (${response.status})`;
+        try {
+            const payload = await response.json();
+            if (payload.detail) message = String(payload.detail);
+        } catch {
+            // Keep the status-based fallback for non-JSON responses.
+        }
+        throw new Error(message);
+    }
+    return response.json();
 }
 
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {

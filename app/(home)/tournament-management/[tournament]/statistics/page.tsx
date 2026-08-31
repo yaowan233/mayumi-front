@@ -76,6 +76,16 @@ interface TournamentScore {
     max_combo: number;
 }
 
+interface StatisticsPublicationStatus {
+    tournament_name: string;
+    stage_name: string;
+    is_qualifier: boolean;
+    is_published: boolean;
+    can_publish: boolean;
+    updated_at?: string;
+    updated_by?: number;
+}
+
 export default function EditStatisticsPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
     const tournament_abbr = decodeURIComponent(params.tournament);
@@ -87,6 +97,9 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
     const [selectedRound, setSelectedRound] = useState<string | undefined>();
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [publicationStatus, setPublicationStatus] = useState<StatisticsPublicationStatus | null>(null);
+    const [isPublicationLoading, setIsPublicationLoading] = useState(false);
+    const [isChangingPublication, setIsChangingPublication] = useState(false);
 
     // Score Management State
     const [allScores, setAllScores] = useState<TournamentScore[]>([]); // Cache all scores
@@ -126,7 +139,14 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
     const fetchAllScores = useCallback(async () => {
         setIsScoresLoading(true);
         try {
-            const res = await fetch(siteConfig.backend_url + `/api/scores?tournament_name=${tournamentName}`);
+            const query = new URLSearchParams({
+                tournament_name: tournamentName,
+                preview: "true",
+            });
+            const res = await fetch(`${siteConfig.backend_url}/api/scores?${query}`, {
+                credentials: "include",
+                cache: "no-store",
+            });
             if (res.ok) {
                 const data = await res.json();
                 setAllScores(data);
@@ -141,6 +161,31 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         }
     }, [tournamentName]);
 
+    const fetchPublicationStatus = useCallback(async () => {
+        if (!selectedRound) {
+            setPublicationStatus(null);
+            return;
+        }
+        setIsPublicationLoading(true);
+        try {
+            const query = new URLSearchParams({
+                tournament_name: tournamentName,
+                stage_name: selectedRound,
+            });
+            const response = await fetch(`${siteConfig.backend_url}/api/statistics-publication?${query}`, {
+                credentials: "include",
+                cache: "no-store",
+            });
+            if (!response.ok) throw new Error(`发布状态请求失败 (${response.status})`);
+            setPublicationStatus(await response.json());
+        } catch (error) {
+            console.error("Failed to load statistics publication status", error);
+            setPublicationStatus(null);
+        } finally {
+            setIsPublicationLoading(false);
+        }
+    }, [selectedRound, tournamentName]);
+
     // Initial fetch of scores
     useEffect(() => {
         const timer = window.setTimeout(() => {
@@ -149,6 +194,14 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
         return () => window.clearTimeout(timer);
     }, [fetchAllScores]);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            void fetchPublicationStatus();
+        }, 0);
+
+        return () => window.clearTimeout(timer);
+    }, [fetchPublicationStatus]);
 
     const displayScores = useMemo(
         () => selectedRound ? allScores.filter((score) => score.stage_name === selectedRound) : [],
@@ -170,8 +223,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                 alert(`更新失败: ${await res.text()}`);
             } else {
                 alert('数据更新成功！排行榜和统计数据已刷新。');
-                // Refresh scores
-                await fetchAllScores();
+                await Promise.all([fetchAllScores(), fetchPublicationStatus()]);
             }
         } catch (e) {
             alert("网络请求失败");
@@ -206,7 +258,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
             });
 
             if (res.ok) {
-                await fetchAllScores(); // Re-fetch all to get the new one
+                await Promise.all([fetchAllScores(), fetchPublicationStatus()]);
                 onClose();
                 setNewScore({ mod: [], acc: 100, score: 0, miss: 0, max_combo: 0 }); // Reset
             } else {
@@ -230,13 +282,51 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
             });
 
             if (res.ok) {
-                await fetchAllScores(); // Re-fetch to sync
+                await Promise.all([fetchAllScores(), fetchPublicationStatus()]);
             } else {
                 alert("删除失败: " + await res.text());
             }
         } catch (e) {
             alert("删除失败");
         }
+    };
+
+    const handlePublicationChange = async (isPublished: boolean) => {
+        if (!selectedRound || !publicationStatus?.is_qualifier) return;
+        if (isPublished && !confirm("确定要向所有人公开该轮资格赛统计吗？")) return;
+
+        setIsChangingPublication(true);
+        try {
+            const response = await fetch(`${siteConfig.backend_url}/api/statistics-publication`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    tournament_name: tournamentName,
+                    stage_name: selectedRound,
+                    is_published: isPublished,
+                }),
+                credentials: "include",
+            });
+            if (!response.ok) {
+                alert(`操作失败: ${await response.text()}`);
+                return;
+            }
+            setPublicationStatus(await response.json());
+        } catch {
+            alert("操作失败: 网络错误");
+        } finally {
+            setIsChangingPublication(false);
+        }
+    };
+
+    const openStatisticsPreview = () => {
+        if (!selectedRound) return;
+        const query = new URLSearchParams({preview: "1", stage: selectedRound});
+        window.open(
+            `/tournaments/${encodeURIComponent(tournamentName)}/stats?${query}`,
+            "_blank",
+            "noopener,noreferrer",
+        );
     };
 
     if (isLoading) {
@@ -304,10 +394,49 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                         <li>请确保 <span className="font-mono text-primary">赛程管理</span> 中该轮次的所有
                                             Match Link (MP 链接) 已填写正确。
                                         </li>
-                                        <li>系统将自动抓取 MP 房间内的所有成绩。</li>
+                                        <li>保存赛程草稿时会自动抓取 MP 成绩，也可用下方按钮手动重试。</li>
+                                        <li>资格赛成绩更新后会自动转为未发布，不会泄露到公开页面。</li>
                                     </ul>
                                 </div>
                             </div>
+
+                            {isPublicationLoading ? (
+                                <div className="flex items-center gap-2 text-sm text-default-500">
+                                    <Spinner size="sm"/> 正在读取发布状态...
+                                </div>
+                            ) : publicationStatus?.is_qualifier ? (
+                                <div className="flex flex-col gap-4 rounded-lg border border-warning/20 bg-warning/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex min-w-0 flex-col gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="font-bold text-foreground">资格赛统计</span>
+                                            <Chip
+                                                size="sm"
+                                                color={publicationStatus.is_published ? "success" : "warning"}
+                                                variant="soft"
+                                            >
+                                                {publicationStatus.is_published ? "已发布" : "未发布"}
+                                            </Chip>
+                                        </div>
+                                        <p className="text-sm text-default-500">
+                                            预览包含未发布结果；同步、新增或删除成绩后需要重新发布。
+                                        </p>
+                                    </div>
+                                    <div className="flex shrink-0 flex-wrap gap-2">
+                                        <Button variant="secondary" onPress={openStatisticsPreview}>
+                                            预览统计结果
+                                        </Button>
+                                        {publicationStatus.can_publish && (
+                                            <Button
+                                                variant={publicationStatus.is_published ? "danger-soft" : "primary"}
+                                                isPending={isChangingPublication}
+                                                onPress={() => handlePublicationChange(!publicationStatus.is_published)}
+                                            >
+                                                {publicationStatus.is_published ? "撤回发布" : "发布统计"}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : null}
 
                             <div className="flex flex-col items-start gap-3 pt-2 sm:flex-row sm:items-center">
                                 <Button
