@@ -27,7 +27,7 @@ import {
 import {siteConfig} from "@/config/site";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {TournamentInfo} from "@/components/homepage";
-import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
 import {
     formatLocalDateTime,
     formatUtcDateTime,
@@ -35,18 +35,14 @@ import {
     toUtcISOString,
     utcDateTimeToLocalInput,
 } from "@/lib/datetime";
-import {getDraftSection, saveDraftSection} from "@/lib/tournament_drafts";
+import {getDraftSection, publishTournamentDraft, saveDraftSection} from "@/lib/tournament_drafts";
+import {DraftAction, DraftSaveActions} from "@/components/draft_save_actions";
+import {ManagementBackLink} from "@/components/management_back_link";
 
 const subscribeToHydration = () => () => undefined;
 const useHasMounted = () => useSyncExternalStore(subscribeToHydration, () => true, () => false);
 
 // --- 图标 ---
-const SaveIcon = () => (
-    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
-    </svg>);
 const PlusIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="12" y1="5" x2="12" y2="19"/>
@@ -79,16 +75,21 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
 
     const [selectedRound, setSelectedRound] = useState<string | undefined>();
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const [pendingAction, setPendingAction] = useState<DraftAction | null>(null);
     const [errMsg, setErrMsg] = useState('');
+    const [canPublish, setCanPublish] = useState(false);
+    const [isApproved, setIsApproved] = useState(false);
     const lastSavedSchedulesRef = useRef<Schedule[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    const managedTournament = await resolveManagedTournament(currentUser.currentUser.uid, tournament_abbr);
+                    const managedTournamentName = managedTournament?.abbreviation ?? tournament_abbr;
                     setTournamentName(managedTournamentName);
+                    setCanPublish(canPublishManagedTournament(managedTournament, currentUser.currentUser.uid));
+                    setIsApproved(managedTournament?.status === "approved");
                     const [roundDraft, scheduleDraft, players, metaDraft] = await Promise.all([
                         getDraftSection<TournamentRoundInfo[]>(managedTournamentName, "rounds"),
                         getDraftSection<Schedule[]>(managedTournamentName, "schedule"),
@@ -124,7 +125,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         ? (tournamentPlayers.groups?.filter(group => group.is_verified) || []) // 团队赛：只显示已审核队伍
         : (tournamentPlayers.players?.filter(p => p.player) || []); // 个人赛 / 单人预选赛：显示选手
 
-    const handleSave = async () => {
+    const handleSave = async (action: DraftAction) => {
         setErrMsg('');
         const currentSchedules = scheduleInfo.filter(s => s.stage_name === selectedRound);
         const isValid = currentSchedules.every(s =>
@@ -136,7 +137,9 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
             return;
         }
 
-        setIsSaving(true);
+        const shouldPublish = action === "publish";
+        let draftSaved = false;
+        setPendingAction(action);
         try {
             const payload = scheduleInfo.map((schedule) => ({
                 ...schedule,
@@ -146,9 +149,11 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
             const matchUrls = getStageMatchUrls(payload, selectedRound);
             const matchUrlsChanged = JSON.stringify(previousMatchUrls) !== JSON.stringify(matchUrls);
             await saveDraftSection(tournamentName, "schedule", payload);
+            draftSaved = true;
             setScheduleInfo(payload);
             lastSavedSchedulesRef.current = payload;
 
+            let syncSummary = "";
             if (selectedRound && matchUrlsChanged && matchUrls.length > 0) {
                 try {
                     const syncResult = await syncStagePlays(
@@ -159,21 +164,27 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     if (syncResult.matches_processed === 0) {
                         throw new Error("未识别到有效的 osu! MP 房间地址");
                     }
-                    alert(
-                        `赛程草稿已保存，已自动同步 ${syncResult.matches_processed} 个 MP 房间的统计。公开页面尚未更新。`,
-                    );
+                    syncSummary = `已自动同步 ${syncResult.matches_processed} 个 MP 房间的统计`;
                 } catch (syncError) {
                     setErrMsg(
                         `赛程草稿已保存，但统计自动同步失败：${syncError instanceof Error ? syncError.message : "网络错误"}`,
                     );
                 }
+            }
+
+            if (shouldPublish) {
+                const result = await publishTournamentDraft(tournamentName, {sections: ["schedule"]});
+                alert(syncSummary ? `${result.message}，${syncSummary}` : result.message);
             } else {
-                alert('赛程草稿已保存，公开页面尚未更新');
+                alert(syncSummary
+                    ? `赛程草稿已保存，${syncSummary}。公开页面尚未更新。`
+                    : '赛程草稿已保存，公开页面尚未更新');
             }
         } catch (e) {
-            setErrMsg(e instanceof Error ? e.message : "保存失败，网络错误");
+            const message = e instanceof Error ? e.message : "网络错误";
+            setErrMsg(draftSaved ? `赛程草稿已保存，但发布失败：${message}` : `保存失败：${message}`);
         } finally {
-            setIsSaving(false);
+            setPendingAction(null);
         }
     };
 
@@ -218,7 +229,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">
             <div className="flex flex-col gap-2 border-b border-default-200 dark:border-white/5 pb-6">
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
-                    <span>管理控制台</span>
+                    <ManagementBackLink tournament={tournament_abbr}/>
                     <span>/</span>
                     <span>{tournament_abbr}</span>
                 </div>
@@ -230,7 +241,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     {tournamentInfo?.is_group
                         ? isSoloRound ? "当前轮次：单人预选赛（团队赛）" : "当前为团队赛模式"
                         : "当前为个人赛模式"
-                    } - 安排对阵表、时间及相关人员配置。保存后需在管理首页统一发布。
+                    } - 安排对阵表、时间及相关人员配置，可保存为草稿或直接发布。
                 </p>
             </div>
 
@@ -288,11 +299,13 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                 <Card.Content className="flex flex-row items-center justify-between px-6 py-4">
                     <div className="text-danger font-medium text-sm animate-pulse">{errMsg &&
                         <span>⚠️ {errMsg}</span>}</div>
-                    <Button size="lg" variant="primary" className="px-8 font-bold shadow-primary/20" isPending={isSaving}
-                            onPress={handleSave}>
-                        {!isSaving && <SaveIcon/>}
-                        <span>{isSaving ? "正在保存..." : "保存草稿"}</span>
-                    </Button>
+                    <DraftSaveActions
+                        pendingAction={pendingAction}
+                        canPublish={canPublish}
+                        publishLabel={isApproved ? "保存并发布" : "保存并提交审核"}
+                        onSave={() => handleSave("save")}
+                        onPublish={() => handleSave("publish")}
+                    />
                 </Card.Content>
             </Card>
         </div>

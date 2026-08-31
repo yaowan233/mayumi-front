@@ -23,6 +23,7 @@ import {RegistrationInfo} from "@/components/homepage";
 import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {ManagementBackLink} from "@/components/management_back_link";
 
 // --- 配置 ---
 const ROLES = [
@@ -153,7 +154,8 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             {/* Header: 修复文字颜色和边框 */}
             <div
                 className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-default-200 dark:border-white/5 pb-6">
-                <div>
+                <div className="flex flex-col gap-2">
+                    <ManagementBackLink tournament={tournament_abbr}/>
                     <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <UserIcon/> 成员管理
                     </h1>

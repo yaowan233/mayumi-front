@@ -4,16 +4,10 @@ import CurrentUserContext from "@/app/user_context";
 import {Button, Card, FieldError, Input, Label, Spinner, Switch, TextField} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {TournamentInfo} from "@/components/homepage";
-import {resolveManagedTournamentName} from "@/lib/tournament_management";
-import {getDraftSection, saveDraftSection} from "@/lib/tournament_drafts";
-
-const SaveIcon = () => (
-    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-         strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
-    </svg>);
+import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
+import {getDraftSection, publishTournamentDraft, saveDraftSection} from "@/lib/tournament_drafts";
+import {DraftAction, DraftSaveActions} from "@/components/draft_save_actions";
+import {ManagementBackLink} from "@/components/management_back_link";
 const PlusIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
          strokeLinecap="round" strokeLinejoin="round">
@@ -47,8 +41,10 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
     const [formData, setFormData] = useState<TournamentRoundInfo[]>([]);
     const [tournamentInfo, setTournamentInfo] = useState<TournamentInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const [pendingAction, setPendingAction] = useState<DraftAction | null>(null);
     const [errMsg, setErrMsg] = useState('');
+    const [canPublish, setCanPublish] = useState(false);
+    const [isApproved, setIsApproved] = useState(false);
 
     const createInitialFormData = useCallback((): TournamentRoundInfo => ({
         tournament_name: tournamentName,
@@ -62,8 +58,11 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    const managedTournament = await resolveManagedTournament(currentUser.currentUser.uid, tournament_abbr);
+                    const managedTournamentName = managedTournament?.abbreviation ?? tournament_abbr;
                     setTournamentName(managedTournamentName);
+                    setCanPublish(canPublishManagedTournament(managedTournament, currentUser.currentUser.uid));
+                    setIsApproved(managedTournament?.status === "approved");
                     const [roundDraft, metaDraft] = await Promise.all([
                         getDraftSection<TournamentRoundInfo[]>(managedTournamentName, "rounds"),
                         getDraftSection<TournamentInfo>(managedTournamentName, "meta"),
@@ -87,21 +86,31 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
         fetchData();
     }, [currentUser, tournament_abbr]);
 
-    const handleUpdateTournament = async () => {
+    const handleUpdateTournament = async (action: DraftAction) => {
         setErrMsg('');
         if (!formData.every(round => round.stage_name && round.start_time)) {
             setErrMsg('请填写所有轮次的名称和开始时间');
             return;
         }
 
-        setIsSaving(true);
+        const shouldPublish = action === "publish";
+        let draftSaved = false;
+        setPendingAction(action);
         try {
             await saveDraftSection(tournamentName, "rounds", formData);
-            alert('轮次草稿已保存，公开页面尚未更新');
+            draftSaved = true;
+            if (!shouldPublish) {
+                alert('轮次草稿已保存，公开页面尚未更新');
+                return;
+            }
+
+            const result = await publishTournamentDraft(tournamentName, {sections: ["rounds"]});
+            alert(result.message);
         } catch (e) {
-            setErrMsg(e instanceof Error ? e.message : "保存失败，网络错误");
+            const message = e instanceof Error ? e.message : "网络错误";
+            setErrMsg(draftSaved ? `轮次草稿已保存，但发布失败：${message}` : `保存失败：${message}`);
         } finally {
-            setIsSaving(false);
+            setPendingAction(null);
         }
     }
 
@@ -132,7 +141,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
             {/* Header: 修复边框颜色 */}
             <div className="flex flex-col gap-2 border-b border-default-200 dark:border-white/5 pb-6">
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
-                    <span>管理控制台</span>
+                    <ManagementBackLink tournament={tournament_abbr}/>
                     <span>/</span>
                     <span>{tournament_abbr}</span>
                 </div>
@@ -141,7 +150,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                     <RoundIcon/>
                     轮次管理
                 </h1>
-                <p className="text-default-500">配置比赛的各个阶段（如：预选赛、小组赛、淘汰赛）。保存后需在管理首页统一发布。</p>
+                <p className="text-default-500">配置比赛的各个阶段（如：预选赛、小组赛、淘汰赛），可保存为草稿或直接发布。</p>
             </div>
 
             {/* Form List */}
@@ -179,20 +188,13 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
                             {errMsg && <span>⚠️ {errMsg}</span>}
                         </div>
                     </div>
-                    <Button
-                        size="lg"
-                        variant="primary"
-                        className="font-bold px-8 shadow-primary/20"
-                        isPending={isSaving}
-                        onPress={handleUpdateTournament}
-                    >
-                        {({isPending}) => (
-                            <>
-                                {!isPending && <SaveIcon/>}
-                                {isPending ? "正在保存..." : "保存草稿"}
-                            </>
-                        )}
-                    </Button>
+                    <DraftSaveActions
+                        pendingAction={pendingAction}
+                        canPublish={canPublish}
+                        publishLabel={isApproved ? "保存并发布" : "保存并提交审核"}
+                        onSave={() => handleUpdateTournament("save")}
+                        onPublish={() => handleUpdateTournament("publish")}
+                    />
                 </Card.Content>
             </Card>
         </div>

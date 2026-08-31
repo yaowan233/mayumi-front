@@ -7,10 +7,12 @@ import CurrentUserContext from "@/app/user_context";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {siteConfig} from "@/config/site";
 import {TournamentInfo} from "@/components/homepage";
-import {resolveManagedTournamentName} from "@/lib/tournament_management";
-import {getDraftSection, getMappoolDraftPreview, saveDraftSection} from "@/lib/tournament_drafts";
+import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
+import {getDraftSection, getMappoolDraftPreview, publishTournamentDraft, saveDraftSection} from "@/lib/tournament_drafts";
 import {MappoolsComponents, Stage} from "@/components/mappools";
 import {useRouter} from "next/navigation";
+import {DraftAction, DraftSaveActions} from "@/components/draft_save_actions";
+import {ManagementBackLink} from "@/components/management_back_link";
 
 const MapIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -24,14 +26,6 @@ const PlusIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <line x1="12" y1="5" x2="12" y2="19"/>
         <line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-);
-
-const SaveIcon = () => (
-    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
     </svg>
 );
 
@@ -50,10 +44,12 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
     const [tournamentName, setTournamentName] = useState(tournament_abbr);
 
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const [pendingAction, setPendingAction] = useState<DraftAction | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
     const [isPreviewing, setIsPreviewing] = useState(false);
     const [errMsg, setErrMsg] = useState("");
+    const [canPublish, setCanPublish] = useState(false);
+    const [isApproved, setIsApproved] = useState(false);
 
     const [roundInfo, setRoundInfo] = useState<TournamentRoundInfo[]>([]);
     const [tournamentMaps, setTournamentMaps] = useState<TournamentMap[]>([]);
@@ -65,8 +61,11 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         const fetchData = async () => {
             if (currentUser?.currentUser?.uid) {
                 try {
-                    const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
+                    const managedTournament = await resolveManagedTournament(currentUser.currentUser.uid, tournament_abbr);
+                    const managedTournamentName = managedTournament?.abbreviation ?? tournament_abbr;
                     setTournamentName(managedTournamentName);
+                    setCanPublish(canPublishManagedTournament(managedTournament, currentUser.currentUser.uid));
+                    setIsApproved(managedTournament?.status === "approved");
                     const [roundDraft, mappoolDraft, metaDraft] = await Promise.all([
                         getDraftSection<TournamentRoundInfo[]>(managedTournamentName, "rounds"),
                         getDraftSection<TournamentMap[]>(managedTournamentName, "mappool"),
@@ -88,7 +87,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         fetchData();
     }, [currentUser, tournament_abbr]);
 
-    const handleUpdateTournament = async () => {
+    const handleUpdateTournament = async (action: DraftAction) => {
         setErrMsg("");
         const currentMaps = tournamentMaps.filter((m) => m.stage_name === selectedRound);
         if (!currentMaps.every((m) => m.map_id && m.mod && m.number)) {
@@ -100,15 +99,25 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
             return;
         }
 
-        setIsSaving(true);
+        const shouldPublish = action === "publish";
+        let draftSaved = false;
+        setPendingAction(action);
         try {
             await saveDraftSection(tournamentName, "mappool", tournamentMaps);
+            draftSaved = true;
             setPreviewStages(null);
-            alert("图池草稿已保存，公开页面尚未更新");
+            if (!shouldPublish) {
+                alert("图池草稿已保存，公开页面尚未更新");
+                return;
+            }
+
+            const result = await publishTournamentDraft(tournamentName, {sections: ["mappool"]});
+            alert(result.message);
         } catch (e) {
-            setErrMsg(e instanceof Error ? e.message : "保存失败，网络错误");
+            const message = e instanceof Error ? e.message : "网络错误";
+            setErrMsg(draftSaved ? `图池草稿已保存，但发布失败：${message}` : `保存失败：${message}`);
         } finally {
-            setIsSaving(false);
+            setPendingAction(null);
         }
     };
 
@@ -192,7 +201,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-32 py-8">
             <div className="flex flex-col gap-2 border-b border-default-200 pb-6 dark:border-white/5">
                 <div className="mb-1 flex items-center gap-3 text-sm text-default-500">
-                    <span>管理控制台</span>
+                    <ManagementBackLink tournament={tournament_abbr}/>
                     <span>/</span>
                     <span>{tournament_abbr}</span>
                 </div>
@@ -287,14 +296,13 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                                 </>
                             )}
                         </Button>
-                        <Button size="lg" variant="primary" className="px-8 font-bold shadow-primary/20" isPending={isSaving} onPress={handleUpdateTournament}>
-                            {({isPending}) => (
-                                <>
-                                    {!isPending && <SaveIcon/>}
-                                    {isPending ? "正在保存..." : "保存草稿"}
-                                </>
-                            )}
-                        </Button>
+                        <DraftSaveActions
+                            pendingAction={pendingAction}
+                            canPublish={canPublish}
+                            publishLabel={isApproved ? "保存并发布" : "保存并提交审核"}
+                            onSave={() => handleUpdateTournament("save")}
+                            onPublish={() => handleUpdateTournament("publish")}
+                        />
                     </div>
                 </Card.Content>
             </Card>

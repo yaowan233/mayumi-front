@@ -7,6 +7,7 @@ import {Button, Card, Chip, Spinner, Tabs} from "@heroui/react";
 import { siteConfig } from "@/config/site";
 import Link from "next/link";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
+import {ManagementBackLink} from "@/components/management_back_link";
 
 // --- 图标 ---
 const DataIcon = () => (
@@ -340,7 +341,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
             {/* Header */}
             <div className="flex flex-col gap-2 border-b border-default-200 dark:border-white/5 pb-6">
                 <div className="flex items-center gap-3 text-default-500 text-sm mb-1">
-                    <span>管理控制台</span>
+                    <ManagementBackLink tournament={tournament_abbr}/>
                     <span>/</span>
                     <span>{tournament_abbr}</span>
                 </div>

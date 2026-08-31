@@ -17,6 +17,9 @@ export interface ManagedTournament {
 
 export const isAdminUser = (uid?: number) => uid !== undefined && ADMIN_UIDS.includes(uid);
 
+export const canPublishManagedTournament = (tournament: ManagedTournament | undefined, uid?: number) =>
+    isAdminUser(uid) || Boolean(tournament?.roles.includes("主办"));
+
 export async function getTournamentManagementInfo(uid: number): Promise<ManagedTournament[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-management-info?uid=${uid}`, {
         next: {revalidate: 10},
@@ -41,10 +44,14 @@ export async function getAdminTournamentManagementInfo(): Promise<ManagedTournam
     }));
 }
 
-export async function resolveManagedTournamentName(uid: number, tournamentAbbr: string): Promise<string> {
+export async function resolveManagedTournament(uid: number, tournamentAbbr: string): Promise<ManagedTournament | undefined> {
     const data = isAdminUser(uid)
         ? await getAdminTournamentManagementInfo()
         : await getTournamentManagementInfo(uid);
 
-    return data.find((item) => item.abbreviation === tournamentAbbr)?.abbreviation ?? tournamentAbbr;
+    return data.find((item) => item.abbreviation === tournamentAbbr);
+}
+
+export async function resolveManagedTournamentName(uid: number, tournamentAbbr: string): Promise<string> {
+    return (await resolveManagedTournament(uid, tournamentAbbr))?.abbreviation ?? tournamentAbbr;
 }
