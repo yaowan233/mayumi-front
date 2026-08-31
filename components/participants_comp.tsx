@@ -56,22 +56,22 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
     }, [players]);
 
     return (
-        <div className="w-full max-w-7xl mx-auto flex flex-col gap-6">
+        <div className="flex w-full flex-col gap-6">
             <Tabs
                 className="w-full"
                 defaultSelectedKey={teams.length>0 ? "teams" : "solo"}
             >
-                <Tabs.ListContainer className="w-full">
-                    <Tabs.List aria-label="Participants Options" className="w-full relative !rounded-none !bg-transparent p-0 border-b border-divider overflow-x-auto scrollbar-hide flex justify-start md:justify-center">
+                <Tabs.ListContainer className="w-full !rounded-none border-b border-zinc-200 !bg-transparent dark:border-white/[0.08]">
+                    <Tabs.List aria-label="Participants Options" className="mx-auto !w-max !min-w-full max-w-5xl justify-start gap-6 !rounded-none !bg-transparent !px-6 !py-0 md:justify-center md:!px-0">
                         {teams.length > 0 && (
-                            <Tabs.Tab id="teams" className="max-w-fit h-12 !rounded-none !bg-transparent px-6 text-lg font-bold text-default-500 transition-colors hover:text-foreground data-[selected=true]:text-primary">
+                            <Tabs.Tab id="teams" className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
                                 {`队伍 (${teams.length})`}
-                                <Tabs.Indicator className="!top-auto !bottom-0 !h-0.5 !rounded-none !bg-primary" />
+                                <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
                             </Tabs.Tab>
                         )}
-                        <Tabs.Tab id="solo" className="max-w-fit h-12 !rounded-none !bg-transparent px-6 text-lg font-bold text-default-500 transition-colors hover:text-foreground data-[selected=true]:text-primary">
+                        <Tabs.Tab id="solo" className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
                             报名人员
-                            <Tabs.Indicator className="!top-auto !bottom-0 !h-0.5 !rounded-none !bg-primary" />
+                            <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
                         </Tabs.Tab>
                     </Tabs.List>
                 </Tabs.ListContainer>

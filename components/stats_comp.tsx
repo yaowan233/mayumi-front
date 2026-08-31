@@ -81,15 +81,15 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players}: {
                     selectedKey={currentStageName}
                     onSelectionChange={(key) => router.replace(`?stage=${encodeURIComponent(String(key))}`)}
                 >
-                    <Tabs.ListContainer className="w-full">
+                    <Tabs.ListContainer className="w-full !rounded-none border-b border-zinc-200 !bg-transparent dark:border-white/[0.08]">
                         <Tabs.List
                             aria-label="Round Selection"
-                            className="w-full relative !rounded-none !bg-transparent p-0 border-b border-divider overflow-x-auto scrollbar-hide flex justify-start md:justify-center"
+                            className="mx-auto !w-max !min-w-full max-w-5xl justify-start gap-6 !rounded-none !bg-transparent !px-6 !py-0 md:justify-center md:!px-0"
                         >
                             {roundInfo.map((round) => (
-                                <Tabs.Tab key={round.stage_name} id={round.stage_name} className="max-w-fit h-12 !rounded-none !bg-transparent px-6 text-lg font-bold text-default-500 transition-colors hover:text-foreground data-[selected=true]:text-primary">
+                                <Tabs.Tab key={round.stage_name} id={round.stage_name} className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
                                     {round.stage_name}
-                                    <Tabs.Indicator className="!top-auto !bottom-0 !h-0.5 !rounded-none !bg-primary" />
+                                    <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
                                 </Tabs.Tab>
                             ))}
                         </Tabs.List>
