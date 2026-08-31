@@ -334,7 +334,7 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                 {/* 添加成员 */}
                 <div>
                     <span className="text-xs font-bold text-default-500 mb-2 block">添加成员 (从已报名选手列表)</span>
-                                        <Autocomplete
+                    <Autocomplete
                         aria-label="搜索并选择选手"
                         placeholder="搜索并选择选手..."
                         variant="secondary"
@@ -355,7 +355,7 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                         </Autocomplete.Trigger>
                         <Autocomplete.Popover>
                             <Autocomplete.Filter filter={contains} inputValue={playerSearch} onInputChange={setPlayerSearch}>
-                                <SearchField autoFocus name={`team-player-search-${index}`} variant="secondary" value={playerSearch} onChange={setPlayerSearch}>
+                                <SearchField autoFocus name={`team-player-search-${index}`} variant="secondary">
                                     <SearchField.Group>
                                         <SearchField.SearchIcon />
                                         <SearchField.Input placeholder="搜索选手..." />
@@ -364,7 +364,7 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
                                 </SearchField>
                                 <ListBox renderEmptyState={() => <div className="px-3 py-2 text-sm text-default-400">没有匹配选手</div>}>
                                     {filteredPlayers.map((player: any) => (
-                                        <ListBox.Item key={player.uid} id={player.uid.toString()} textValue={player.name}>
+                                        <ListBox.Item key={player.uid} id={player.uid.toString()} textValue={`${player.name} ${player.uid}`}>
                                             <Avatar size="sm">
                                                 <Avatar.Image src={`https://a.ppy.sh/${player.uid}`} alt={player.name}/>
                                                 <Avatar.Fallback>{player.name?.[0] ?? "?"}</Avatar.Fallback>

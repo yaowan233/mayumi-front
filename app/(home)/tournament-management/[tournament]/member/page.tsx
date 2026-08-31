@@ -3,16 +3,16 @@
 import React, {type Key, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {
-    Autocomplete,
     Avatar,
     Button,
     Card,
+    ComboBox,
     Description,
     EmptyState,
+    Input,
     Label,
     ListBox,
     Modal,
-    SearchField,
     Spinner,
     Table,
     Tabs,
@@ -432,7 +432,7 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
     const onInputChange = (value: string) => {
         setFieldState((prev: any) => ({
             inputValue: value,
-            selectedKey: value === "" ? null : prev.selectedKey,
+            selectedKey: value === prev.selectedKey ? prev.selectedKey : null,
         }));
     };
 
@@ -507,70 +507,43 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
     return (
         <div
             className="flex gap-2 w-full md:w-auto items-center bg-default-100 dark:bg-zinc-900/50 p-1.5 rounded-lg border border-default-200 dark:border-white/5">
-            <Autocomplete
+            <ComboBox
                 aria-label="成员搜索框"
+                allowsCustomValue
+                allowsEmptyCollection
                 className="w-full md:w-72"
-                placeholder="输入成员 UID 或用户名"
+                defaultFilter={() => true}
+                inputValue={fieldState.inputValue}
+                onInputChange={onInputChange}
+                selectedKey={fieldState.selectedKey}
+                onSelectionChange={onSelectionChange}
                 variant="secondary"
-                value={fieldState.selectedKey}
-                onChange={onSelectionChange}
-                onClear={() => setFieldState({selectedKey: null, inputValue: ""})}
-                selectionMode="single"
             >
                 <Label>添加成员</Label>
-                <Autocomplete.Trigger>
-                    <Autocomplete.Value>
-                        {({defaultChildren, isPlaceholder, state}) => {
-                            if (isPlaceholder || state.selectedItems.length === 0) {
-                                return defaultChildren;
-                            }
-
-                            const selectedMember = members.find((member: Player) => member.uid.toString() === state.selectedItems[0]?.key);
-                            if (!selectedMember) {
-                                return defaultChildren;
-                            }
-
-                            return (
-                                <div className="flex items-center gap-2">
-                                    <Avatar className="size-4" size="sm">
-                                        <Avatar.Image src={`https://a.ppy.sh/${selectedMember.uid}`}/>
-                                        <Avatar.Fallback>{selectedMember.name?.[0] ?? "?"}</Avatar.Fallback>
-                                    </Avatar>
-                                    <span>{selectedMember.name}</span>
+                <ComboBox.InputGroup>
+                    <Input name="member-search" placeholder="输入成员 UID 或用户名" />
+                    <ComboBox.Trigger />
+                </ComboBox.InputGroup>
+                <ComboBox.Popover>
+                    <ListBox renderEmptyState={() => (
+                        <EmptyState>没有匹配成员，可直接点击“添加”查询该 UID</EmptyState>
+                    )}>
+                        {filteredMembers.map((member: Player) => (
+                            <ListBox.Item key={member.uid} id={member.uid.toString()} textValue={member.uid.toString()}>
+                                <Avatar size="sm">
+                                    <Avatar.Image src={`https://a.ppy.sh/${member.uid}`}/>
+                                    <Avatar.Fallback>{member.name?.[0] ?? "?"}</Avatar.Fallback>
+                                </Avatar>
+                                <div className="flex flex-col">
+                                    <Label>{member.name}</Label>
+                                    <Description>#{member.uid}</Description>
                                 </div>
-                            );
-                        }}
-                    </Autocomplete.Value>
-                    <Autocomplete.ClearButton />
-                    <Autocomplete.Indicator />
-                </Autocomplete.Trigger>
-                <Autocomplete.Popover>
-                    <Autocomplete.Filter filter={contains}>
-                        <SearchField autoFocus name="member-search" variant="secondary" value={fieldState.inputValue} onChange={onInputChange}>
-                            <SearchField.Group>
-                                <SearchField.SearchIcon />
-                                <SearchField.Input placeholder="搜索成员 UID 或用户名..." />
-                                <SearchField.ClearButton />
-                            </SearchField.Group>
-                        </SearchField>
-                        <ListBox renderEmptyState={() => <EmptyState>没有匹配成员</EmptyState>}>
-                            {filteredMembers.map((member: Player) => (
-                                <ListBox.Item key={member.uid} id={member.uid.toString()} textValue={`${member.uid} ${member.name}`}>
-                                    <Avatar size="sm">
-                                        <Avatar.Image src={`https://a.ppy.sh/${member.uid}`}/>
-                                        <Avatar.Fallback>{member.name?.[0] ?? "?"}</Avatar.Fallback>
-                                    </Avatar>
-                                    <div className="flex flex-col">
-                                        <Label>{member.name}</Label>
-                                        <Description>#{member.uid}</Description>
-                                    </div>
-                                    <ListBox.ItemIndicator />
-                                </ListBox.Item>
-                            ))}
-                        </ListBox>
-                    </Autocomplete.Filter>
-                </Autocomplete.Popover>
-            </Autocomplete>
+                                <ListBox.ItemIndicator />
+                            </ListBox.Item>
+                        ))}
+                    </ListBox>
+                </ComboBox.Popover>
+            </ComboBox>
             <Button
                 size="sm"
                 variant="primary"

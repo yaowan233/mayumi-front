@@ -578,9 +578,8 @@ const TeamSelect = ({items, selectedKey, onSelectionChange, label}: {
                 <Autocomplete.Indicator/>
             </Autocomplete.Trigger>
             <Autocomplete.Popover>
-                <Autocomplete.Filter filter={contains}>
-                    <SearchField autoFocus name="team-search" variant="secondary" value={inputValue}
-                                 onChange={onInputChange}>
+                <Autocomplete.Filter filter={contains} inputValue={inputValue} onInputChange={onInputChange}>
+                    <SearchField autoFocus name="team-search" variant="secondary">
                         <SearchField.Group>
                             <SearchField.SearchIcon/>
                             <SearchField.Input placeholder={`搜索${label}...`}/>
@@ -687,9 +686,8 @@ const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添
                     <Autocomplete.Indicator className="shrink-0 text-lg text-default-500"/>
                 </Autocomplete.Trigger>
                 <Autocomplete.Popover>
-                    <Autocomplete.Filter filter={contains}>
-                        <SearchField autoFocus name="multi-select-search" variant="secondary" value={inputVal}
-                                     onChange={setInputVal}>
+                    <Autocomplete.Filter filter={contains} inputValue={inputVal} onInputChange={setInputVal}>
+                        <SearchField autoFocus name="multi-select-search" variant="secondary">
                             <SearchField.Group>
                                 <SearchField.SearchIcon/>
                                 <SearchField.Input placeholder={placeholder}/>
