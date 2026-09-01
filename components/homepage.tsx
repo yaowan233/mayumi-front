@@ -539,7 +539,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         </h1>
 
                         {tournament_info.description && (
-                            <p className="text-sm text-zinc-500 leading-relaxed line-clamp-2 dark:text-zinc-400">
+                            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">
                                 {tournament_info.description}
                             </p>
                         )}

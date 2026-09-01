@@ -77,7 +77,7 @@ const FeaturedTournament = ({ tournament }: { tournament: Tournament }) => {
                         <h3 className="line-clamp-2 text-2xl font-black leading-tight tracking-tight text-zinc-900 transition-colors group-hover:text-primary dark:text-white">
                             {tournament.name}
                         </h3>
-                        <p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                        <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                             {tournament.description || "暂无详细描述..."}
                         </p>
                     </div>

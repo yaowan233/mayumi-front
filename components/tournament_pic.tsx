@@ -80,54 +80,59 @@ export const TournamentComponent = ({tournament, priority = false}: { tournament
     return (
         <NextLink
             href={tournamentHref}
-            className="group relative block aspect-video w-full overflow-hidden rounded-xl border border-transparent bg-zinc-100 shadow-sm shadow-zinc-200/70 outline-none transition hover:-translate-y-1 hover:shadow-lg hover:shadow-zinc-300/60 focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/80 dark:shadow-black/25 dark:ring-1 dark:ring-white/10 dark:hover:ring-primary/40"
+            className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-transparent bg-zinc-100 shadow-sm shadow-zinc-200/70 outline-none transition hover:-translate-y-1 hover:shadow-lg hover:shadow-zinc-300/60 focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-zinc-900/80 dark:shadow-black/25 dark:ring-1 dark:ring-white/10 dark:hover:ring-primary/40"
         >
-            {tournament.status && tournament.status !== "approved" && (
-                <span className="absolute left-3 top-3 z-30 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black uppercase text-amber-950 shadow-lg shadow-amber-400/30">
-                    {tournament.status === "pending" ? "审核中" : "已驳回"}
+            <div className="relative aspect-video w-full shrink-0 overflow-hidden">
+                {tournament.status && tournament.status !== "approved" && (
+                    <span className="absolute left-3 top-3 z-30 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-black uppercase text-amber-950 shadow-lg shadow-amber-400/30">
+                        {tournament.status === "pending" ? "审核中" : "已驳回"}
+                    </span>
+                )}
+                <span
+                    className={`absolute right-3 top-3 z-30 inline-flex items-center justify-center rounded-full border border-white/15 px-2.5 py-1 text-center text-[11px] font-medium uppercase leading-none tracking-wide shadow-md backdrop-blur-sm ${modeClassName(tournament.mode || "")}`}
+                >
+                    {modeLabel(tournament.mode || "")}
                 </span>
-            )}
-            <span
-                className={`absolute right-3 top-3 z-30 inline-flex items-center justify-center rounded-full border border-white/15 px-2.5 py-1 text-center text-[11px] font-medium uppercase leading-none tracking-wide shadow-md backdrop-blur-sm ${modeClassName(tournament.mode || "")}`}
-            >
-                {modeLabel(tournament.mode || "")}
-            </span>
 
-            {hasImage ? (
-                <>
-                    <div className="absolute inset-0 z-0">
-                        <NextImage
-                            className="object-cover opacity-50 blur-2xl saturate-200"
-                            src={tournament.pic_url}
-                            alt=""
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        />
+                {hasImage ? (
+                    <>
+                        <div className="absolute inset-0 z-0">
+                            <NextImage
+                                className="object-cover opacity-50 blur-2xl saturate-200"
+                                src={tournament.pic_url}
+                                alt=""
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            />
+                        </div>
+                        <div className="absolute inset-0 z-10">
+                            <NextImage
+                                className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-[1.06]"
+                                src={tournament.pic_url}
+                                alt={tournament.name}
+                                fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                priority={priority}
+                            />
+                        </div>
+                    </>
+                ) : (
+                    <div className="absolute inset-0 z-10 transition-transform duration-500 group-hover:scale-[1.06]">
+                        <TournamentFallback name={tournament.name} />
                     </div>
-                    <div className="absolute inset-0 z-10">
-                        <NextImage
-                            className="object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-[1.06]"
-                            src={tournament.pic_url}
-                            alt={tournament.name}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            priority={priority}
-                        />
-                    </div>
-                </>
-            ) : (
-                <div className="absolute inset-0 z-10 transition-transform duration-500 group-hover:scale-[1.06]">
-                    <TournamentFallback name={tournament.name} />
+                )}
+
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-1/2 bg-gradient-to-t from-black/95 via-black/55 to-transparent"/>
+
+                <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-3">
+                    <h4 className="line-clamp-1 text-lg font-bold leading-tight text-white drop-shadow-md transition-colors group-hover:text-primary">
+                        {tournament.name}
+                    </h4>
                 </div>
-            )}
+            </div>
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-2/3 bg-gradient-to-t from-black/95 via-black/55 to-transparent"/>
-
-            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-start gap-1 px-4 pb-3">
-                <h4 className="line-clamp-1 text-lg font-bold leading-tight text-white drop-shadow-md transition-colors group-hover:text-primary">
-                    {tournament.name}
-                </h4>
-                <p className="line-clamp-2 text-xs font-normal leading-relaxed text-zinc-300">
+            <div className="flex flex-1 px-4 py-3">
+                <p className="whitespace-pre-wrap break-words text-sm font-normal leading-relaxed text-zinc-600 dark:text-zinc-300">
                     {tournament.description || "暂无详细描述..."}
                 </p>
             </div>
