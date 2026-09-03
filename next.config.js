@@ -8,7 +8,9 @@ const backendOrigin = (() => {
     }
 })();
 
-const connectSources = ["'self'", backendOrigin];
+// The API configuration page validates user-provided HTTPS model endpoints
+// directly in the browser so the Mayumi relay never receives the plaintext key.
+const connectSources = ["'self'", backendOrigin, "https:"];
 const scriptSources = ["'self'", "'unsafe-inline'"];
 if (process.env.NODE_ENV !== "production") {
     connectSources.push("http://localhost:*", "ws://localhost:*", "http://127.0.0.1:*", "ws://127.0.0.1:*");

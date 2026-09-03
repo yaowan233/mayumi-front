@@ -25,6 +25,10 @@ import {
     GroupModelApiFormat,
     GroupModelPayload,
 } from "@/lib/group_model_relay_crypto";
+import {
+    GroupModelApiConnectionError,
+    testGroupModelApiConnection,
+} from "@/lib/group_model_api_validation";
 
 declare global {
     interface Window {
@@ -48,7 +52,8 @@ interface SubmitResult {
     expires_at: string;
 }
 
-type PageState = "loading" | "ready" | "submitting" | "success" | "error";
+type PageState = "loading" | "ready" | "testing" | "submitting" | "success" | "error";
+type ConnectionTestState = "idle" | "testing" | "passed" | "failed" | "browser_blocked" | "skipped";
 
 const API_FORMATS: ReadonlyArray<{
     key: GroupModelApiFormat;
@@ -195,6 +200,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
     const [showApiKey, setShowApiKey] = useState(false);
     const [baseUrlError, setBaseUrlError] = useState<string>();
     const [replyProbabilityError, setReplyProbabilityError] = useState<string>();
+    const [connectionTestState, setConnectionTestState] = useState<ConnectionTestState>("idle");
     const [submitted, setSubmitted] = useState<SubmitResult | null>(null);
     const [now, setNow] = useState(() => Date.now());
     const [copied, setCopied] = useState(false);
@@ -205,6 +211,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
     const activeExpiry = submitted?.expires_at ?? ticket?.expires_at;
     const remaining = activeExpiry ? formatRemaining(activeExpiry, now) : "--:--";
     const isPrivate = ticket?.scope === "private";
+    const isBusy = pageState === "testing" || pageState === "submitting";
 
     useEffect(() => {
         const interval = window.setInterval(() => setNow(Date.now()), 1000);
@@ -276,42 +283,43 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
         setFormat(nextFormat.key);
         setBaseUrl(nextFormat.defaultBaseUrl);
         setBaseUrlError(undefined);
+        setConnectionTestState("idle");
+        setErrorMessage("");
     };
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!ticket || pageState === "submitting") return;
-
-        const nextBaseUrlError = validateBaseUrl(baseUrl.trim());
-        const nextReplyProbabilityError = !isPrivate && customReplyProbability
-            ? validateReplyProbability(replyProbability)
-            : undefined;
-        setBaseUrlError(nextBaseUrlError);
-        setReplyProbabilityError(nextReplyProbabilityError);
+    const resetConnectionTest = () => {
+        setConnectionTestState("idle");
         setErrorMessage("");
+    };
 
-        if (nextBaseUrlError || nextReplyProbabilityError || !apiKey.trim() || !model.trim()) return;
+    const buildPayload = (): GroupModelPayload | null => {
+        if (!ticket) return null;
+        return {
+            schema_version: 1,
+            ticket_id: ticket.ticket_id,
+            api_format: format,
+            base_url: baseUrl.trim().replace(/\/$/u, ""),
+            api_key: apiKey.trim(),
+            chat_model: model.trim(),
+            chat_multimodal: multimodal,
+            reply_probability: !isPrivate && customReplyProbability ? Number(replyProbability) : null,
+            allow_global_fallback: false,
+            created_at: new Date().toISOString(),
+        };
+    };
+
+    const submitEncryptedPayload = async (payload: GroupModelPayload) => {
+        if (!ticket) return;
 
         const submitToken = submitTokenRef.current;
         if (!submitToken) {
             setErrorMessage("一次性提交凭据已失效，请让机器人重新生成配置链接。");
+            setPageState("ready");
             return;
         }
 
         setPageState("submitting");
         try {
-            const payload: GroupModelPayload = {
-                schema_version: 1,
-                ticket_id: ticket.ticket_id,
-                api_format: format,
-                base_url: baseUrl.trim().replace(/\/$/u, ""),
-                api_key: apiKey.trim(),
-                chat_model: model.trim(),
-                chat_multimodal: multimodal,
-                reply_probability: !isPrivate && customReplyProbability ? Number(replyProbability) : null,
-                allow_global_fallback: false,
-                created_at: new Date().toISOString(),
-            };
             const encrypted = await encryptGroupModelPayload({
                 payload,
                 instanceId: ticket.instance_id,
@@ -356,6 +364,59 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
             setErrorMessage(error instanceof Error ? error.message : "提交失败，请稍后重试。");
             setPageState("ready");
         }
+    };
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!ticket || isBusy) return;
+
+        const nextBaseUrlError = validateBaseUrl(baseUrl.trim());
+        const nextReplyProbabilityError = !isPrivate && customReplyProbability
+            ? validateReplyProbability(replyProbability)
+            : undefined;
+        setBaseUrlError(nextBaseUrlError);
+        setReplyProbabilityError(nextReplyProbabilityError);
+        setErrorMessage("");
+
+        if (nextBaseUrlError || nextReplyProbabilityError || !apiKey.trim() || !model.trim()) return;
+
+        const payload = buildPayload();
+        if (!payload) return;
+
+        if (connectionTestState !== "passed") {
+            setConnectionTestState("testing");
+            setPageState("testing");
+            try {
+                await testGroupModelApiConnection({
+                    apiFormat: format,
+                    baseUrl: payload.base_url,
+                    apiKey: payload.api_key,
+                    model: payload.chat_model,
+                    multimodal: payload.chat_multimodal,
+                });
+                setConnectionTestState("passed");
+            } catch (error) {
+                const testError = error instanceof GroupModelApiConnectionError
+                    ? error
+                    : new GroupModelApiConnectionError("browser_blocked", "浏览器无法完成模型连接测试，请检查网络后重试");
+                setConnectionTestState(testError.reason === "browser_blocked" ? "browser_blocked" : "failed");
+                setErrorMessage(testError.message);
+                setPageState("ready");
+                return;
+            }
+        }
+
+        await submitEncryptedPayload(payload);
+    };
+
+    const handleSubmitWithoutBrowserTest = async () => {
+        if (connectionTestState !== "browser_blocked" || isBusy || remaining === "0:00") return;
+        const payload = buildPayload();
+        if (!payload) return;
+
+        setConnectionTestState("skipped");
+        setErrorMessage("");
+        await submitEncryptedPayload(payload);
     };
 
     const copyCode = async () => {
@@ -419,8 +480,14 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                             <ShieldIcon className="h-8 w-8"/>
                         </div>
                         <div>
-                            <Card.Title className="text-2xl">配置已安全提交</Card.Title>
-                            <Card.Description className="mt-1">API Key 已在浏览器内加密，服务器只能看到密文</Card.Description>
+                            <Card.Title className="text-2xl">
+                                {connectionTestState === "passed" ? "模型连接已验证，配置已安全提交" : "配置已安全提交"}
+                            </Card.Title>
+                            <Card.Description className="mt-1">
+                                {connectionTestState === "passed"
+                                    ? "网页已实际调用模型；API Key 随后在浏览器内加密，中转服务器只能看到密文"
+                                    : "API Key 已在浏览器内加密，中转服务器只能看到密文"}
+                            </Card.Description>
                         </div>
                     </Card.Header>
                     <Card.Content className="flex flex-col gap-5 p-6 sm:p-8">
@@ -440,7 +507,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                             <ol className="space-y-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                                 <li>1. 返回机器人刚才发来配置链接的 QQ 私聊。</li>
                                 <li>2. 发送：<code className="rounded bg-zinc-200/70 px-1.5 py-0.5 font-mono text-primary dark:bg-white/10">{ticket?.scope === "private" ? "/提交个人API" : "/提交群API"} {submitted.code}</code></li>
-                                <li>3. 等待机器人提示配置成功。</li>
+                                <li>3. Bot 会再做一次最终校验，通过后保存配置。</li>
                             </ol>
                         </div>
 
@@ -553,6 +620,7 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                     onChange={(event) => {
                                         setBaseUrl(event.target.value);
                                         if (baseUrlError) setBaseUrlError(undefined);
+                                        resetConnectionTest();
                                     }}
                                 />
                                 <Description>
@@ -574,7 +642,10 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                         spellCheck={false}
                                         placeholder="sk-..."
                                         value={apiKey}
-                                        onChange={(event) => setApiKey(event.target.value)}
+                                        onChange={(event) => {
+                                            setApiKey(event.target.value);
+                                            resetConnectionTest();
+                                        }}
                                     />
                                     <button
                                         type="button"
@@ -597,7 +668,10 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                     spellCheck={false}
                                     placeholder={format === "anthropic" ? "claude-sonnet-4-6" : format === "vertex" ? "gemini-2.5-flash" : "gpt-4.1-mini"}
                                     value={model}
-                                    onChange={(event) => setModel(event.target.value)}
+                                    onChange={(event) => {
+                                        setModel(event.target.value);
+                                        resetConnectionTest();
+                                    }}
                                 />
                                 <Description>
                                     填写服务商控制台或模型列表中的完整模型 ID，区分字母、数字、横线和 /；不要填写“GPT”“Claude”等简称。
@@ -652,7 +726,14 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                     <div className="font-medium text-zinc-900 dark:text-white">启用图片理解</div>
                                     <div className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">模型文档明确写有视觉、多模态或图片输入能力时才开启；不确定可以先关闭</div>
                                 </div>
-                                <Switch isSelected={multimodal} onChange={setMultimodal} aria-label="启用图片理解">
+                                <Switch
+                                    isSelected={multimodal}
+                                    onChange={(selected) => {
+                                        setMultimodal(selected);
+                                        resetConnectionTest();
+                                    }}
+                                    aria-label="启用图片理解"
+                                >
                                     <Switch.Content>
                                         <Switch.Control><Switch.Thumb/></Switch.Control>
                                     </Switch.Content>
@@ -660,8 +741,18 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                             </div>
 
                             {errorMessage && (
-                                <Alert status="danger" className={`${alertToneClass.danger} border-l-[3px]`}>
-                                    <Alert.Content><Alert.Title>{errorMessage}</Alert.Title></Alert.Content>
+                                <Alert
+                                    status={connectionTestState === "browser_blocked" ? "warning" : "danger"}
+                                    className={`${connectionTestState === "browser_blocked" ? alertToneClass.warning : alertToneClass.danger} border-l-[3px]`}
+                                >
+                                    <Alert.Content>
+                                        <Alert.Title>{errorMessage}</Alert.Title>
+                                        {connectionTestState === "browser_blocked" && (
+                                            <Alert.Description>
+                                                为保持端到端加密，Mayumi 不会把明文 Key 交给自己的服务器代测。确认填写无误时，可使用下方兜底提交，之后由 Bot 最终验证。
+                                            </Alert.Description>
+                                        )}
+                                    </Alert.Content>
                                 </Alert>
                             )}
 
@@ -670,11 +761,34 @@ export function GroupModelConfigForm({ticketId}: {ticketId: string}) {
                                 size="lg"
                                 variant="primary"
                                 className="w-full font-bold"
-                                isDisabled={pageState === "submitting" || remaining === "0:00" || !apiKey.trim() || !model.trim() || !baseUrl.trim() || (!isPrivate && customReplyProbability && !replyProbability.trim())}
+                                isDisabled={isBusy || remaining === "0:00" || !apiKey.trim() || !model.trim() || !baseUrl.trim() || (!isPrivate && customReplyProbability && !replyProbability.trim())}
                             >
-                                {pageState === "submitting" ? <Spinner color="current" size="sm"/> : <ShieldIcon className="h-5 w-5"/>}
-                                {pageState === "submitting" ? "正在本地加密并提交…" : "加密并生成配置码"}
+                                {isBusy ? <Spinner color="current" size="sm"/> : <ShieldIcon className="h-5 w-5"/>}
+                                {pageState === "testing"
+                                    ? "正在测试模型连接…"
+                                    : pageState === "submitting"
+                                        ? "正在本地加密并提交…"
+                                        : connectionTestState === "passed"
+                                            ? "重新加密并生成配置码"
+                                            : "测试连接并生成配置码"}
                             </Button>
+
+                            <p className="-mt-3 text-center text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                                网页会从当前浏览器向模型服务发起一次最小请求；Mayumi 中转服务器不会接触明文 API Key。
+                            </p>
+
+                            {connectionTestState === "browser_blocked" && (
+                                <Button
+                                    type="button"
+                                    size="lg"
+                                    variant="secondary"
+                                    className="w-full font-bold"
+                                    isDisabled={isBusy || remaining === "0:00"}
+                                    onPress={() => void handleSubmitWithoutBrowserTest()}
+                                >
+                                    浏览器无法验证，仍然加密生成配置码
+                                </Button>
+                            )}
                         </form>
                     </Card.Content>
                 </Card>
