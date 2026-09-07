@@ -8,18 +8,10 @@ import { TournamentComponent, Tournament, modeLabel, TournamentFallback } from "
 import { SectionTitle } from "@/app/page";
 import CurrentUserContext from "@/app/user_context";
 import { siteConfig } from "@/config/site";
+import {formatRegistrationStart, splitTournamentsByTime} from "@/lib/tournament_timing";
+import {useCurrentTime} from "@/lib/use_current_time";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(r => r.json());
-
-function splitTournaments(list: Tournament[]) {
-    const sorted = [...list].sort((a, b) =>
-        new Date(a.start_date) < new Date(b.start_date) ? 1 : -1
-    );
-    return {
-        ongoing: sorted.filter(t => new Date(t.end_date) >= new Date()),
-        finished: sorted.filter(t => new Date(t.end_date) < new Date()),
-    };
-}
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString("zh-CN", {
     month: "2-digit",
@@ -97,6 +89,7 @@ const FeaturedTournament = ({ tournament }: { tournament: Tournament }) => {
 };
 
 export default function TournamentListClient({ initialTournaments }: { initialTournaments: Tournament[] }) {
+    const now = useCurrentTime();
     const ctx = useContext(CurrentUserContext);
     const isLoggedIn = !!ctx?.currentUser;
     const [searchQuery, setSearchQuery] = useState("");
@@ -108,7 +101,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
     );
 
     const tournaments = authedTournaments ?? initialTournaments;
-    const { ongoing, finished } = splitTournaments(tournaments);
+    const { upcoming, ongoing, finished } = splitTournamentsByTime(tournaments, now);
     const [featuredOngoing, ...otherOngoing] = ongoing;
     const modes = Array.from(new Set(finished.map((tournament) => tournament.mode).filter(Boolean)))
         .sort((a, b) => modeLabel(a).localeCompare(modeLabel(b)));
@@ -156,6 +149,20 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                     </div>
                 )}
             </section>
+
+            {upcoming.length > 0 && (
+                <section className="mb-16 flex flex-col">
+                    <SectionTitle title="即将开始的比赛" count={upcoming.length}/>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {upcoming.map(tournament => (
+                            <div key={tournament.name} className="flex min-w-0 flex-col gap-3">
+                                <TournamentComponent tournament={tournament}/>
+                                <p className="px-1 text-sm text-default-500">报名尚未开始 · {formatRegistrationStart(tournament.registration_start_time)}（北京时间）</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             <section className="flex flex-col">
                 <div className="mb-7 flex flex-col gap-4 border-b border-zinc-200/80 pb-5 dark:border-white/10">

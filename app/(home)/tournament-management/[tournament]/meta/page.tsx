@@ -9,6 +9,7 @@ import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tourn
 import {getDraftSection, publishTournamentDraft, saveDraftSection} from "@/lib/tournament_drafts";
 import {DraftAction, DraftSaveActions} from "@/components/draft_save_actions";
 import {ManagementBackLink} from "@/components/management_back_link";
+import {registrationTimeError} from "@/lib/tournament_timing";
 const EditIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
          strokeLinecap="round" strokeLinejoin="round">
@@ -92,6 +93,11 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
         }
 
         const shouldPublish = action === "publish";
+        const timeError = registrationTimeError(formData);
+        if (timeError) {
+            setErrMsg(timeError);
+            return;
+        }
         let draftSaved = false;
         setPendingAction(action);
         try {

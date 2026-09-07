@@ -7,6 +7,8 @@ import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/pa
 import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
 import {TournamentFallback} from "@/components/tournament_pic";
 import {ImageUploadField} from "@/components/image_upload_field";
+import {formatRegistrationStart, getRegistrationState} from "@/lib/tournament_timing";
+import {useCurrentTime} from "@/lib/use_current_time";
 import NextImage from "next/image";
 import {
     Alert,
@@ -299,6 +301,9 @@ const RankLimitCard = ({
 
 
 export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
+    const now = useCurrentTime();
+    const registrationState = getRegistrationState(tournament_info, now);
+    const hasRegistrationStarted = registrationState !== "upcoming";
     // ... 状态逻辑保持不变 ...
     const currentUser = useContext(CurrentUserContext);
     const {isOpen, onOpen, onClose, onOpenChange} = useDisclosure();
@@ -360,6 +365,10 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
     }, [onOpenChange, resetRegistrationForm]);
 
     const handleRegistration = async (onClose: () => void) => {
+        if (getRegistrationState(tournament_info) === "closed") {
+            setErrMsg("该比赛报名已结束");
+            return;
+        }
         if (formData.qqNumber === '' || formData.isFirstTimeStaff === undefined || formData.selectedPositions.length === 0) {
             setErrMsg('请填写所有必填字段')
         } else if (isNaN(Number(formData.qqNumber))) {
@@ -395,9 +404,17 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         && (
             (tournament_info.rank_min && userRank < tournament_info.rank_min) ||
             (tournament_info.rank_max && userRank > tournament_info.rank_max) ||
-            (new Date(tournament_info.start_date) < new Date())
+            registrationState !== "open"
         );
-    const hasRegistrationEnded = new Date(tournament_info.start_date) < new Date();
+    const hasRegistrationEnded = registrationState === "closed";
+    const registrationPendingNotice = (
+        <Alert status="default" className={`${alertToneClass.default} rounded-lg border-l-[3px] px-4 py-3`}>
+            <Alert.Content>
+                <Alert.Title>报名尚未开始</Alert.Title>
+                <Alert.Description>{formatRegistrationStart(tournament_info.registration_start_time)}（北京时间）开放报名</Alert.Description>
+            </Alert.Content>
+        </Alert>
+    );
 
     const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
     const isRegistered = members.some((member) => member.player && member.uid === currentUser?.currentUser?.uid);
@@ -649,7 +666,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         <h2 className="font-bold text-lg">选手报名</h2>
 
                         <div className="mt-4 flex flex-col gap-4">
-                            {!hasRegistrationEnded && (
+                            {registrationState === "open" && (
                                 <RegistrationCountdown deadline={tournament_info.start_date} />
                             )}
 
@@ -691,7 +708,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                             )}
 
                             <div className="mt-2">
-                                {hasRegistrationEnded ? (
+                                {!hasRegistrationStarted ? registrationPendingNotice : hasRegistrationEnded ? (
                                     <Alert status="warning" className={`${alertToneClass.warning} rounded-lg border-l-[3px] px-4 py-3`}>
                                         <Alert.Content>
                                             <Alert.Title>该比赛报名已结束</Alert.Title>
@@ -1052,6 +1069,7 @@ export interface TournamentInfo {
     name: string;
     abbreviation: string;
     start_date: string
+    registration_start_time?: string | null;
     end_date: string
     pic_url: string;
     theme_color?: string;

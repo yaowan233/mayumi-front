@@ -8,6 +8,7 @@ export interface Tournament {
     abbreviation: string;
     description: string;
     start_date: string;
+    registration_start_time?: string | null;
     end_date: string;
     pic_url: string;
     mode: string;

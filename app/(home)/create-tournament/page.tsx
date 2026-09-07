@@ -5,6 +5,7 @@ import {TournamentInfoForm} from "@/components/tournament_info_form";
 import {Button, Card} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {siteConfig} from "@/config/site";
+import {registrationTimeError} from "@/lib/tournament_timing";
 
 // 图标
 const CreateIcon = () => (
@@ -32,6 +33,11 @@ export default function CreateTournamentPage() {
             return;
         }
 
+        const timeError = registrationTimeError(formData);
+        if (timeError) {
+            setErrMsg(timeError);
+            return;
+        }
         setIsLoading(true);
         try {
             const res = await fetch(siteConfig.backend_url + '/api/create-tournament', {
