@@ -439,33 +439,28 @@ const TeamEditCard = ({index, team, players, teams, onUpdate, onDelete}: any) =>
 const MemberChip = ({player, uid, isCaptain, onToggle, onDelete}: any) => {
     return (
         <div
-            role="button"
-            tabIndex={0}
-            onClick={onToggle}
-            onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    onToggle();
-                }
-            }}
-            className={`inline-flex h-8 max-w-full cursor-pointer items-center gap-2 rounded-full border px-2 pr-1 text-sm font-semibold transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+            className={`inline-flex h-8 max-w-full items-center gap-2 rounded-full border pl-2 pr-1 text-sm font-semibold transition-transform hover:scale-105 ${
                 isCaptain
                     ? "border-amber-400/25 bg-amber-500/15 text-amber-800 dark:border-amber-300/15 dark:bg-white/[0.055] dark:text-amber-300"
                     : "border-zinc-300/70 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/[0.07] dark:text-zinc-300"
             }`}
         >
-            <Avatar className="h-5 w-5">
-                <Avatar.Image src={`https://a.ppy.sh/${uid}`} alt={player?.name || `UID: ${uid}`}/>
-                <Avatar.Fallback>{player?.name?.[0] ?? "?"}</Avatar.Fallback>
-            </Avatar>
-            <span className="max-w-32 truncate">{player?.name || `UID: ${uid}`}</span>
+            <button
+                type="button"
+                aria-label={`${isCaptain ? "降为队员" : "设为队长"}：${player?.name || `UID: ${uid}`}`}
+                onClick={onToggle}
+                className="flex h-full min-w-0 cursor-pointer items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+                <Avatar className="h-5 w-5">
+                    <Avatar.Image src={`https://a.ppy.sh/${uid}`} alt={player?.name || `UID: ${uid}`}/>
+                    <Avatar.Fallback>{player?.name?.[0] ?? "?"}</Avatar.Fallback>
+                </Avatar>
+                <span className="max-w-32 truncate">{player?.name || `UID: ${uid}`}</span>
+            </button>
             <CloseButton
-                aria-label="Remove member"
-                className="h-5 w-5 rounded-full"
-                onPress={(event) => {
-                    event.continuePropagation();
-                    onDelete();
-                }}
+                aria-label={`移除成员：${player?.name || `UID: ${uid}`}`}
+                className="h-5 w-5 shrink-0 rounded-full"
+                onPress={onDelete}
             />
         </div>
     )
