@@ -1,8 +1,6 @@
 import {Card} from "@heroui/react";
 import {siteConfig} from "@/config/site";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks"; // 1. 引入换行插件
+import {TournamentMarkdown} from "@/components/tournament_markdown";
 
 // --- 图标组件 ---
 const RuleBookIcon = () => (
@@ -35,43 +33,7 @@ export default async function TournamentRulesPage(props: { params: Promise<{ tou
                 <Card.Content className="p-0">
                     {info.data ? (
                         <div className="px-2 sm:px-4 py-4">
-                            {/*
-                                样式修复核心：
-                                1. dark:prose-invert: 只有在深色模式下才反转颜色（变白），亮色模式保持黑色。
-                                2. dark:prose-p:text-gray-200: 深色模式下正文变亮白。
-                                3. prose-p:text-gray-600: 亮色模式下正文用深灰，保证阅读舒适。
-                            */}
-                            <article className="
-                                prose max-w-none
-                                dark:prose-invert
-
-                                prose-p:leading-loose prose-p:font-medium
-                                prose-p:text-gray-700 dark:prose-p:text-gray-200
-
-                                prose-headings:font-bold
-                                prose-headings:text-gray-900 dark:prose-headings:text-white
-
-                                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-
-                                prose-strong:font-black
-                                prose-strong:text-gray-900 dark:prose-strong:text-white
-
-                                prose-li:text-gray-700 dark:prose-li:text-gray-200
-
-                                font-sans text-lg tracking-wide"
-                            >
-                                <Markdown
-                                    // 2. 这里的 remarkPlugins 加入 remarkBreaks 即可解决换行问题
-                                    remarkPlugins={[remarkGfm, remarkBreaks]}
-                                    components={{
-                                        a: ({node, ...props}) => (
-                                            <a {...props} target="_blank" rel="noopener noreferrer" />
-                                        )
-                                    }}
-                                >
-                                    {info.data}
-                                </Markdown>
-                            </article>
+                            <TournamentMarkdown>{info.data}</TournamentMarkdown>
                         </div>
                     ) : (
                         // 空状态
