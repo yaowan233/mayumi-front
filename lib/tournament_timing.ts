@@ -29,30 +29,11 @@ export function splitTournamentsByTime<T extends TournamentDates>(list: T[], now
     return {upcoming, ongoing, finished};
 }
 
-export function toBeijingDateTimeInput(value?: string | null): string {
-    const timestamp = registrationStartTimestamp(value);
-    return timestamp === null ? "" : new Date(timestamp + 8 * 60 * 60 * 1000).toISOString().slice(0, 16);
-}
-
-export function fromBeijingDateTimeInput(value: string): string | null {
-    if (!value) return null;
-    const timestamp = Date.parse(`${value}+08:00`);
-    return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
-}
-
-export function formatRegistrationStart(value?: string | null): string {
-    const timestamp = registrationStartTimestamp(value);
-    if (timestamp === null) return "";
-    return new Intl.DateTimeFormat("zh-CN", {
-        timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", hourCycle: "h23",
-    }).format(timestamp);
-}
-
 export function registrationTimeError(tournament: TournamentDates): string | null {
+    if (!Number.isFinite(Date.parse(tournament.start_date))) return "比赛开始时间格式无效";
     if (!tournament.registration_start_time) return null;
     const timestamp = registrationStartTimestamp(tournament.registration_start_time);
     if (timestamp === null) return "报名开始时间格式无效";
-    if (timestamp >= Date.parse(tournament.start_date)) return "报名开始时间必须早于比赛开始日期";
+    if (timestamp >= Date.parse(tournament.start_date)) return "报名开始时间必须早于比赛开始时间";
     return null;
 }

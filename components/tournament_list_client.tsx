@@ -1,4 +1,5 @@
 "use client"
+import {TournamentTime} from "@/components/tournament_time";
 
 import { useContext, useState } from "react";
 import NextImage from "next/image";
@@ -8,7 +9,7 @@ import { TournamentComponent, Tournament, modeLabel, TournamentFallback } from "
 import { SectionTitle } from "@/app/page";
 import CurrentUserContext from "@/app/user_context";
 import { siteConfig } from "@/config/site";
-import {formatRegistrationStart, splitTournamentsByTime} from "@/lib/tournament_timing";
+import {splitTournamentsByTime} from "@/lib/tournament_timing";
 import {useCurrentTime} from "@/lib/use_current_time";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(r => r.json());
@@ -77,7 +78,7 @@ const FeaturedTournament = ({ tournament }: { tournament: Tournament }) => {
 
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200/80 pt-4 dark:border-white/10">
                     <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-                        {formatDate(tournament.start_date)} - {formatDate(tournament.end_date)}
+                        <TournamentTime value={tournament.start_date} /> - {formatDate(tournament.end_date)}
                     </span>
                     <span className="text-sm font-bold text-primary">
                         进入比赛
@@ -157,7 +158,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
                         {upcoming.map(tournament => (
                             <div key={tournament.name} className="flex min-w-0 flex-col gap-3">
                                 <TournamentComponent tournament={tournament}/>
-                                <p className="px-1 text-sm text-default-500">报名尚未开始 · {formatRegistrationStart(tournament.registration_start_time)}（北京时间）</p>
+                                <p className="px-1 text-sm text-default-500">报名尚未开始 · <TournamentTime value={tournament.registration_start_time} />（当地时间）</p>
                             </div>
                         ))}
                     </div>

@@ -1,4 +1,5 @@
 "use client"
+import {TournamentTime} from "@/components/tournament_time";
 import {useContext, useEffect, useMemo, useState} from "react";
 import { siteConfig } from "@/config/site";
 
@@ -201,7 +202,7 @@ export default function AdminPage() {
                                 )}
                             </td>
                             <td className="whitespace-nowrap px-4 py-3">
-                                <div className="text-small">{item.start_date}</div>
+                                <div className="text-small"><TournamentTime value={item.start_date} /></div>
                                 <div className="text-tiny text-default-400">至 {item.end_date}</div>
                             </td>
                             <td className="px-4 py-3">

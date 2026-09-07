@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {fromBeijingDateTimeInput, getRegistrationState, registrationTimeError, splitTournamentsByTime, toBeijingDateTimeInput} from "../lib/tournament_timing.ts";
+import {getRegistrationState, registrationTimeError, splitTournamentsByTime} from "../lib/tournament_timing.ts";
 
 const tournament = {
     name: "HLC-ALLSTAR 2026",
@@ -33,15 +33,30 @@ test("existing events without a registration start keep their previous availabil
     }
 });
 
-test("Beijing datetime input round-trips across the UTC date boundary", () => {
-    assert.equal(fromBeijingDateTimeInput("2026-12-01T00:00"), tournament.registration_start_time);
-    assert.equal(toBeijingDateTimeInput(tournament.registration_start_time), "2026-12-01T00:00");
-    assert.equal(fromBeijingDateTimeInput(""), null);
-    assert.equal(toBeijingDateTimeInput(null), "");
+test("datetime cutoff preserves the exact instant", () => {
+    const timed = {...tournament, start_date: "2027-01-01T18:30:00+08:00"};
+    assert.equal(getRegistrationState(timed, Date.parse("2027-01-01T10:29:59.999Z")), "open");
+    assert.equal(getRegistrationState(timed, Date.parse("2027-01-01T10:30:00Z")), "closed");
 });
 
 test("registration cannot begin at or after its cutoff", () => {
     assert.equal(registrationTimeError(tournament), null);
     assert.ok(registrationTimeError({...tournament, registration_start_time: "2027-01-01T00:00:00Z"}));
     assert.ok(registrationTimeError({...tournament, registration_start_time: "invalid"}));
+});
+
+test("schedule datetime helpers round-trip tournament inputs in multiple local timezones", async () => {
+    const {localDateTimeInputToUtc, utcDateTimeToLocalInput, formatLocalDateTime} = await import("../lib/datetime.ts");
+    const original = process.env.TZ;
+    try {
+        for (const [zone, local] of [["Asia/Shanghai", "2026-12-01T00:00"], ["America/New_York", "2026-11-30T11:00"], ["UTC", "2026-11-30T16:00"]]) {
+            process.env.TZ = zone;
+            assert.equal(utcDateTimeToLocalInput(tournament.registration_start_time), local);
+            assert.equal(localDateTimeInputToUtc(local), tournament.registration_start_time);
+            assert.ok(formatLocalDateTime(tournament.registration_start_time));
+        }
+    } finally {
+        if (original === undefined) delete process.env.TZ;
+        else process.env.TZ = original;
+    }
 });

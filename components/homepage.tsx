@@ -1,4 +1,5 @@
 ﻿"use client"
+import {TournamentTime} from "@/components/tournament_time";
 
 import {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
@@ -7,7 +8,7 @@ import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/pa
 import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
 import {TournamentFallback} from "@/components/tournament_pic";
 import {ImageUploadField} from "@/components/image_upload_field";
-import {formatRegistrationStart, getRegistrationState} from "@/lib/tournament_timing";
+import {getRegistrationState} from "@/lib/tournament_timing";
 import {useCurrentTime} from "@/lib/use_current_time";
 import NextImage from "next/image";
 import {
@@ -411,7 +412,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         <Alert status="default" className={`${alertToneClass.default} rounded-lg border-l-[3px] px-4 py-3`}>
             <Alert.Content>
                 <Alert.Title>报名尚未开始</Alert.Title>
-                <Alert.Description>{formatRegistrationStart(tournament_info.registration_start_time)}（北京时间）开放报名</Alert.Description>
+                <Alert.Description><TournamentTime value={tournament_info.registration_start_time} />（当地时间）开放报名</Alert.Description>
             </Alert.Content>
         </Alert>
     );
@@ -568,7 +569,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                             </Chip>
                             <Chip size="sm" variant="soft" className="border border-zinc-200/70 bg-white/75 text-zinc-600 shadow-sm backdrop-blur-md dark:text-zinc-300 dark:bg-white/5 dark:border-white/10 dark:md:text-white/90 dark:md:bg-white/10">
                                 <CalendarIcon/>
-                                {formatDate(tournament_info.start_date)} - {formatDate(tournament_info.end_date)}
+                                <TournamentTime value={tournament_info.start_date} /> - {formatDate(tournament_info.end_date)}
                             </Chip>
                         </div>
                     </div>
