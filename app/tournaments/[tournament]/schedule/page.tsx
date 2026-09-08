@@ -1,5 +1,5 @@
 import {ScheduleComp, ScheduleStage} from "@/components/schedule_comp";
-import {siteConfig} from "@/config/site";
+import {backendServerUrl} from "@/lib/backend_server";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 
 export default async function SchedulePage(props: { params: Promise<{ tournament: string }> }) {
@@ -14,13 +14,13 @@ export default async function SchedulePage(props: { params: Promise<{ tournament
 }
 
 async function getSchedule(tournament_name: string): Promise<ScheduleStage[]> {
-    const res = await fetch(siteConfig.backend_url + '/api/schedule?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/schedule?tournament_name=' + tournament_name,
         {next: {revalidate: 0}})
     return await res.json()
 }
 
 async function getPlayers(tournament_name: string): Promise<TournamentPlayers> {
-    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/players?tournament_name=' + tournament_name,
         {next: {revalidate: 0}})
     return await res.json()
 }

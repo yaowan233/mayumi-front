@@ -1,5 +1,5 @@
 import {Card} from "@heroui/react";
-import {siteConfig} from "@/config/site";
+import {backendServerUrl} from "@/lib/backend_server";
 import {TournamentMarkdown} from "@/components/tournament_markdown";
 
 // --- 图标组件 ---
@@ -51,7 +51,7 @@ export default async function TournamentRulesPage(props: { params: Promise<{ tou
 }
 
 async function getTournamentRule(tournament_name: string): Promise<{ data: string }> {
-    const res = await fetch(siteConfig.backend_url + '/api/tournament_rule?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/tournament_rule?tournament_name=' + tournament_name,
         {next: {revalidate: 0}})
 
     if (!res.ok) {

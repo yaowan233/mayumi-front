@@ -2,8 +2,11 @@ import "server-only";
 
 import {cache} from "react";
 import {cookies} from "next/headers";
-import {siteConfig} from "@/config/site";
+import {backendServerUrl} from "@/lib/backend_server";
 import type {TournamentInfo} from "@/components/homepage";
+
+// One stable clock snapshot for the server render and the client's first render.
+export const getTournamentRenderTime = cache(() => Date.now());
 
 // Reuse the response within one render, without caching private data across users.
 export const getTournamentInfo = cache(async (tournament: string): Promise<{
@@ -13,7 +16,7 @@ export const getTournamentInfo = cache(async (tournament: string): Promise<{
     try {
         const cookieHeader = (await cookies()).toString();
         const response = await fetch(
-            `${siteConfig.backend_url}/api/tournament-info?tournament_name=${encodeURIComponent(tournament)}`,
+            `${backendServerUrl()}/api/tournament-info?tournament_name=${encodeURIComponent(tournament)}`,
             {cache: "no-store", headers: cookieHeader ? {Cookie: cookieHeader} : undefined},
         );
         if (!response.ok) {

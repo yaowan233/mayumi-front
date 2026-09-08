@@ -71,4 +71,5 @@ jobs:
           pm2 -v
           cd /home/ubuntu/meow
           npm ci --omit=dev
+          export BACKEND_INTERNAL_URL="http://127.0.0.1:8421"
           pm2 restart all --update-env

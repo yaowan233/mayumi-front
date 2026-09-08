@@ -1,6 +1,6 @@
 "use server"
 import {cookies} from "next/headers";
-import {siteConfig} from "@/config/site";
+import {backendServerUrl} from "@/lib/backend_server";
 
 export async function getMe(): Promise<Me | null> {
     const cookieStore = await cookies()
@@ -9,7 +9,7 @@ export async function getMe(): Promise<Me | null> {
         return null
     }
     try {
-        const res = await fetch(siteConfig.backend_url + '/api/me', {
+        const res = await fetch(backendServerUrl() + '/api/me', {
             headers: {
                 Cookie: `uuid=${uuid}`,
             },

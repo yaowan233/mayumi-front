@@ -1,5 +1,5 @@
 import {StatsComp} from "@/components/stats_comp";
-import {siteConfig} from "@/config/site";
+import {backendServerUrl} from "@/lib/backend_server";
 import {Stage} from "@/components/mappools";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {cookies} from "next/headers";
@@ -69,7 +69,7 @@ async function getPrivateStatisticsResource<T>(
 ): Promise<T> {
     const query = new URLSearchParams({tournament_name: tournamentName});
     if (preview) query.set("preview", "true");
-    const response = await fetch(`${siteConfig.backend_url}${pathname}?${query}`, {
+    const response = await fetch(`${backendServerUrl()}${pathname}?${query}`, {
         cache: "no-store",
         headers: cookieHeader ? {Cookie: cookieHeader} : undefined,
     });
@@ -105,7 +105,7 @@ interface Score {
 }
 
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(siteConfig.backend_url + `/api/tournament-round-info?tournament_name=${tournament_name}`,
+    const data = await fetch(backendServerUrl() + `/api/tournament-round-info?tournament_name=${tournament_name}`,
         {next: {revalidate: 0}});
     return await data.json();
 }
@@ -119,13 +119,13 @@ interface TournamentRoundInfo {
 }
 
 async function getStages(tournament_name: string): Promise<Stage[]> {
-    const res = await fetch(siteConfig.backend_url + '/api/map_pools?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/map_pools?tournament_name=' + tournament_name,
         {next: {revalidate: 0}})
     return await res.json()
 }
 
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
-    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/players?tournament_name=' + tournament_name,
         {next: {revalidate: revalidate_time}})
     return await res.json()
 }

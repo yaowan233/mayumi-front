@@ -6,7 +6,7 @@ import NextImage from "next/image";
 import NextLink from "next/link";
 import useSWR from "swr";
 import { TournamentComponent, Tournament, modeLabel, TournamentFallback } from "@/components/tournament_pic";
-import { SectionTitle } from "@/app/page";
+import { SectionTitle } from "@/components/section_title";
 import CurrentUserContext from "@/app/user_context";
 import { siteConfig } from "@/config/site";
 import {splitTournamentsByTime} from "@/lib/tournament_timing";
@@ -97,7 +97,7 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
     const [selectedMode, setSelectedMode] = useState("__all__");
 
     const { data: authedTournaments } = useSWR<Tournament[]>(
-        isLoggedIn ? `${siteConfig.backend_url}/api/tournaments` : null,
+        isLoggedIn ? `${siteConfig.backend_url}/api/tournament-summaries` : null,
         fetcher
     );
 

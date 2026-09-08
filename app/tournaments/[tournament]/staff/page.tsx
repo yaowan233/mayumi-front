@@ -1,5 +1,5 @@
 import {Avatar, Card, Chip, Separator} from "@heroui/react";
-import {siteConfig} from "@/config/site";
+import {backendServerUrl} from "@/lib/backend_server";
 
 type ColorType = "default" | "primary" | "secondary" | "success" | "warning" | "danger";
 
@@ -152,7 +152,7 @@ const StaffCard = ({member, color}: { member: { name: string; uid: string }; col
 
 async function GetStaff(tournament: string): Promise<Staff> {
     const res = await fetch(
-        `${siteConfig.backend_url}/api/staff?tournament_name=${encodeURIComponent(tournament)}`,
+        `${backendServerUrl()}/api/staff?tournament_name=${encodeURIComponent(tournament)}`,
         {next: {revalidate: 0}},
     );
 

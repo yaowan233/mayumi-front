@@ -1,5 +1,5 @@
 import {MappoolsComponents, Stage} from "@/components/mappools";
-import {siteConfig} from "@/config/site";
+import {backendServerUrl} from "@/lib/backend_server";
 
 
 export default async function MapPollsPage(props: { params: Promise<{ tournament: string }> }) {
@@ -12,7 +12,7 @@ export default async function MapPollsPage(props: { params: Promise<{ tournament
 
 
 async function getStages(tournament_name: string): Promise<Stage[]> {
-    const res = await fetch(siteConfig.backend_url + '/api/map_pools?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/map_pools?tournament_name=' + tournament_name,
         {next: {revalidate: 0}})
     return await res.json()
 }
