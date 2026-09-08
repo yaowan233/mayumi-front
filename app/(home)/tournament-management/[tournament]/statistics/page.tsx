@@ -294,7 +294,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
     const handlePublicationChange = async (isPublished: boolean) => {
         if (!selectedRound || !publicationStatus?.is_qualifier) return;
-        if (isPublished && !confirm("确定要向所有人公开该轮资格赛统计吗？")) return;
+        if (isPublished && !confirm(`确定公开「${selectedRound}」的结果吗？比赛链接、成绩和排名将对所有人可见。`)) return;
 
         setIsChangingPublication(true);
         try {
@@ -396,7 +396,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                             Match Link (MP 链接) 已填写正确。
                                         </li>
                                         <li>保存赛程草稿时会自动抓取 MP 成绩，也可用下方按钮手动重试。</li>
-                                        <li>资格赛成绩更新后会自动转为未发布，不会泄露到公开页面。</li>
+                                        <li>启用结果公开控制的轮次，成绩更新后会自动转为未公开。</li>
                                     </ul>
                                 </div>
                             </div>
@@ -409,7 +409,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                 <div className="flex flex-col gap-4 rounded-lg border border-warning/20 bg-warning/5 p-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="flex min-w-0 flex-col gap-2">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="font-bold text-foreground">资格赛统计</span>
+                                            <span className="font-bold text-foreground">{selectedRound} · 结果公开</span>
                                             <Chip
                                                 size="sm"
                                                 color={publicationStatus.is_published ? "success" : "warning"}
@@ -419,7 +419,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                             </Chip>
                                         </div>
                                         <p className="text-sm text-default-500">
-                                            预览包含未发布结果；同步、新增或删除成绩后需要重新发布。
+                                            未公开时，比赛链接、成绩和排名仅供内部核对。确认后统一公开；修改链接或更新成绩后需重新公开。
                                         </p>
                                     </div>
                                     <div className="flex shrink-0 flex-wrap gap-2">
@@ -432,7 +432,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
                                                 isPending={isChangingPublication}
                                                 onPress={() => handlePublicationChange(!publicationStatus.is_published)}
                                             >
-                                                {publicationStatus.is_published ? "撤回发布" : "发布统计"}
+                                                {publicationStatus.is_published ? "撤回公开" : `公开${selectedRound}结果`}
                                             </Button>
                                         )}
                                     </div>

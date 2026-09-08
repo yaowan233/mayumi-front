@@ -24,6 +24,7 @@ import {
     Tooltip,
     useFilter,
 } from "@heroui/react";
+import Link from "next/link";
 import {siteConfig} from "@/config/site";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {TournamentInfo} from "@/components/homepage";
@@ -292,6 +293,15 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                 </Tabs>
             </div>
 
+            {(currentRoundInfo?.is_lobby || isSoloRound) && (
+                <div className="rounded-xl border border-warning/20 bg-warning/5 p-4 text-sm">
+                    <p>「{selectedRound}」的 MP 链接可提前填写。新增或修改链接后，比赛链接、成绩和排名会保持未公开；发布赛程不会公开这些结果。</p>
+                    <Link className="mt-2 inline-block font-medium text-primary" href={`/tournament-management/${encodeURIComponent(tournament_abbr)}/statistics`}>
+                        前往统计管理，预览并确认公开本轮结果 →
+                    </Link>
+                </div>
+            )}
+
             {/* Footer ... */}
             <Card
                 variant="secondary"
@@ -513,7 +523,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         {/* 4. 链接管理 ... (保持不变) */}
                         <div className="flex flex-col gap-2">
                             <span className="text-sm font-medium text-foreground">比赛链接</span>
-                            <span className="text-xs text-default-500">保存草稿后会自动同步当前轮次的 MP 成绩；资格赛统计仍保持未发布。</span>
+                            <span className="text-xs text-default-500">保存草稿后会自动同步当前轮次的 MP 成绩；启用结果公开控制的轮次需在统计管理中确认公开。</span>
                             {(schedule.match_url || [""]).map((url: string, i: number) => (
                                 <div key={i} className="flex items-center gap-2">
                                     <Input className="flex-1" variant="secondary" value={url} placeholder="https://osu.ppy.sh/community/matches/..."
