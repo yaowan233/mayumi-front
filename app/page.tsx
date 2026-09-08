@@ -1,4 +1,4 @@
-import {tournamentSummary} from "@/lib/tournament_summary";
+import {fetchTournamentSummaries} from "@/lib/tournament_summary";
 import {backendServerUrl} from "@/lib/backend_server";
 import { Navbar } from "@/components/navbar";
 import { Tournament } from "@/components/tournament_pic";
@@ -23,12 +23,7 @@ export default async function Home() {
 
 async function GetPublicTournaments(): Promise<Tournament[]> {
     try {
-        const res = await fetch(backendServerUrl() + '/api/tournament-summaries', {
-            next: { revalidate: 60 }
-        });
-        if (!res.ok) throw new Error('Failed to fetch data');
-        const tournaments: Tournament[] = await res.json();
-        return tournaments.map(tournamentSummary);
+        return await fetchTournamentSummaries(backendServerUrl(), {next: {revalidate: 60}});
     } catch (e) {
         console.error("Fetch Error:", e);
         return [];

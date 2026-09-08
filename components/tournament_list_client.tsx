@@ -10,9 +10,10 @@ import { SectionTitle } from "@/components/section_title";
 import CurrentUserContext from "@/app/user_context";
 import { siteConfig } from "@/config/site";
 import {splitTournamentsByTime} from "@/lib/tournament_timing";
+import {fetchTournamentSummaries} from "@/lib/tournament_summary";
 import {useCurrentTime} from "@/lib/use_current_time";
 
-const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(r => r.json());
+const fetcher = () => fetchTournamentSummaries(siteConfig.backend_url, {credentials: "include"});
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString("zh-CN", {
     month: "2-digit",
