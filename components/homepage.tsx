@@ -99,15 +99,8 @@ const SectionEmpty = ({ text }: { text: string }) => (
     </div>
 );
 
-const RegistrationCountdown = ({ deadline }: { deadline: string }) => {
-    const [remaining, setRemaining] = useState(() => calcRemaining(deadline));
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setRemaining(calcRemaining(deadline));
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [deadline]);
+const RegistrationCountdown = ({ deadline, now }: { deadline: string; now: number }) => {
+    const remaining = calcRemaining(deadline, now);
 
     if (remaining === null) return null;
     if (remaining.expired) {
@@ -163,10 +156,10 @@ const RegistrationCountdown = ({ deadline }: { deadline: string }) => {
     );
 };
 
-function calcRemaining(deadline: string) {
+function calcRemaining(deadline: string, now: number) {
     const target = new Date(deadline).getTime();
     if (isNaN(target)) return null;
-    const diff = target - Date.now();
+    const diff = target - now;
     if (diff <= 0) return { expired: true };
     const days = Math.floor(diff / 86400000);
     const hours = Math.floor((diff % 86400000) / 3600000);
@@ -301,8 +294,8 @@ const RankLimitCard = ({
 };
 
 
-export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo }) => {
-    const now = useCurrentTime();
+export const HomePage = ({tournament_info, initialNow}: { tournament_info: TournamentInfo; initialNow?: number }) => {
+    const now = useCurrentTime(initialNow);
     const registrationState = getRegistrationState(tournament_info, now);
     const hasRegistrationStarted = registrationState !== "upcoming";
     // ... 状态逻辑保持不变 ...
@@ -417,7 +410,8 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
         </Alert>
     );
 
-    const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('zh-CN');
+    // end_date is a calendar date, not a timezone-dependent instant.
+    const formatDate = (dateStr: string) => dateStr.slice(0, 10).replaceAll('-', '/');
     const isRegistered = members.some((member) => member.player && member.uid === currentUser?.currentUser?.uid);
     const myTeam = tournament_info.is_group
         ? teams.find(t => t.captains.includes(currentUser?.currentUser?.uid ?? -1))
@@ -613,7 +607,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
                         </div>
                         {!hasRegistrationEnded && (
                             <div className="mt-4">
-                                <RegistrationCountdown deadline={tournament_info.start_date} />
+                                <RegistrationCountdown deadline={tournament_info.start_date} now={now} />
                             </div>
                         )}
                         <div className="mt-5">
@@ -668,7 +662,7 @@ export const HomePage = ({tournament_info}: { tournament_info: TournamentInfo })
 
                         <div className="mt-4 flex flex-col gap-4">
                             {registrationState === "open" && (
-                                <RegistrationCountdown deadline={tournament_info.start_date} />
+                                <RegistrationCountdown deadline={tournament_info.start_date} now={now} />
                             )}
 
                             {(tournament_info.rank_max || tournament_info.rank_min) && (

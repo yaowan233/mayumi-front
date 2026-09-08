@@ -1,7 +1,6 @@
 import {TournamentNavbar} from "@/components/navbar";
-import {siteConfig} from "@/config/site";
+import {getTournamentInfo} from "@/lib/tournament_info";
 import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
-import {cookies} from "next/headers";
 
 export default async function HomeLayout({
                                              children,
@@ -40,23 +39,6 @@ export default async function HomeLayout({
 }
 
 async function getTournamentThemeColor(tournament: string) {
-    try {
-        const cookieHeader = (await cookies()).toString();
-        const res = await fetch(
-            `${siteConfig.backend_url}/api/tournament-info?tournament_name=${encodeURIComponent(tournament)}`,
-            {
-                cache: "no-store",
-                headers: cookieHeader ? {Cookie: cookieHeader} : undefined,
-            },
-        );
-
-        if (!res.ok) {
-            return undefined;
-        }
-
-        const data = await res.json();
-        return normalizeTournamentThemeColor(data?.theme_color);
-    } catch {
-        return undefined;
-    }
+    const {data} = await getTournamentInfo(tournament);
+    return data ? normalizeTournamentThemeColor(data.theme_color) : undefined;
 }

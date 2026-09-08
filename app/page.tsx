@@ -1,3 +1,4 @@
+import {tournamentSummary} from "@/lib/tournament_summary";
 import { siteConfig } from "@/config/site";
 import { Navbar } from "@/components/navbar";
 import { Tournament } from "@/components/tournament_pic";
@@ -56,7 +57,8 @@ async function GetPublicTournaments(): Promise<Tournament[]> {
             next: { revalidate: 60 }
         });
         if (!res.ok) throw new Error('Failed to fetch data');
-        return await res.json();
+        const tournaments: Tournament[] = await res.json();
+        return tournaments.map(tournamentSummary);
     } catch (e) {
         console.error("Fetch Error:", e);
         return [];
