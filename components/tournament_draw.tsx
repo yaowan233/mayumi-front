@@ -1,20 +1,9 @@
 "use client";
 
 import {useMemo, useRef, useState} from "react";
-import useSWR from "swr";
 import {Avatar, Button, Input, Label, TextField} from "@heroui/react";
-import {siteConfig} from "@/config/site";
 import {formatUtcDateTime} from "@/lib/datetime";
-import {DRAW_STATUS, drawSlotLabel, formatMatchScore, layoutDraw, requestDraw, type DrawMatch, type TournamentDraw} from "@/lib/tournament_draw";
-
-export function PublicTournamentDraw({tournamentName}: {tournamentName: string}) {
-    const {data, error, isLoading, mutate} = useSWR(`${siteConfig.backend_url}/api/tournament-draw/${encodeURIComponent(tournamentName)}/public`,
-        (url: string) => requestDraw<{state: TournamentDraw | null}>(url), {refreshInterval: 15000});
-    if (isLoading) return <p className="p-8 text-center text-default-500">正在加载对阵图…</p>;
-    if (error) return <div className="flex items-center gap-3 p-8"><p role="alert">对阵图加载失败</p><Button variant="secondary" onPress={() => void mutate()}>重试</Button></div>;
-    if (!data?.state) return <p className="p-8 text-center text-default-500">主办尚未发布对阵图。</p>;
-    return <TournamentDrawBoard state={data.state}/>;
-}
+import {DRAW_STATUS, drawSlotLabel, formatMatchScore, layoutDraw, type DrawMatch, type TournamentDraw} from "@/lib/tournament_draw";
 
 export function TournamentDrawBoard({state, onSelect, selectedId}: {state: TournamentDraw; onSelect?: (match: DrawMatch) => void; selectedId?: string}) {
     const [query, setQuery] = useState("");
