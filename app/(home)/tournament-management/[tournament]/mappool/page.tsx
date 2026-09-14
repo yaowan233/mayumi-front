@@ -2,7 +2,7 @@
 
 import React, {useContext, useEffect, useState} from "react";
 import NextImage from "next/image";
-import {Button, Card, Input, Label, Spinner, Tabs, TextField} from "@heroui/react";
+import {Button, Card, Input, Label, Spinner, Tabs, TextArea, TextField} from "@heroui/react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {siteConfig} from "@/config/site";
@@ -13,6 +13,7 @@ import {MappoolsComponents, Stage} from "@/components/mappools";
 import {useRouter} from "next/navigation";
 import {DraftAction, DraftSaveActions} from "@/components/draft_save_actions";
 import {ManagementBackLink} from "@/components/management_back_link";
+import {importMappoolIds, type TournamentMap} from "@/lib/mappool_import";
 
 const MapIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -249,6 +250,18 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
 
                                 return (
                                     <Tabs.Panel key={item.stage_name} id={item.stage_name} className="pt-6">
+                                        <BulkMapImport
+                                            key={item.stage_name}
+                                            tournamentName={tournamentName}
+                                            stageName={item.stage_name}
+                                            mode={tournamentInfo?.mode}
+                                            maps={tournamentMaps}
+                                            isDisabled={!tournamentInfo || pendingAction !== null}
+                                            onImport={(maps) => {
+                                                setTournamentMaps((current) => [...current, ...maps]);
+                                                setErrMsg("");
+                                            }}
+                                        />
                                         <div className="grid grid-cols-1 justify-items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
                                             {mapsForRound.map((mapWrapper) => (
                                                 <MapEditCard
@@ -307,6 +320,75 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
                 </Card.Content>
             </Card>
         </div>
+    );
+}
+
+function BulkMapImport({tournamentName, stageName, mode, maps, isDisabled, onImport}: {
+    tournamentName: string;
+    stageName: string;
+    mode?: string;
+    maps: TournamentMap[];
+    isDisabled: boolean;
+    onImport: (maps: TournamentMap[]) => void;
+}) {
+    const [input, setInput] = useState("");
+    const [mod, setMod] = useState("NM");
+    const [error, setError] = useState("");
+    const [message, setMessage] = useState("");
+
+    const handleImport = () => {
+        setError("");
+        setMessage("");
+        try {
+            const result = importMappoolIds(input, mod, {
+                tournament_name: tournamentName,
+                stage_name: stageName,
+                mode,
+            }, maps);
+            if (result.maps.length > 0) onImport(result.maps);
+            setInput("");
+            setMessage(result.maps.length > 0
+                ? `已添加 ${result.maps.length} 张谱面${result.skipped ? `，跳过 ${result.skipped} 个重复 ID` : ""}。请保存草稿以保留更改。`
+                : "所有 ID 均已存在于当前轮次的该 Mod 中，未添加新谱面。");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "导入失败，请重试");
+        }
+    };
+
+    return (
+        <Card variant="secondary" className="mb-6 w-full !p-0">
+            <Card.Content className="flex flex-col gap-4 !p-4">
+                <div>
+                    <h2 className="font-bold">批量导入谱面 · {stageName}</h2>
+                    <p className="text-sm text-default-500">用空格或换行分隔 Map ID（不是 Set ID）。按输入顺序接续当前 Mod 的最大序号，导入后可逐张修改。</p>
+                </div>
+                <TextField isDisabled={isDisabled} onChange={(value) => {
+                    setInput(value);
+                    setError("");
+                    setMessage("");
+                }} value={input}>
+                    <Label>谱面 ID</Label>
+                    <TextArea variant="secondary" fullWidth rows={4} placeholder={"1234567 2345678\n3456789"}/>
+                </TextField>
+                <div className="flex flex-wrap items-end gap-3">
+                    <TextField className="w-32" isDisabled={isDisabled} value={mod} onChange={(value) => {
+                        setMod(value.toUpperCase());
+                        setError("");
+                        setMessage("");
+                    }}>
+                        <Label>本批 Mod</Label>
+                        <Input variant="secondary" fullWidth placeholder="NM"/>
+                    </TextField>
+                    <Button variant="primary" isDisabled={isDisabled || !input.trim() || !mod.trim()} onPress={handleImport}>
+                        <PlusIcon/>
+                        导入到当前轮次
+                    </Button>
+                </div>
+                <p className="text-xs text-default-500">同一轮次、同一 Mod 下的重复 ID 会自动跳过。</p>
+                {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+                {message && <p role="status" className="text-sm text-default-500">{message}</p>}
+            </Card.Content>
+        </Card>
     );
 }
 
@@ -440,14 +522,4 @@ function validateModOrder(tournamentMaps: TournamentMap[]): boolean {
     }
 
     return false;
-}
-
-interface TournamentMap {
-    tournament_name: string;
-    stage_name: string;
-    mod?: string;
-    map_id?: number;
-    number?: number;
-    mode?: string;
-    extra?: string[];
 }
