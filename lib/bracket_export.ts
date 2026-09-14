@@ -251,19 +251,20 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
         if (!team1 || !team2 || team1 === team2) throw new Error(`“${schedule.stage_name}”的对阵“${schedule.team1} vs ${schedule.team2}”无效或参赛信息缺失`);
         const score1 = schedule.team1_score ?? 0;
         const score2 = schedule.team2_score ?? 0;
-        if (![score1, score2].every((score) => Number.isInteger(score) && score >= 0)) throw new Error(`“${schedule.stage_name}”存在无效比分`);
+        if (![score1, score2].every((score) => Number.isInteger(score) && score >= -1)) throw new Error(`“${schedule.stage_name}”存在无效比分`);
+        if (score1 === -1 && score2 === -1) throw new Error(`“${schedule.stage_name}”双方均为弃权，请核对本场赛果`);
         const exportedRound = exportedRounds[roundIndex];
         const pointsToWin = (exportedRound.BestOf + 1) / 2;
         const id = matches.length + 1;
         matches.push({
             ID: id, Team1Acronym: team1, Team2Acronym: team2, Team1Score: score1, Team2Score: score2,
-            Completed: Math.max(score1, score2) === pointsToWin && Math.min(score1, score2) < pointsToWin,
+            Completed: score1 !== score2,
             Losers: !schedule.is_winner_bracket, PicksBans: [], Current: false,
             Date: requiredDate(schedule.match_time, `“${schedule.stage_name}”的对阵`),
             ConditionalMatches: [], Position: {X: roundIndex * 400, Y: exportedRound.Matches.length * 150},
         });
         if (Math.max(score1, score2) > pointsToWin || (score1 === score2 && score1 >= pointsToWin)) {
-            warnings.push(`${schedule.team1} vs ${schedule.team2}：已有比分与 BO${exportedRound.BestOf} 不符，已保留比分并标记为未结束`);
+            warnings.push(`${schedule.team1} vs ${schedule.team2}：已有比分与 BO${exportedRound.BestOf} 不符，已保留比分，赛果按比分高低判定`);
         }
         exportedRound.Matches.push(id);
     }

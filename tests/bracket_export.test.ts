@@ -101,16 +101,32 @@ test("scores incompatible with calculated BO are preserved with a warning", () =
     input.schedules[0].team1_score = 7;
     const {bracket, warnings} = generateBracket(input);
     assert.equal(bracket.Matches[0].Team1Score, 7);
-    assert.equal(bracket.Matches[0].Completed, false);
+    assert.equal(bracket.Matches[0].Completed, true);
     assert.ok(warnings.some((warning) => warning.includes("已有比分")));
 });
 
-test("manual BO and ban counts apply to every round and determine match completion", () => {
+test("forfeits preserve minus one and complete without reaching the BO target", () => {
+    for (const scores of [[-1, 0], [2, -1]]) {
+        const input = fixture();
+        [input.schedules[0].team1_score, input.schedules[0].team2_score] = scores;
+        const {bracket, warnings} = generateBracket(input);
+        assert.deepEqual([bracket.Matches[0].Team1Score, bracket.Matches[0].Team2Score], scores);
+        assert.equal(bracket.Matches[0].Completed, true);
+        assert.deepEqual(warnings, []);
+    }
+    for (const scores of [[-2, 0], [-1, -1]]) {
+        const input = fixture();
+        [input.schedules[0].team1_score, input.schedules[0].team2_score] = scores;
+        assert.throws(() => generateBracket(input), /比分|弃权/);
+    }
+});
+
+test("manual BO and ban counts apply to every round without affecting match completion", () => {
     const input = fixture();
     input.rounds.push({stage_name: "Extra", start_time: "2026-09-11", is_lobby: false});
     const {bracket, warnings} = generateBracket(input, {bestOf: 9, banCount: 2});
     assert.deepEqual(bracket.Rounds.map((round) => [round.BestOf, round.BanCount]), [[9, 2], [9, 2]]);
-    assert.equal(bracket.Matches[0].Completed, false);
+    assert.equal(bracket.Matches[0].Completed, true);
     assert.ok(warnings.some((warning) => warning.includes("Extra") && warning.includes("至少需要 13 张图")));
 });
 
@@ -132,7 +148,7 @@ test("invalid BO and ban counts cannot be exported", () => {
     for (const bestOf of [3, 23]) assert.equal(generateBracket(fixture(), {bestOf}).bracket.Rounds[0].BestOf, bestOf);
 });
 
-test("each round independently controls automatic BO, explicit BO, bans and match completion", () => {
+test("each round independently controls BO and bans without changing match completion", () => {
     const input = fixture();
     input.rounds.push({stage_name: "Grand Final", start_time: "2026-09-11", is_lobby: false});
     input.maps.push(...input.maps.map((map) => ({...map, stage_name: "Grand Final"})));
@@ -142,7 +158,7 @@ test("each round independently controls automatic BO, explicit BO, bans and matc
         "Grand Final": {bestOf: 11, banCount: 1},
     }});
     assert.deepEqual(bracket.Rounds.map((round) => [round.BestOf, round.BanCount]), [[9, 2], [11, 1]]);
-    assert.deepEqual(bracket.Matches.map((match) => match.Completed), [false, true]);
+    assert.deepEqual(bracket.Matches.map((match) => match.Completed), [true, true]);
     assert.throws(() => generateBracket(input, {rounds: {Final: {banCount: 6}}}), /Final.*Ban/);
     assert.throws(() => generateBracket(input, {rounds: {"Grand Final": {bestOf: 10}}}), /Grand Final.*BO/);
 });
@@ -170,4 +186,14 @@ test("suggested acronyms stay short and unique even with many identical prefixes
     assert.equal(new Set(values).size, entrants.length);
     assert.ok(values.every((value) => Array.from(value).length >= 1 && Array.from(value).length <= 3));
     assert.deepEqual(getDefaultBracketAcronyms(entrants), getDefaultBracketAcronyms(entrants));
+});
+
+ test("saved scores determine completion regardless of BO, with ties pending", () => {
+    for (const scores of [[1, 0], [0, 1], [9, 2], [2, 9], [0, 0], [6, 6]]) {
+        const input = fixture();
+        [input.schedules[0].team1_score, input.schedules[0].team2_score] = scores;
+        for (const bestOf of [3, 13, 23]) {
+            assert.equal(generateBracket(input, {bestOf}).bracket.Matches[0].Completed, scores[0] !== scores[1]);
+        }
+    }
 });

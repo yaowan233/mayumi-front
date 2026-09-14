@@ -208,6 +208,13 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
             allowed: hasAdminAccess || myRoles.includes('主办') || myRoles.includes('时间安排')
         },
         {
+            title: "对阵管理",
+            desc: "生成单败或双败对阵，录入比分并自动晋级",
+            href: `${link_prefix}/draw`,
+            icon: <ScheduleIcon/>,
+            allowed: hasAdminAccess || myRoles.includes('主办') || myRoles.includes('时间安排'),
+        },
+        {
             title: "数据统计",
             desc: "进行比赛数据分析",
             href: `${link_prefix}/statistics`,

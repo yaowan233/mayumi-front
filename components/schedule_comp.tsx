@@ -8,6 +8,8 @@ import {LinkIcon} from "@/components/icons"; // 假设你有这个图标，或�
 import {usePathname, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {formatUtcDateTime, getLocalDateTimeParts, parseUtcDateTime} from "@/lib/datetime";
+import {PublicTournamentDraw} from "@/components/tournament_draw";
+import {formatMatchScore} from "@/lib/tournament_draw";
 import {
     Accordion,
     Avatar,
@@ -36,6 +38,7 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
     const [scheduleStages, setScheduleStages] = useState<ScheduleStage []>(tabs);
     const searchParams = useSearchParams();
     const pathname = usePathname();
+    const showBracket = searchParams.get("view") === "bracket";
     const [selectedStage, setSelectedStage] = useState(searchParams.get('stage') || tabs.at(-1)?.stage_name || tabs[0]?.stage_name || "");
     const selectedScheduleStage = scheduleStages.find((stage) => stage.stage_name === selectedStage) || scheduleStages.at(-1) || scheduleStages[0];
 
@@ -45,6 +48,11 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
 
     return (
         <div className="w-full flex flex-col items-center">
+            <nav aria-label="赛程显示方式" className="mb-4 flex max-w-full gap-2 rounded-xl bg-default-100/60 p-1">
+                <NextLink href={`${pathname}?view=list&stage=${encodeURIComponent(selectedStage)}`} scroll={false} aria-current={!showBracket ? "page" : undefined} className={`rounded-lg px-4 py-2 text-sm font-semibold ${!showBracket ? "bg-surface text-primary shadow-sm" : "text-default-500 hover:text-primary"}`}>赛程列表</NextLink>
+                <NextLink href={`${pathname}?view=bracket`} scroll={false} aria-current={showBracket ? "page" : undefined} className={`rounded-lg px-4 py-2 text-sm font-semibold ${showBracket ? "bg-surface text-primary shadow-sm" : "text-default-500 hover:text-primary"}`}>对阵图</NextLink>
+            </nav>
+            {showBracket ? <div className="w-full pb-8"><PublicTournamentDraw tournamentName={tournament_name}/></div> : <>
             <div className="w-full border-b border-zinc-200 dark:border-white/[0.08]">
                 <div className="mx-auto flex max-w-5xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
                     {scheduleStages.map((stage) => {
@@ -74,6 +82,7 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
                     }
                 </div>
             )}
+            </>}
         </div>
     )
 }
@@ -235,11 +244,11 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 <div className="flex justify-center px-2">
                     <div className="flex items-center justify-center px-5 py-2 bg-default-100/10 rounded-full border border-white/5 min-w-[100px] shadow-inner">
                         <span className={`text-3xl font-mono font-black tabular-nums ${isTeam1Win ? "text-primary drop-shadow-[0_0_8px_rgba(0,111,238,0.6)]" : "text-default-700"}`}>
-                            {score1}
+                            {formatMatchScore(score1)}
                         </span>
                         <span className="mx-3 text-default-600 text-xl font-light pb-1">:</span>
                         <span className={`text-3xl font-mono font-black tabular-nums ${isTeam2Win ? "text-primary drop-shadow-[0_0_8px_rgba(0,111,238,0.6)]" : "text-default-700"}`}>
-                            {score2}
+                            {formatMatchScore(score2)}
                         </span>
                     </div>
                 </div>

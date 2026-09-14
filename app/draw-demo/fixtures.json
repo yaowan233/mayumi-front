@@ -1,0 +1,3583 @@
+{
+  "single": [
+    {
+      "label": "未开始",
+      "description": "首轮选手已确定，后续比赛提前显示晋级来源，BO 可待定。",
+      "state": {
+        "format": "single",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T12:00:00+00:00"
+          }
+        ],
+        "champion": null
+      }
+    },
+    {
+      "label": "进行中",
+      "description": "M1 按 3:1 晋级；M2 一方弃权；M3 暂时 2:2，后续席位仍在等待赛果。",
+      "state": {
+        "format": "single",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              -1,
+              0
+            ],
+            "status": "completed",
+            "winner": "demo:5",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              2,
+              2
+            ],
+            "status": "playing",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:5"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T12:00:00+00:00"
+          }
+        ],
+        "champion": null
+      }
+    },
+    {
+      "label": "决赛待赛",
+      "description": "前序比赛已结束，决赛双方已自动就位。",
+      "state": {
+        "format": "single",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              -1,
+              0
+            ],
+            "status": "completed",
+            "winner": "demo:5",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:7",
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:6"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T12:00:00+00:00"
+          }
+        ],
+        "champion": null
+      }
+    },
+    {
+      "label": "已完赛",
+      "description": "全部赛果已填写，冠军与完整晋级路径可查看。",
+      "state": {
+        "format": "single",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              -1,
+              0
+            ],
+            "status": "completed",
+            "winner": "demo:5",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:7",
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:6"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:6",
+            "datetime": "2026-09-19T12:00:00+00:00"
+          }
+        ],
+        "champion": "demo:1"
+      }
+    }
+  ],
+  "double": [
+    {
+      "label": "未开始",
+      "description": "首轮选手已确定，后续比赛提前显示晋级来源，BO 可待定。",
+      "state": {
+        "format": "double",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强 · 胜者组",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L1",
+            "name": "半决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "L2",
+            "name": "决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L3",
+            "name": "决赛 · 败者组 2",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L4",
+            "name": "总决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "GF",
+            "name": "总决赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "RF",
+            "name": "总决赛 · 重置赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T12:00:00+00:00"
+          },
+          {
+            "id": "M8",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M1"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T13:00:00+00:00"
+          },
+          {
+            "id": "M9",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M3"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T14:00:00+00:00"
+          },
+          {
+            "id": "M10",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M8"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T15:00:00+00:00"
+          },
+          {
+            "id": "M11",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M9"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M5"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T16:00:00+00:00"
+          },
+          {
+            "id": "M12",
+            "round_id": "L3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M10"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M11"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T17:00:00+00:00"
+          },
+          {
+            "id": "M13",
+            "round_id": "L4",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M12"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M7"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T18:00:00+00:00"
+          },
+          {
+            "id": "M14",
+            "round_id": "GF",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M7"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M13"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T19:00:00+00:00"
+          },
+          {
+            "id": "M15",
+            "round_id": "RF",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M14"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M14"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T20:00:00+00:00"
+          }
+        ],
+        "champion": null,
+        "reset_trigger": "M14"
+      }
+    },
+    {
+      "label": "进行中",
+      "description": "M1 按 3:1 晋级；M2 一方弃权；M3 暂时 2:2，后续席位仍在等待赛果。",
+      "state": {
+        "format": "double",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强 · 胜者组",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L1",
+            "name": "半决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "L2",
+            "name": "决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L3",
+            "name": "决赛 · 败者组 2",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L4",
+            "name": "总决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "GF",
+            "name": "总决赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "RF",
+            "name": "总决赛 · 重置赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              -1,
+              0
+            ],
+            "status": "completed",
+            "winner": "demo:5",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              2,
+              2
+            ],
+            "status": "playing",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:5"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T12:00:00+00:00"
+          },
+          {
+            "id": "M8",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M1"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:8",
+              "demo:4"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T13:00:00+00:00"
+          },
+          {
+            "id": "M9",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M3"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T14:00:00+00:00"
+          },
+          {
+            "id": "M10",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M8"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T15:00:00+00:00"
+          },
+          {
+            "id": "M11",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M9"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M5"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T16:00:00+00:00"
+          },
+          {
+            "id": "M12",
+            "round_id": "L3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M10"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M11"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T17:00:00+00:00"
+          },
+          {
+            "id": "M13",
+            "round_id": "L4",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M12"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M7"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T18:00:00+00:00"
+          },
+          {
+            "id": "M14",
+            "round_id": "GF",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M7"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M13"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T19:00:00+00:00"
+          },
+          {
+            "id": "M15",
+            "round_id": "RF",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M14"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M14"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T20:00:00+00:00"
+          }
+        ],
+        "champion": null,
+        "reset_trigger": "M14"
+      }
+    },
+    {
+      "label": "决赛待赛",
+      "description": "前序比赛已结束，决赛双方已自动就位。败者组冠军赢下总决赛后才会开启重置赛。",
+      "state": {
+        "format": "double",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强 · 胜者组",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L1",
+            "name": "半决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "L2",
+            "name": "决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L3",
+            "name": "决赛 · 败者组 2",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L4",
+            "name": "总决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "GF",
+            "name": "总决赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "RF",
+            "name": "总决赛 · 重置赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              -1,
+              0
+            ],
+            "status": "completed",
+            "winner": "demo:5",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:7",
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:6"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:6",
+            "datetime": "2026-09-19T12:00:00+00:00"
+          },
+          {
+            "id": "M8",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M1"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:8",
+              "demo:4"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:4",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T13:00:00+00:00"
+          },
+          {
+            "id": "M9",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M3"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:3"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T14:00:00+00:00"
+          },
+          {
+            "id": "M10",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M8"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:2"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T15:00:00+00:00"
+          },
+          {
+            "id": "M11",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M9"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M5"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T16:00:00+00:00"
+          },
+          {
+            "id": "M12",
+            "round_id": "L3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M10"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M11"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T17:00:00+00:00"
+          },
+          {
+            "id": "M13",
+            "round_id": "L4",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M12"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M7"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:6"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:6",
+            "datetime": "2026-09-19T18:00:00+00:00"
+          },
+          {
+            "id": "M14",
+            "round_id": "GF",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M7"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M13"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:7"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T19:00:00+00:00"
+          },
+          {
+            "id": "M15",
+            "round_id": "RF",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M14"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M14"
+              }
+            ],
+            "teams": [
+              null,
+              null
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "pending",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T20:00:00+00:00"
+          }
+        ],
+        "champion": null,
+        "reset_trigger": "M14"
+      }
+    },
+    {
+      "label": "总决赛重置",
+      "description": "败者组冠军赢下首场总决赛，双方进入重置赛，冠军尚未确定。",
+      "state": {
+        "format": "double",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强 · 胜者组",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L1",
+            "name": "半决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "L2",
+            "name": "决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L3",
+            "name": "决赛 · 败者组 2",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L4",
+            "name": "总决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "GF",
+            "name": "总决赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "RF",
+            "name": "总决赛 · 重置赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              -1,
+              0
+            ],
+            "status": "completed",
+            "winner": "demo:5",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:7",
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:6"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:6",
+            "datetime": "2026-09-19T12:00:00+00:00"
+          },
+          {
+            "id": "M8",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M1"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:8",
+              "demo:4"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:4",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T13:00:00+00:00"
+          },
+          {
+            "id": "M9",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M3"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:3"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T14:00:00+00:00"
+          },
+          {
+            "id": "M10",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M8"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:2"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T15:00:00+00:00"
+          },
+          {
+            "id": "M11",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M9"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M5"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T16:00:00+00:00"
+          },
+          {
+            "id": "M12",
+            "round_id": "L3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M10"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M11"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T17:00:00+00:00"
+          },
+          {
+            "id": "M13",
+            "round_id": "L4",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M12"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M7"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:6"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:6",
+            "datetime": "2026-09-19T18:00:00+00:00"
+          },
+          {
+            "id": "M14",
+            "round_id": "GF",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M7"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M13"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:7"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:1",
+            "datetime": "2026-09-19T19:00:00+00:00"
+          },
+          {
+            "id": "M15",
+            "round_id": "RF",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M14"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M14"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:7"
+            ],
+            "scores": [
+              0,
+              0
+            ],
+            "status": "ready",
+            "winner": null,
+            "loser": null,
+            "datetime": "2026-09-19T20:00:00+00:00"
+          }
+        ],
+        "champion": null,
+        "reset_trigger": "M14"
+      }
+    },
+    {
+      "label": "已完赛",
+      "description": "全部赛果已填写，冠军与完整晋级路径可查看。",
+      "state": {
+        "format": "double",
+        "reset_final": true,
+        "entrants": [
+          {
+            "id": "demo:1",
+            "name": "星河",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:2",
+            "name": "白夜",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:3",
+            "name": "青空",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:4",
+            "name": "霜月",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:5",
+            "name": "流萤",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:6",
+            "name": "北辰",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:7",
+            "name": "夏雨",
+            "avatar_url": ""
+          },
+          {
+            "id": "demo:8",
+            "name": "墨羽",
+            "avatar_url": ""
+          }
+        ],
+        "rounds": [
+          {
+            "id": "W1",
+            "name": "八强 · 胜者组",
+            "bracket": "winner",
+            "best_of": 9,
+            "stage_name": "八强"
+          },
+          {
+            "id": "W2",
+            "name": "半决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "W3",
+            "name": "决赛 · 胜者组",
+            "bracket": "winner",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L1",
+            "name": "半决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": 11,
+            "stage_name": "半决赛"
+          },
+          {
+            "id": "L2",
+            "name": "决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L3",
+            "name": "决赛 · 败者组 2",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "决赛"
+          },
+          {
+            "id": "L4",
+            "name": "总决赛 · 败者组",
+            "bracket": "loser",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "GF",
+            "name": "总决赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          },
+          {
+            "id": "RF",
+            "name": "总决赛 · 重置赛",
+            "bracket": "final",
+            "best_of": null,
+            "stage_name": "总决赛"
+          }
+        ],
+        "matches": [
+          {
+            "id": "M1",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 1
+              },
+              {
+                "kind": "seed",
+                "seed": 8
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:8"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T06:00:00+00:00"
+          },
+          {
+            "id": "M2",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 4
+              },
+              {
+                "kind": "seed",
+                "seed": 5
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:5"
+            ],
+            "scores": [
+              -1,
+              0
+            ],
+            "status": "completed",
+            "winner": "demo:5",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T07:00:00+00:00"
+          },
+          {
+            "id": "M3",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 2
+              },
+              {
+                "kind": "seed",
+                "seed": 7
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:7",
+            "datetime": "2026-09-19T08:00:00+00:00"
+          },
+          {
+            "id": "M4",
+            "round_id": "W1",
+            "sources": [
+              {
+                "kind": "seed",
+                "seed": 3
+              },
+              {
+                "kind": "seed",
+                "seed": 6
+              }
+            ],
+            "teams": [
+              "demo:3",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T09:00:00+00:00"
+          },
+          {
+            "id": "M5",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M1"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T10:00:00+00:00"
+          },
+          {
+            "id": "M6",
+            "round_id": "W2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M3"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:6"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:6",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T11:00:00+00:00"
+          },
+          {
+            "id": "M7",
+            "round_id": "W3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M5"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:6"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:6",
+            "datetime": "2026-09-19T12:00:00+00:00"
+          },
+          {
+            "id": "M8",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M1"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M2"
+              }
+            ],
+            "teams": [
+              "demo:8",
+              "demo:4"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:4",
+            "loser": "demo:8",
+            "datetime": "2026-09-19T13:00:00+00:00"
+          },
+          {
+            "id": "M9",
+            "round_id": "L1",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M3"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M4"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:3"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:3",
+            "datetime": "2026-09-19T14:00:00+00:00"
+          },
+          {
+            "id": "M10",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M8"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M6"
+              }
+            ],
+            "teams": [
+              "demo:4",
+              "demo:2"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:2",
+            "loser": "demo:4",
+            "datetime": "2026-09-19T15:00:00+00:00"
+          },
+          {
+            "id": "M11",
+            "round_id": "L2",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M9"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M5"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:5"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:5",
+            "datetime": "2026-09-19T16:00:00+00:00"
+          },
+          {
+            "id": "M12",
+            "round_id": "L3",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M10"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M11"
+              }
+            ],
+            "teams": [
+              "demo:2",
+              "demo:7"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:2",
+            "datetime": "2026-09-19T17:00:00+00:00"
+          },
+          {
+            "id": "M13",
+            "round_id": "L4",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M12"
+              },
+              {
+                "kind": "loser",
+                "match_id": "M7"
+              }
+            ],
+            "teams": [
+              "demo:7",
+              "demo:6"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:6",
+            "datetime": "2026-09-19T18:00:00+00:00"
+          },
+          {
+            "id": "M14",
+            "round_id": "GF",
+            "sources": [
+              {
+                "kind": "winner",
+                "match_id": "M7"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M13"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:7"
+            ],
+            "scores": [
+              1,
+              3
+            ],
+            "status": "completed",
+            "winner": "demo:7",
+            "loser": "demo:1",
+            "datetime": "2026-09-19T19:00:00+00:00"
+          },
+          {
+            "id": "M15",
+            "round_id": "RF",
+            "sources": [
+              {
+                "kind": "loser",
+                "match_id": "M14"
+              },
+              {
+                "kind": "winner",
+                "match_id": "M14"
+              }
+            ],
+            "teams": [
+              "demo:1",
+              "demo:7"
+            ],
+            "scores": [
+              3,
+              1
+            ],
+            "status": "completed",
+            "winner": "demo:1",
+            "loser": "demo:7",
+            "datetime": "2026-09-19T20:00:00+00:00"
+          }
+        ],
+        "champion": "demo:1",
+        "reset_trigger": "M14"
+      }
+    }
+  ]
+}
