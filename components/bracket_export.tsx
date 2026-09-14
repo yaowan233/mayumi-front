@@ -19,7 +19,7 @@ interface ExportSettings {
 
 function initialSettings(data: BracketExportInput, saved: SharedBracketSettings): ExportSettings {
     const settings: ExportSettings = {
-        rounds: Object.fromEntries(data.rounds.map((round) => [round.stage_name, {bestOf: "", banCount: "1"}])),
+        rounds: Object.fromEntries(data.rounds.filter((round) => !round.is_lobby).map((round) => [round.stage_name, {bestOf: "", banCount: "1"}])),
         acronyms: getDefaultBracketAcronyms(getBracketEntrants(data)),
     };
     for (const name of Object.keys(settings.rounds)) {
@@ -78,8 +78,9 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
     const [saveMessage, setSaveMessage] = useState("");
     const [result, setResult] = useState<{message: string; warnings: string[]} | null>(null);
     const entrants = useMemo(() => getBracketEntrants(data), [data]);
+    const configurableRounds = data.rounds.filter((round) => !round.is_lobby);
     const acronymErrors = getBracketAcronymErrors(entrants, settings.acronyms);
-    const roundOptions = Object.fromEntries(data.rounds.map((round) => {
+    const roundOptions = Object.fromEntries(configurableRounds.map((round) => {
         const fields = settings.rounds[round.stage_name];
         return [round.stage_name, {
             bestOf: fields.bestOf.trim() ? Number(fields.bestOf) : undefined,
@@ -143,7 +144,7 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
                     <p className="text-sm text-default-500">逐轮设置每方 Ban 数；BO 留空时，按该轮图池张数扣除双方 Ban 数后自动计算。</p>
                 </Card.Header>
                 <Card.Content className="divide-y divide-default-200 !p-0 dark:divide-white/10">
-                    {data.rounds.map((round) => {
+                    {configurableRounds.map((round) => {
                         const fields = settings.rounds[round.stage_name];
                         const options = roundOptions[round.stage_name];
                         const optionsError = getBracketOptionsError(options);
@@ -156,7 +157,7 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
                             <div key={round.stage_name} className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_9rem_9rem] sm:items-center">
                                 <div className="min-w-0">
                                     <h3 className="break-words font-bold">{round.stage_name}</h3>
-                                    <p className="mt-1 text-sm text-default-500">{count} 张谱面{!optionsError && ` · 导出 BO${bestOf} / 每方 ${options.banCount} Ban`}{round.is_lobby && " · Lobby 仅导出轮次和图池"}</p>
+                                    <p className="mt-1 text-sm text-default-500">{count} 张谱面{!optionsError && ` · 导出 BO${bestOf} / 每方 ${options.banCount} Ban`}</p>
                                 </div>
                                 <TextField isDisabled={pending !== null} value={fields.bestOf} onChange={(value) => updateRound("bestOf", value)} aria-label={`${round.stage_name} BO`}>
                                     <Label>BO（留空自动）</Label>
@@ -170,7 +171,7 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
                             </div>
                         );
                     })}
-                    {data.rounds.length === 0 && <p className="p-5 text-default-500">暂无已保存轮次，请先前往轮次管理添加。</p>}
+                    {configurableRounds.length === 0 && <p className="p-5 text-default-500">暂无需要配置的对阵轮次。</p>}
                 </Card.Content>
             </Card>
 
