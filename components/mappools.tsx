@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import {saveAs} from "file-saver";
 import {useParams, useRouter, useSearchParams} from "next/navigation";
 import React, {useEffect, useMemo, useRef, useState} from "react";
+import {Button, TextArea} from "@heroui/react";
 
 const IconWrapper = ({children, className}: { children: React.ReactNode; className?: string }) => (
     <svg className={className} width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -159,6 +160,40 @@ const DownloadMenu = ({
 };
 
 type DownloadSource = "beatconnect" | "osu-direct" | "official-txt";
+
+const CopyMappoolButton = ({stage}: {stage: Stage}) => {
+    const [copyState, setCopyState] = useState<"idle" | "copying" | "success" | "error">("idle");
+    const mapIds = stage.mod_bracket.flatMap((bracket) => bracket.maps.map((map) => String(map.map_id ?? "").trim()))
+        .filter((id) => /^\d+$/.test(id) && Number.isSafeInteger(Number(id)) && Number(id) > 0);
+    const text = mapIds.join("\n");
+
+    const handleCopy = async () => {
+        if (mapIds.length === 0) return;
+        setCopyState("copying");
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopyState("success");
+        } catch {
+            setCopyState("error");
+        }
+    };
+
+    return (
+        <>
+            <Button variant="primary" className="h-10 shrink-0 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary/90" isDisabled={mapIds.length === 0} isPending={copyState === "copying"} onPress={handleCopy} aria-label={`复制 ${stage.stage_name} 图池 ID`}>
+                <span aria-hidden="true"><CopyIcon className="text-base"/></span>
+                {copyState === "success" ? "已复制图池 ID" : "复制图池 ID"}
+            </Button>
+            {copyState === "success" && <p role="status" className="sr-only">已复制 {stage.stage_name} 的 {mapIds.length} 个谱面 ID</p>}
+            {copyState === "error" && (
+                <div className="order-last flex w-full flex-col gap-2">
+                    <p role="alert" className="text-sm text-danger">自动复制失败，请重试或选中下方 ID 手动复制。</p>
+                    <TextArea aria-label={`${stage.stage_name} 图池 ID`} fullWidth readOnly rows={5} value={text} onFocus={(event) => event.target.select()}/>
+                </div>
+            )}
+        </>
+    );
+};
 
 export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
     const searchParams = useSearchParams();
@@ -332,7 +367,8 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
 
             {activeStage && (
                 <div className="mx-auto w-full max-w-7xl px-4 py-8">
-                    <div className="mb-6 flex w-full justify-end">
+                    <div className="mb-6 flex w-full flex-wrap items-center justify-end gap-3">
+                        <CopyMappoolButton key={activeStage.stage_name} stage={activeStage}/>
                         <DownloadMenu
                             stage={activeStage}
                             disabled={downloadState.isOpen}

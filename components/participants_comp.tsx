@@ -1,10 +1,11 @@
 "use client"
 
-import {Avatar, Card, Chip, Tabs} from "@heroui/react";
+import {Avatar, Button, Card, Chip, Tabs, TextArea} from "@heroui/react";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import NextImage from "next/image";
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import GameModeIcon, {GameMode} from "@/components/gamemode_icon";
+import {formatParticipantsForCopy} from "@/lib/participants_copy";
 
 // --- 图标组件 ---
 const CrownIcon = () => (
@@ -47,6 +48,22 @@ const getInitials = (name?: string) => (name || "?").trim().slice(0, 2).toUpperC
 export const ParticipantsComp = ({tournament_players}: { tournament_players: TournamentPlayers }) => {
     const players = useMemo(() => tournament_players.players ?? [], [tournament_players.players]);
     const teams = useMemo(() => tournament_players.groups ?? [], [tournament_players.groups]);
+    const [copyState, setCopyState] = useState<"idle" | "copying" | "success" | "error">("idle");
+    const roster = useMemo(() => formatParticipantsForCopy({
+        players: [...players].sort((a, b) => b.pp - a.pp),
+        groups: teams,
+    }), [players, teams]);
+
+    const handleCopyParticipants = async () => {
+        if (roster.count === 0) return;
+        setCopyState("copying");
+        try {
+            await navigator.clipboard.writeText(roster.text);
+            setCopyState("success");
+        } catch {
+            setCopyState("error");
+        }
+    };
 
     // 排序逻辑
     const sortedSoloPlayers = useMemo(() => {
@@ -61,20 +78,36 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                 className="w-full"
                 defaultSelectedKey={teams.length>0 ? "teams" : "solo"}
             >
-                <Tabs.ListContainer className="w-full !rounded-none border-b border-zinc-200 !bg-transparent dark:border-white/[0.08]">
-                    <Tabs.List aria-label="Participants Options" className="mx-auto !w-max !min-w-full max-w-5xl justify-start gap-6 !rounded-none !bg-transparent !px-6 !py-0 md:justify-center md:!px-0">
-                        {teams.length > 0 && (
-                            <Tabs.Tab id="teams" className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
-                                {`队伍 (${teams.length})`}
+                <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-4 border-b border-zinc-200 px-1 dark:border-white/[0.08]">
+                    <Tabs.ListContainer className="!w-auto min-w-0 max-w-full !rounded-none !bg-transparent">
+                        <Tabs.List aria-label="Participants Options" className="!w-max !min-w-0 justify-start gap-6 !rounded-none !bg-transparent !px-0 !py-0">
+                            {teams.length > 0 && (
+                                <Tabs.Tab id="teams" className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
+                                    {`队伍 (${teams.length})`}
+                                    <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
+                                </Tabs.Tab>
+                            )}
+                            <Tabs.Tab id="solo" className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
+                                报名人员
                                 <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
                             </Tabs.Tab>
-                        )}
-                        <Tabs.Tab id="solo" className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
-                            报名人员
-                            <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
-                        </Tabs.Tab>
-                    </Tabs.List>
-                </Tabs.ListContainer>
+                        </Tabs.List>
+                    </Tabs.ListContainer>
+                    <Button size="sm" variant="secondary" className="my-2 ml-auto shrink-0" isDisabled={roster.count === 0} isPending={copyState === "copying"} onPress={handleCopyParticipants}>
+                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="8" y="8" width="12" height="12" rx="2"/>
+                            <path d="M16 8V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"/>
+                        </svg>
+                        {copyState === "success" ? "已复制名单" : "复制参赛名单"}
+                    </Button>
+                </div>
+                {copyState === "success" && <p role="status" className="sr-only">已复制 {roster.count} 名参赛成员</p>}
+                {copyState === "error" && (
+                    <div className="mx-auto mt-3 flex w-full max-w-7xl flex-col gap-2 px-1">
+                        <p role="alert" className="text-sm text-danger">自动复制失败，请重试或选中下方名单手动复制。</p>
+                        <TextArea aria-label="参赛名单（osu! ID、用户名、队伍名）" fullWidth readOnly rows={5} value={roster.text} onFocus={(event) => event.target.select()}/>
+                    </div>
+                )}
                 {teams.length > 0 && (
                     <Tabs.Panel id="teams" className="pt-6 w-full max-w-7xl mx-auto">
                         <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -99,7 +132,6 @@ export const ParticipantsComp = ({tournament_players}: { tournament_players: Tou
                                     <span className="text-sm text-default-400">人已报名</span>
                                 </div>
                             </div>
-                            {/* 如果需要右侧放东西（比如导出按钮），可以加在这里，用 ml-auto 挤过去 */}
                         </div>
 
                         <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
