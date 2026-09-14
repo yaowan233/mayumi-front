@@ -20,6 +20,9 @@ export const isAdminUser = (uid?: number) => uid !== undefined && ADMIN_UIDS.inc
 export const canPublishManagedTournament = (tournament: ManagedTournament | undefined, uid?: number) =>
     isAdminUser(uid) || Boolean(tournament?.roles.includes("主办"));
 
+export const canConfigureTournamentBracket = (roles: string[]) =>
+    roles.some((role) => [ADMIN_ROLE, "主办", "直播"].includes(role));
+
 export async function getTournamentManagementInfo(uid: number): Promise<ManagedTournament[]> {
     const data = await fetch(siteConfig.backend_url + `/api/tournament-management-info?uid=${uid}`, {
         next: {revalidate: 10},

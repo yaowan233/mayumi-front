@@ -8,6 +8,7 @@ import {Button, Card, Chip, Skeleton} from "@heroui/react";
 import {siteConfig} from "@/config/site";
 import {
     ADMIN_ROLE,
+    canConfigureTournamentBracket,
     getAdminTournamentManagementInfo,
     getTournamentManagementInfo,
     isAdminUser,
@@ -122,7 +123,9 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
                         try {
                             const [playersData, currentDraftStatus] = await Promise.all([
                                 getPlayers(currentTournament.abbreviation, 120),
-                                getDraftStatus(currentTournament.abbreviation),
+                                (currentTournament.roles ?? []).some((role) => [ADMIN_ROLE, "主办", "选图", "时间安排"].includes(role))
+                                    ? getDraftStatus(currentTournament.abbreviation)
+                                    : Promise.resolve(null),
                             ]);
                             setTournamentPlayers(playersData);
                             setDraftStatus(currentDraftStatus);
@@ -210,6 +213,13 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
             href: `${link_prefix}/statistics`,
             icon: <DataIcon/>,
             allowed: hasAdminAccess || myRoles.includes('主办')
+        },
+        {
+            title: "比赛端配置",
+            desc: "设置参赛简称、各轮 BO 和 Ban，导出比赛端文件",
+            href: `${link_prefix}/bracket`,
+            icon: <MetaIcon/>,
+            allowed: canConfigureTournamentBracket(myRoles),
         },
         {
             title: "队伍管理",
