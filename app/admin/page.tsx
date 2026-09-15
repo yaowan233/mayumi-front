@@ -1,5 +1,6 @@
 "use client"
 import {TournamentTime} from "@/components/tournament_time";
+import {StaffNotificationSettings} from "@/components/staff_notification_settings";
 import {useContext, useEffect, useMemo, useState} from "react";
 import { siteConfig } from "@/config/site";
 
@@ -154,6 +155,7 @@ export default function AdminPage() {
                 </Button>
             </div>
 
+            <StaffNotificationSettings/>
             <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
                 <table className="w-full border-collapse text-sm" aria-label="Tournaments Admin Table">
                     <thead>

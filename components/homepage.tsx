@@ -371,6 +371,7 @@ export const HomePage = ({tournament_info, initialNow}: { tournament_info: Tourn
             const res = await fetch(siteConfig.backend_url + '/api/tournament-info', {
                 'method': 'POST',
                 'body': JSON.stringify(formData),
+                credentials: 'include',
                 'headers': {'Content-Type': 'application/json'}
             })
             if (res.status != 200) {

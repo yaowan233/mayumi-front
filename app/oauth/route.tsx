@@ -8,6 +8,26 @@ import { siteConfig } from '@/config/site';
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
+    const state = searchParams.get('state');
+
+    if (state?.startsWith('staff-pm:')) {
+        const session = (await cookies()).get('uuid')?.value;
+        let authorized = false;
+        if (code && session) {
+            try {
+                const response = await fetch(`${siteConfig.backend_url}/api/staff-pm/callback`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', Cookie: `uuid=${encodeURIComponent(session)}`},
+                    body: JSON.stringify({code, state}),
+                    cache: 'no-store',
+                });
+                authorized = response.ok;
+            } catch {
+                // Codes and tokens must never be written to logs.
+            }
+        }
+        return redirect(`/admin?staff_pm=${authorized ? 'authorized' : 'failed'}`);
+    }
 
     if (!code) {
         return redirect('/')

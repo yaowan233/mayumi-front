@@ -14,12 +14,11 @@ import {
     Label,
     ListBox,
     Modal,
-    Table,
     Tabs,
     useFilter,
     useOverlayState,
 } from "@heroui/react";
-import {RegistrationInfo} from "@/components/homepage";
+import {StaffApplications, StaffApplicationsSkeleton, type StaffApplication} from "@/components/staff_applications";
 import {siteConfig} from "@/config/site";
 import {Player, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {resolveManagedTournamentName} from "@/lib/tournament_management";
@@ -57,22 +56,11 @@ const UserIcon = () => (
         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
     </svg>);
 
-const columns = [
-    {name: "UID", key: "uid"},
-    {name: "名字", key: "name"},
-    {name: "QQ", key: "qqNumber"},
-    {name: "首次Staff", key: "isFirstTimeStaff"},
-    {name: "经验", key: "tournamentExperience"},
-    {name: "意向", key: "selectedPositions"},
-    {name: "其他", key: "otherDetails"},
-    {name: "备注", key: "additionalComments"},
-];
-
 export default function EditMemberPage(props: { params: Promise<{ tournament: string }> }) {
     const params = React.use(props.params);
     const currentUser = useContext(CurrentUserContext);
     const [tournamentPlayers, setTournamentPlayers] = useState<TournamentPlayers>({players: []});
-    const [registrationInfo, setRegistrationInfo] = useState<RegistrationInfo[]>([]);
+    const [registrationInfo, setRegistrationInfo] = useState<StaffApplication[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -82,7 +70,12 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
     const [tournamentName, setTournamentName] = useState(tournament_abbr);
     const players = tournamentPlayers.players || [];
     const teams = tournamentPlayers.groups;
-    const playerNameByUid = new Map(players.map((player) => [player.uid, player.name]));
+    const [applicationError, setApplicationError] = useState("");
+    const openApplications = modalState.open;
+
+    useEffect(() => {
+        if (new URLSearchParams(window.location.search).get("applications") === "1") openApplications();
+    }, [openApplications]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -97,6 +90,9 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                     ]);
                     setTournamentPlayers(data);
                     setRegistrationInfo(regInfo);
+                    setApplicationError("");
+                } catch (error) {
+                    setApplicationError(error instanceof Error ? error.message : "加载申请失败，请重试");
                 } finally {
                     setIsLoading(false);
                 }
@@ -187,35 +183,20 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                                     {({close}) => (
                                         <>
                                             <Modal.Header>
-                                                <Modal.Heading>成员申请列表 ({registrationInfo.length})</Modal.Heading>
+                                                <Modal.Heading>Staff 申请 ({registrationInfo.length})</Modal.Heading>
                                             </Modal.Header>
                                             <Modal.Body>
-                                                <Table variant="secondary">
-                                                    <Table.ScrollContainer className="overflow-x-auto">
-                                                        <Table.Content aria-label="Applications">
-                                                            <Table.Header>
-                                                                {columns.map((column) => (
-                                                                    <Table.Column key={column.key} isRowHeader={column.key === "uid"} className={getApplicationColumnClass(column.key)}>
-                                                                        {column.name}
-                                                                    </Table.Column>
-                                                                ))}
-                                                            </Table.Header>
-                                                            <Table.Body renderEmptyState={() => <EmptyState>暂无申请</EmptyState>}>
-                                                                {registrationInfo.map((item) => (
-                                                                    <Table.Row key={item.uid} id={String(item.uid)}>
-                                                                        {columns.map((column) => (
-                                                                            <Table.Cell key={column.key}>
-                                                                                {renderRegistrationValue(item, column.key, playerNameByUid)}
-                                                                            </Table.Cell>
-                                                                        ))}
-                                                                    </Table.Row>
-                                                                ))}
-                                                            </Table.Body>
-                                                        </Table.Content>
-                                                    </Table.ScrollContainer>
-                                                </Table>
+                                                {applicationError && <p role="alert" className="mb-4 text-sm text-danger">{applicationError}</p>}
+                                                {isLoading ? <StaffApplicationsSkeleton/> : <StaffApplications applications={registrationInfo}/>}
+
                                             </Modal.Body>
                                             <Modal.Footer>
+                                                <Button variant="secondary" isPending={isLoading} onPress={async () => {
+                                                    setIsLoading(true);
+                                                    try {setRegistrationInfo(await getRegistrationInfo(tournamentName)); setApplicationError("");}
+                                                    catch (error) {setApplicationError(error instanceof Error ? error.message : "加载申请失败");}
+                                                    finally {setIsLoading(false);}
+                                                }}>刷新申请</Button>
                                                 <Button variant="ghost" className="text-danger" onPress={close}>关闭</Button>
                                             </Modal.Footer>
                                         </>
@@ -287,46 +268,6 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             </>}
         </div>
     );
-}
-
-function renderRegistrationValue(item: RegistrationInfo, columnKey: string, playerNameByUid: Map<number, string>) {
-    if (columnKey === "name") {
-        return item.uid != null ? playerNameByUid.get(item.uid) ?? "-" : "-";
-    }
-
-    const value = item[columnKey as keyof RegistrationInfo];
-
-    if (columnKey === "selectedPositions") {
-        return Array.isArray(value) ? value.join("，") : "";
-    }
-
-    if (typeof value === "boolean") {
-        return value ? "是" : "否";
-    }
-
-    return value ?? "-";
-}
-
-function getApplicationColumnClass(columnKey: string) {
-    switch (columnKey) {
-        case "uid":
-            return "min-w-20";
-        case "qqNumber":
-            return "min-w-28";
-        case "name":
-            return "min-w-32";
-        case "isFirstTimeStaff":
-            return "min-w-24";
-        case "tournamentExperience":
-            return "min-w-40";
-        case "selectedPositions":
-            return "min-w-44";
-        case "otherDetails":
-        case "additionalComments":
-            return "min-w-48";
-        default:
-            return "min-w-28";
-    }
 }
 
 // --- 子组件：单个职位管理区块 ---
@@ -553,8 +494,9 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
     )
 }
 
-async function getRegistrationInfo(tournament_name: string): Promise<RegistrationInfo[]> {
-    const res = await fetch(siteConfig.backend_url + `/api/get-registration-info?tournament_name=${tournament_name}`, {next: {revalidate: 10}});
+async function getRegistrationInfo(tournament_name: string): Promise<StaffApplication[]> {
+    const res = await fetch(siteConfig.backend_url + `/api/get-registration-info?tournament_name=${encodeURIComponent(tournament_name)}`, {credentials: "include", cache: "no-store"});
+    if (!res.ok) throw new Error("无法加载申请，请确认拥有赛事主办权限后重试");
     return await res.json();
 }
 
