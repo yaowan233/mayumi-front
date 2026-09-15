@@ -1,7 +1,7 @@
 ﻿"use client"
 import {TournamentTime} from "@/components/tournament_time";
 
-import {useCallback, useContext, useEffect, useState} from "react";
+import {useCallback, useContext, useEffect, useRef, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {Player, Team, TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
@@ -19,12 +19,15 @@ import {
     Checkbox,
     CheckboxGroup,
     Chip,
+    FieldError,
     Input,
+    Label,
     Modal,
     Radio,
     RadioGroup,
     Separator,
     TextArea,
+    TextField,
     Tooltip,
 } from "@heroui/react";
 
@@ -319,6 +322,13 @@ export const HomePage = ({tournament_info, initialNow}: { tournament_info: Tourn
         additionalComments: ''
     });
     const [members, setMembers] = useState<Player[]>([]);
+    const [showStaffErrors, setShowStaffErrors] = useState(false);
+    const staffFormRef = useRef<HTMLDivElement>(null);
+    const staffFieldErrors = {
+        qqNumber: !formData.qqNumber.trim() ? "请填写 QQ 号" : !/^\d+$/.test(formData.qqNumber.trim()) ? "QQ 号只能包含数字" : "",
+        isFirstTimeStaff: formData.isFirstTimeStaff === undefined ? "请选择是否首次担任 Staff" : "",
+        selectedPositions: formData.selectedPositions.length === 0 ? "请至少选择一个意向职位" : "",
+    };
     const [qqCopied, setQqCopied] = useState(false);
 
     useEffect(() => {
@@ -334,11 +344,12 @@ export const HomePage = ({tournament_info, initialNow}: { tournament_info: Tourn
 
     const resetRegistrationForm = useCallback(() => {
         setErrMsg('');
+        setShowStaffErrors(false);
         setFormData({
             tournament: tournament_info.abbreviation,
             uid: currentUser?.currentUser?.uid,
             qqNumber: '',
-            isFirstTimeStaff: false,
+            isFirstTimeStaff: undefined,
             tournamentExperience: '',
             selectedPositions: [],
             otherDetails: '',
@@ -359,27 +370,32 @@ export const HomePage = ({tournament_info, initialNow}: { tournament_info: Tourn
     }, [onOpenChange, resetRegistrationForm]);
 
     const handleRegistration = async (onClose: () => void) => {
+        setShowStaffErrors(true);
+        setErrMsg('');
+        if (Object.values(staffFieldErrors).some(Boolean)) {
+            requestAnimationFrame(() => {
+                const invalidField = staffFormRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+                const input = invalidField?.matches('input') ? invalidField : invalidField?.querySelector<HTMLElement>('input, [tabindex="0"]');
+                input?.focus({preventScroll: true});
+                invalidField?.scrollIntoView({block: "center"});
+            });
+            return;
+        }
         if (getRegistrationState(tournament_info) === "closed") {
             setErrMsg("该比赛报名已结束");
             return;
         }
-        if (formData.qqNumber === '' || formData.isFirstTimeStaff === undefined || formData.selectedPositions.length === 0) {
-            setErrMsg('请填写所有必填字段')
-        } else if (isNaN(Number(formData.qqNumber))) {
-            setErrMsg('QQ号必须是数字')
+        const res = await fetch(siteConfig.backend_url + '/api/tournament-info', {
+            'method': 'POST',
+            'body': JSON.stringify({...formData, qqNumber: formData.qqNumber.trim()}),
+            credentials: 'include',
+            'headers': {'Content-Type': 'application/json'}
+        })
+        if (res.status != 200) {
+            setErrMsg(await res.text());
         } else {
-            const res = await fetch(siteConfig.backend_url + '/api/tournament-info', {
-                'method': 'POST',
-                'body': JSON.stringify(formData),
-                credentials: 'include',
-                'headers': {'Content-Type': 'application/json'}
-            })
-            if (res.status != 200) {
-                setErrMsg(await res.text());
-            } else {
-                onClose();
-                alert('报名成功');
-            }
+            onClose();
+            alert('报名成功');
         }
     };
 
@@ -969,62 +985,79 @@ export const HomePage = ({tournament_info, initialNow}: { tournament_info: Tourn
                                 <Modal.Heading>报名 Staff - {tournament_info.abbreviation}</Modal.Heading>
                             </Modal.Header>
                             <Separator />
-                            <Modal.Body className="py-6 flex flex-col gap-6 max-h-[70vh] overflow-y-auto">
+                            <Modal.Body ref={staffFormRef} className="py-6 flex flex-col gap-6 max-h-[70vh] overflow-y-auto">
                                 <Alert status="default" className={`${alertToneClass.default} rounded-lg border-l-[3px] px-4 py-3`}>
                                     <Alert.Content>
-                                        <Alert.Title>请务必填写真实有效的信息，以便我们与您联系。</Alert.Title>
+                                        <Alert.Title>请务必填写真实有效的信息，以便我们与您联系。标有 * 的项目为必填项。</Alert.Title>
                                     </Alert.Content>
                                 </Alert>
 
                                 <div className="flex flex-col gap-4">
-                                    <label className="flex flex-col gap-1 text-sm">
-                                        <span className="font-bold text-zinc-700 dark:text-zinc-300">QQ号</span>
-                                        <Input required placeholder="请输入您的QQ号码"
-                                               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, qqNumber: e.target.value})}/>
-                                    </label>
+                                    <TextField isRequired validationBehavior="aria" isInvalid={showStaffErrors && Boolean(staffFieldErrors.qqNumber)}
+                                        value={formData.qqNumber} onChange={(value) => setFormData({...formData, qqNumber: value})}>
+                                        <Label className="font-bold text-zinc-700 dark:text-zinc-300">QQ号</Label>
+                                        <Input inputMode="numeric" placeholder="请输入您的QQ号码"/>
+                                        <FieldError>{staffFieldErrors.qqNumber}</FieldError>
+                                    </TextField>
 
                                     <div className="flex flex-col gap-2">
-                                        <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">是否第一次担任 Staff？</span>
                                         <RadioGroup
-                                            orientation="horizontal"
                                             isRequired
-                                            className="ml-1 flex flex-wrap gap-3"
-                                            onChange={(value: string) => setFormData({...formData, isFirstTimeStaff: (value !== "")})}
+                                            validationBehavior="aria"
+                                            isInvalid={showStaffErrors && Boolean(staffFieldErrors.isFirstTimeStaff)}
+                                            className="gap-2"
+                                            value={formData.isFirstTimeStaff === undefined ? null : formData.isFirstTimeStaff ? "yes" : "no"}
+                                            onChange={(value: string) => setFormData({...formData, isFirstTimeStaff: value === "yes"})}
                                         >
-                                            <Radio value="1" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                                            <Label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">是否第一次担任 Staff？</Label>
+                                            <div className="flex flex-wrap gap-6">
+                                            <Radio value="yes" className="!mt-0">
                                                 <Radio.Content>
                                                     <Radio.Control><Radio.Indicator /></Radio.Control>
-                                                    是
+                                                    <span>是</span>
                                                 </Radio.Content>
                                             </Radio>
-                                            <Radio value="" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                                            <Radio value="no" className="!mt-0">
                                                 <Radio.Content>
                                                     <Radio.Control><Radio.Indicator /></Radio.Control>
-                                                    否
+                                                    <span>否</span>
                                                 </Radio.Content>
                                             </Radio>
+                                            </div>
+                                            <FieldError>{staffFieldErrors.isFirstTimeStaff}</FieldError>
                                         </RadioGroup>
                                     </div>
                                 </div>
                                 <label className="flex flex-col gap-1 text-sm">
-                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">赛事经验</span>
+                                    <span className="font-bold text-zinc-700 dark:text-zinc-300">赛事经验 (选填)</span>
                                     <TextArea rows={3} placeholder="请简述您参与过的比赛及担任的职位..."
                                               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({...formData, tournamentExperience: e.target.value})} />
                                 </label>
-                                <div className="flex flex-col gap-2">
-                                    <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">选择意向职位</span>
-                                    <CheckboxGroup isRequired className="flex flex-wrap gap-4"
-                                        onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}>
-                                        {tournament_info.streamer && <Checkbox value="直播" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>直播</Checkbox.Content></Checkbox>}
-                                        {tournament_info.referee && <Checkbox value="裁判" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>裁判</Checkbox.Content></Checkbox>}
-                                        {tournament_info.commentator && <Checkbox value="解说" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>解说</Checkbox.Content></Checkbox>}
-                                        {tournament_info.mappooler && <Checkbox value="选图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>选图</Checkbox.Content></Checkbox>}
-                                        {tournament_info.custom_mapper && <Checkbox value="作图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>作图</Checkbox.Content></Checkbox>}
-                                        {tournament_info.designer && <Checkbox value="设计" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>设计</Checkbox.Content></Checkbox>}
-                                        {tournament_info.scheduler && <Checkbox value="赛程安排" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>赛程安排</Checkbox.Content></Checkbox>}
-                                        {tournament_info.map_tester && <Checkbox value="测图" className="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-200"><Checkbox.Content><Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>测图</Checkbox.Content></Checkbox>}
-                                    </CheckboxGroup>
-                                </div>
+                                <CheckboxGroup isRequired className="gap-3" value={formData.selectedPositions}
+                                    validationBehavior="aria" isInvalid={showStaffErrors && Boolean(staffFieldErrors.selectedPositions)}
+                                    onChange={(value: string[]) => setFormData({...formData, selectedPositions: value})}>
+                                    <Label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">选择意向职位</Label>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+                                        {([
+                                            [tournament_info.streamer, "直播"],
+                                            [tournament_info.referee, "裁判"],
+                                            [tournament_info.commentator, "解说"],
+                                            [tournament_info.mappooler, "选图"],
+                                            [tournament_info.custom_mapper, "作图"],
+                                            [tournament_info.designer, "设计"],
+                                            [tournament_info.scheduler, "赛程安排"],
+                                            [tournament_info.map_tester, "测图"],
+                                        ] as const).filter(([enabled]) => enabled).map(([, position]) => (
+                                            <Checkbox key={position} value={position} className="!mt-0 min-w-0">
+                                                <Checkbox.Content className="w-full gap-2 py-1">
+                                                    <Checkbox.Control><Checkbox.Indicator /></Checkbox.Control>
+                                                    <Label className="text-sm font-normal">{position}</Label>
+                                                </Checkbox.Content>
+                                            </Checkbox>
+                                        ))}
+                                    </div>
+                                    <FieldError>{staffFieldErrors.selectedPositions}</FieldError>
+                                </CheckboxGroup>
                                 <div className="flex flex-col gap-4">
                                      <label className="flex flex-col gap-1 text-sm">
                                          <span className="font-bold text-zinc-700 dark:text-zinc-300">其他说明 (选填)</span>
