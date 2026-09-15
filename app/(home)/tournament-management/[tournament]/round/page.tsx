@@ -1,7 +1,8 @@
 "use client";
+import {ManagementSkeleton} from "@/components/page_skeleton";
 import React, {useCallback, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
-import {Button, Card, FieldError, Input, Label, Spinner, Switch, TextField} from "@heroui/react";
+import {Button, Card, FieldError, Input, Label, Switch, TextField} from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {TournamentInfo} from "@/components/homepage";
 import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
@@ -126,14 +127,7 @@ export default function EditRoundPage(props: { params: Promise<{ tournament: str
         setFormData(newFormData);
     };
 
-    if (isLoading) {
-        return (
-            <div className="w-full h-[50vh] flex flex-col items-center justify-center gap-4">
-                <Spinner size="lg" color="accent"/>
-                <p className="text-default-500">正在加载轮次信息...</p>
-            </div>
-        );
-    }
+    if (isLoading) return <ManagementSkeleton page="round"/>;
 
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">

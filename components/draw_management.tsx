@@ -1,9 +1,10 @@
 "use client";
 
+import {DrawManagementSkeleton} from "@/components/page_skeleton";
 import {useContext, useState} from "react";
 import useSWR from "swr";
 import NextLink from "next/link";
-import {Button, Input, Label, Spinner, TextField} from "@heroui/react";
+import {Button, Input, Label, TextField} from "@heroui/react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {localDateTimeInputToUtc, utcDateTimeToLocalInput} from "@/lib/datetime";
@@ -18,7 +19,7 @@ export function DrawManagement({tournamentName}: {tournamentName: string}) {
     const {data, error, mutate} = useSWR(user?.uid ? [url, user.uid] : null, ([endpoint]: [string, number]) => requestDraw<DrawManagementResponse>(endpoint), {revalidateOnFocus: false});
     if (user === null) return <p>请先登录。</p>;
     if (error) return <div className="flex items-center gap-3"><p role="alert">{error.message}</p><Button variant="secondary" onPress={() => void mutate()}>重试</Button></div>;
-    if (!data) return <Spinner aria-label="加载对阵管理"/>;
+    if (!data) return <DrawManagementSkeleton/>;
     return <DrawEditor key={`${tournamentName}:${user?.uid}`} data={data} url={url} tournamentName={tournamentName} onChange={async response => {await mutate({...data, ...response}, {revalidate: false});}} onReload={async () => {await mutate();}}/>;
 }
 

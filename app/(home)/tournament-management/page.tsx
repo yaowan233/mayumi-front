@@ -1,5 +1,6 @@
 'use client'
-import {Button, Card, Chip, Skeleton, Tooltip} from "@heroui/react";
+import {Button, Card, Chip, Tooltip} from "@heroui/react";
+import {ManagementListSkeleton} from "@/components/page_skeleton";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {
@@ -133,15 +134,7 @@ export default function TournamentManagementPage() {
 
             {/* 内容区 */}
             {isLoading ? (
-                // Loading Skeleton (保持不变)
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map((i) => (
-                        <Card key={i} className="h-[180px] space-y-4 rounded-lg p-4">
-                            <Skeleton className="h-6 w-1/3 rounded-lg"/>
-                            <Skeleton className="h-20 rounded-lg"/>
-                        </Card>
-                    ))}
-                </div>
+                <ManagementListSkeleton/>
             ) : !isLoggedIn ? (
                 // 未登录 (保持不变)
                 <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-default-200 dark:border-default-100 rounded-2xl bg-default-50 dark:bg-zinc-900/30">

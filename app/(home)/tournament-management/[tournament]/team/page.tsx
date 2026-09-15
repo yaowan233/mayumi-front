@@ -1,4 +1,5 @@
 "use client"
+import {ManagementSkeleton} from "@/components/page_skeleton";
 
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
@@ -23,7 +24,6 @@ import {
     ListBox,
     SearchField,
     Separator,
-    Spinner,
     TextField,
     useFilter,
 } from "@heroui/react";
@@ -136,9 +136,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
         setTournamentPlayers(prev => ({...prev, groups: newTeams}));
     };
 
-    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg"
-                                                                                                     color="accent"/>
-    </div>;
+    if (isLoading) return <ManagementSkeleton page="team"/>;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">

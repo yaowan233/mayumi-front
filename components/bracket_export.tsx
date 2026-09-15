@@ -1,7 +1,8 @@
 "use client";
 
+import {BracketExportSkeleton} from "@/components/page_skeleton";
 import {useContext, useEffect, useMemo, useState} from "react";
-import {Button, Card, FieldError, Input, Label, Spinner, TextField} from "@heroui/react";
+import {Button, Card, FieldError, Input, Label, TextField} from "@heroui/react";
 import {saveAs} from "file-saver";
 import CurrentUserContext from "@/app/user_context";
 import {canConfigureTournamentBracket, resolveManagedTournament} from "@/lib/tournament_management";
@@ -60,7 +61,7 @@ export function BracketExport({tournamentName}: {tournamentName: string}) {
 
     if (user === null) return <p className="text-default-500">请先登录后查看比赛端配置。</p>;
     if (error) return <div className="flex flex-col items-start gap-3"><p role="alert" className="text-danger">{error}</p><Button variant="secondary" onPress={() => setReload((value) => value + 1)}>重新加载</Button></div>;
-    if (!loaded) return <div className="flex h-48 items-center justify-center"><Spinner aria-label="正在加载比赛端配置"/></div>;
+    if (!loaded) return <BracketExportSkeleton/>;
     return <BracketExportEditor key={`${tournamentName}:${user?.uid}:${reload}`} data={loaded.data} initial={loaded.settings} initialRevision={loaded.revision} tournamentName={tournamentName} onReload={() => setReload((value) => value + 1)}/>;
 }
 

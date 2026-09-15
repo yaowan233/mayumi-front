@@ -1,4 +1,5 @@
 "use client";
+import {ManagementSkeleton} from "@/components/page_skeleton";
 
 import React, {type Key, useContext, useEffect, useRef, useState, useSyncExternalStore} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
@@ -17,7 +18,6 @@ import {
     ListBox,
     SearchField,
     Separator,
-    Spinner,
     Switch,
     Tabs,
     TextField,
@@ -223,8 +223,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         setScheduleInfo([...scheduleInfo, newSchedule]);
     };
 
-    if (isLoading) return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg"/>
-    </div>;
+    if (isLoading) return <ManagementSkeleton page="scheduler"/>;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">

@@ -1,10 +1,11 @@
 "use client";
+import {DashboardSkeleton} from "@/components/page_skeleton";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
-import {Button, Card, Chip, Skeleton} from "@heroui/react";
+import {Button, Card, Chip} from "@heroui/react";
 import {siteConfig} from "@/config/site";
 import {
     ADMIN_ROLE,
@@ -411,28 +412,6 @@ const DashboardCard = ({item}: { item: MenuItem }) => {
 }
 
 // --- 子组件：加载骨架 ---
-const DashboardSkeleton = () => (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8">
-        <div className="space-y-3">
-            <Skeleton className="w-48 h-10 rounded-lg bg-default-200"/>
-            <Skeleton className="w-64 h-6 rounded-lg bg-default-100"/>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-                // 修复：骨架屏背景色 bg-surface dark:bg-zinc-900
-                <Card key={i}
-                      className="h-[140px] bg-surface dark:bg-zinc-900 border border-default-200 dark:border-white/5 p-6 space-y-4">
-                    <Skeleton className="w-12 h-12 rounded-xl bg-default-200"/>
-                    <div className="space-y-2">
-                        <Skeleton className="w-24 h-5 rounded-lg bg-default-200"/>
-                        <Skeleton className="w-full h-3 rounded-lg bg-default-100"/>
-                    </div>
-                </Card>
-            ))}
-        </div>
-    </div>
-)
-
 // --- 数据获取 ---
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
     const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name,

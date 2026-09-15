@@ -1,8 +1,9 @@
 "use client";
+import {MappoolEditorSkeleton} from "@/components/page_skeleton";
 
 import React, {useContext, useEffect, useState} from "react";
 import NextImage from "next/image";
-import {Button, Card, Input, Label, Spinner, Tabs, TextArea, TextField} from "@heroui/react";
+import {Button, Card, Input, Label, Tabs, TextArea, TextField} from "@heroui/react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {siteConfig} from "@/config/site";
@@ -190,13 +191,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         ]);
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex h-[50vh] w-full items-center justify-center">
-                <Spinner size="lg" color="accent"/>
-            </div>
-        );
-    }
+    if (isLoading) return <MappoolEditorSkeleton/>;
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-32 py-8">

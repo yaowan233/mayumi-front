@@ -1,5 +1,6 @@
 "use client";
 
+import {MemberEditorSkeleton} from "@/components/page_skeleton";
 import React, {type Key, useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {
@@ -13,7 +14,6 @@ import {
     Label,
     ListBox,
     Modal,
-    Spinner,
     Table,
     Tabs,
     useFilter,
@@ -227,12 +227,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                 </div>
             </div>
 
-            {isLoading && (
-                <div className="flex min-h-60 flex-col items-center justify-center gap-3 text-default-500">
-                    <Spinner />
-                    <span>正在加载成员信息...</span>
-                </div>
-            )}
+            {isLoading && <MemberEditorSkeleton/>}
 
             {!isLoading && <>
             {/* Main Content: Role Management Tabs */}

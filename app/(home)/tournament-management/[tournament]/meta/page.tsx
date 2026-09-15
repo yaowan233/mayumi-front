@@ -1,9 +1,10 @@
 "use client"
+import {ManagementSkeleton} from "@/components/page_skeleton";
 import React, {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
 import {TournamentInfo} from "@/components/homepage";
 import {TournamentInfoForm} from "@/components/tournament_info_form";
-import {Button, Card, Spinner} from "@heroui/react";
+import {Button, Card, } from "@heroui/react";
 import {useRouter} from "next/navigation";
 import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
 import {getDraftSection, publishTournamentDraft, saveDraftSection} from "@/lib/tournament_drafts";
@@ -122,14 +123,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
         }
     }
 
-    if (isLoadingData) {
-        return (
-            <div className="w-full h-[60vh] flex flex-col items-center justify-center gap-4">
-                <Spinner size="lg" color="accent"/>
-                <p className="text-default-500">正在加载赛事信息...</p>
-            </div>
-        );
-    }
+    if (isLoadingData) return <ManagementSkeleton page="meta"/>;
 
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-10 flex flex-col gap-8">

@@ -1,4 +1,5 @@
 "use client";
+import {ManagementSkeleton} from "@/components/page_skeleton";
 
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { TournamentRoundInfo } from "@/app/(home)/tournament-management/[tournament]/round/page";
@@ -330,10 +331,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         );
     };
 
-    if (isLoading) {
-        return <div className="w-full h-[50vh] flex justify-center items-center"><Spinner size="lg" color="accent" />
-        </div>;
-    }
+    if (isLoading) return <ManagementSkeleton page="statistics"/>;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8">

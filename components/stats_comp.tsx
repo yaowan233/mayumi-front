@@ -1,6 +1,7 @@
 "use client"
 
-import {Avatar, Card, Chip, Spinner, Tabs} from "@heroui/react";
+import {LeaderboardSkeleton} from "@/components/page_skeleton";
+import {Avatar, Card, Chip, Tabs} from "@heroui/react";
 import React, {useEffect, useMemo, useState} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
@@ -293,12 +294,7 @@ const LeaderboardPanel = ({round, preview}: { round: TournamentRoundInfo, previe
         return "";
     };
 
-    if (loading) return (
-        <div className="flex h-40 w-full flex-col items-center justify-center gap-3 text-default-500">
-            <Spinner />
-            <span>加载排行榜...</span>
-        </div>
-    );
+    if (loading) return <LeaderboardSkeleton/>;
     if (loadError) return <div className="p-4 text-danger">{loadError}</div>;
     if (leaderboard.length === 0) return <div className="text-default-400 p-4">暂无排行数据</div>;
 

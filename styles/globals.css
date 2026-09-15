@@ -37,13 +37,18 @@ html {
     font-size: 15px;
 }
 
-@keyframes nav-loading {
-    0% {
-        transform: translateX(-120%);
-    }
-    100% {
-        transform: translateX(340%);
-    }
+/* Reserve the content layout immediately; avoid flashing on fast navigation. */
+.page-skeleton {
+    animation: skeleton-appear 120ms ease-out 160ms both;
+}
+
+@keyframes skeleton-appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-skeleton { animation-duration: 0ms; }
 }
 
 .text-stroke {
