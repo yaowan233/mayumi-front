@@ -71,6 +71,24 @@ export function formatMatchScore(score: number): string {
     return score === -1 ? "弃权" : String(score);
 }
 
+// Collapse automatic advances for display without changing the saved bracket.
+export function visibleDraw(state: TournamentDraw): TournamentDraw {
+    const byId = new Map(state.matches.map(match => [match.id, match]));
+    const resolveSource = (source: DrawSource): DrawSource => {
+        if (!("match_id" in source)) return source;
+        const parent = byId.get(source.match_id);
+        if (!parent || parent.status !== "bye") return source;
+        if (source.kind === "loser") return {kind: "bye"};
+        const winnerIndex = parent.winner === null ? -1 : parent.teams.indexOf(parent.winner);
+        if (winnerIndex >= 0) return resolveSource(parent.sources[winnerIndex]);
+        return parent.sources.map(resolveSource).find(item => item.kind !== "bye") ?? {kind: "bye"};
+    };
+    const matches = state.matches.filter(match => match.status !== "bye").map(match => ({
+        ...match, sources: match.sources.map(resolveSource),
+    }));
+    return {...state, matches, rounds: state.rounds.filter(round => matches.some(match => match.round_id === round.id))};
+}
+
 export function layoutDraw(state: TournamentDraw) {
     const positions: Record<string, {x: number; y: number}> = {};
     const headers: {round: DrawRound; x: number; y: number}[] = [];

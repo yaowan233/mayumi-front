@@ -3,9 +3,10 @@
 import {useMemo, useRef, useState} from "react";
 import {Avatar, Button, Input, Label, TextField} from "@heroui/react";
 import {formatUtcDateTime} from "@/lib/datetime";
-import {DRAW_STATUS, drawSlotLabel, formatMatchScore, layoutDraw, type DrawMatch, type TournamentDraw} from "@/lib/tournament_draw";
+import {DRAW_STATUS, drawSlotLabel, formatMatchScore, layoutDraw, visibleDraw, type DrawMatch, type TournamentDraw} from "@/lib/tournament_draw";
 
-export function TournamentDrawBoard({state, onSelect, selectedId}: {state: TournamentDraw; onSelect?: (match: DrawMatch) => void; selectedId?: string}) {
+export function TournamentDrawBoard({state: savedState, onSelect, selectedId}: {state: TournamentDraw; onSelect?: (match: DrawMatch) => void; selectedId?: string}) {
+    const state = useMemo(() => visibleDraw(savedState), [savedState]);
     const [query, setQuery] = useState("");
     const [zoom, setZoom] = useState(1);
     const [detailId, setDetailId] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export function TournamentDrawBoard({state, onSelect, selectedId}: {state: Tourn
                         {state.matches.flatMap(match => match.sources.map((source, index) => {
                             if (!("match_id" in source)) return null;
                             const from = layout.positions[source.match_id], to = layout.positions[match.id];
+                            if (!from || !to) return null;
                             const parent = state.matches.find(m => m.id === source.match_id)!;
                             const sameGroup = state.rounds.find(r => r.id === parent.round_id)?.bracket === state.rounds.find(r => r.id === match.round_id)?.bracket;
                             const highlight = activeId === match.id || activeId === source.match_id;
@@ -67,7 +69,7 @@ export function TournamentDrawBoard({state, onSelect, selectedId}: {state: Tourn
                     {state.matches.map(match => {
                         const position = layout.positions[match.id];
                         const found = !query.trim() || [match.id, ...[0, 1].map(i => drawSlotLabel(state, match, i))].some(text => text.toLowerCase().includes(query.trim().toLowerCase()));
-                        return <button key={match.id} type="button" onClick={() => {setDetailId(match.id); onSelect?.(match);}} aria-pressed={match.id === activeId}
+                        return <button key={match.id} type="button" onClick={() => {setDetailId(match.id); onSelect?.(savedState.matches.find(item => item.id === match.id)!);}} aria-pressed={match.id === activeId}
                             aria-label={`${match.id}：${drawSlotLabel(state, match, 0)} 对 ${drawSlotLabel(state, match, 1)}，${match.scores.map(formatMatchScore).join(' 比 ')}，${DRAW_STATUS[match.status]}`}
                             style={{left: position.x, top: position.y}}
                             className={`absolute h-[132px] w-[264px] overflow-hidden rounded-xl border bg-white text-left shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:bg-zinc-950 ${related.has(match.id) ? "border-primary ring-1 ring-primary/20" : "border-default-200 hover:border-primary/60 dark:border-white/15"} ${found ? "opacity-100" : "opacity-30"}`}>
