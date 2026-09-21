@@ -93,3 +93,34 @@ test("double elimination links skip chained byes and omit empty round columns", 
         if ("match_id" in source) assert.ok(layout.positions[source.match_id]);
     }
 });
+
+test("pending loser matches with guaranteed empty slots collapse before upstream results exist", () => {
+    const pending = (id: string, sources: DrawMatch["sources"]): DrawMatch => ({
+        ...state.matches[2], id, sources, teams: [null, null],
+    });
+    const original: TournamentDraw = {
+        ...state, format: "double",
+        matches: [
+            ...state.matches,
+            pending("M32", [{kind: "loser", match_id: "M1"}, {kind: "loser", match_id: "M2"}]),
+            pending("M40", [{kind: "winner", match_id: "M32"}, {kind: "loser", match_id: "M3"}]),
+            pending("M41", [{kind: "bye"}, {kind: "loser", match_id: "M3"}]),
+            pending("M48", [{kind: "winner", match_id: "M40"}, {kind: "winner", match_id: "M41"}]),
+            pending("empty", [{kind: "loser", match_id: "M1"}, {kind: "bye"}]),
+            pending("empty-chain", [{kind: "winner", match_id: "empty"}, {kind: "loser", match_id: "M32"}]),
+        ].reverse(),
+    };
+    const snapshot = structuredClone(original);
+    const visible = visibleDraw(original);
+    for (const id of ["M1", "M32", "M41", "empty", "empty-chain"]) {
+        assert.ok(!visible.matches.some(match => match.id === id), `${id} must not render a bye card`);
+    }
+    const m40 = visible.matches.find(match => match.id === "M40")!;
+    assert.equal(drawSlotLabel(visible, m40, 0), "M2 败者");
+    assert.equal(drawSlotLabel(visible, visible.matches.find(match => match.id === "M48")!, 1), "M3 败者");
+    assert.ok(visible.matches.some(match => match.id === "M2"), "unresolved entrants are not byes");
+    for (const match of visible.matches) for (const source of match.sources) {
+        if ("match_id" in source) assert.ok(visible.matches.some(parent => parent.id === source.match_id));
+    }
+    assert.deepEqual(original, snapshot);
+});

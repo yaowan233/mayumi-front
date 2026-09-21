@@ -74,18 +74,33 @@ export function formatMatchScore(score: number): string {
 // Collapse automatic advances for display without changing the saved bracket.
 export function visibleDraw(state: TournamentDraw): TournamentDraw {
     const byId = new Map(state.matches.map(match => [match.id, match]));
+    const resolved = new Map<string, DrawMatch>();
+    const hidden = new Set<string>();
+    const resolveMatch = (match: DrawMatch): DrawMatch => {
+        const cached = resolved.get(match.id);
+        if (cached) return cached;
+        const sources = match.sources.map(resolveSource);
+        const display = {...match, sources};
+        resolved.set(match.id, display);
+        // A pending opponent can still advance automatically if the other slot
+        // can never receive an entrant (including the loser of another bye).
+        if (match.status === "bye" || (match.status === "pending" && sources.some((source, index) => source.kind === "bye" && !match.teams[index]))) {
+            hidden.add(match.id);
+        }
+        return display;
+    };
     const resolveSource = (source: DrawSource): DrawSource => {
         if (!("match_id" in source)) return source;
         const parent = byId.get(source.match_id);
-        if (!parent || parent.status !== "bye") return source;
+        if (!parent) return source;
+        const display = resolveMatch(parent);
+        if (!hidden.has(parent.id)) return source;
         if (source.kind === "loser") return {kind: "bye"};
         const winnerIndex = parent.winner === null ? -1 : parent.teams.indexOf(parent.winner);
-        if (winnerIndex >= 0) return resolveSource(parent.sources[winnerIndex]);
-        return parent.sources.map(resolveSource).find(item => item.kind !== "bye") ?? {kind: "bye"};
+        if (winnerIndex >= 0) return display.sources[winnerIndex];
+        return display.sources.find(item => item.kind !== "bye") ?? {kind: "bye"};
     };
-    const matches = state.matches.filter(match => match.status !== "bye").map(match => ({
-        ...match, sources: match.sources.map(resolveSource),
-    }));
+    const matches = state.matches.map(resolveMatch).filter(match => !hidden.has(match.id));
     return {...state, matches, rounds: state.rounds.filter(round => matches.some(match => match.round_id === round.id))};
 }
 
