@@ -51,6 +51,23 @@ html {
     .page-skeleton { animation-duration: 0ms; }
 }
 
+.recommendation-explorer :where(button, [role="button"], a[href], summary, select, input[type="checkbox"]):not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {
+    cursor: pointer;
+}
+
+.recommendation-explorer :where(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):not([data-disabled]):hover {
+    filter: brightness(0.94);
+}
+
+.recommendation-explorer :where(button, [role="button"], a[href], summary, select, input[type="checkbox"]):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.recommendation-explorer :where(button, [role="button"], select, input):is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
+}
+
 .text-stroke {
     text-shadow: -1px -1px 0 black,
     1px -1px 0 black,

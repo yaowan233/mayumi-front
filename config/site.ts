@@ -21,6 +21,10 @@ export const siteConfig = {
             href: "/user-info",
         },
         {
+            label: "谱面推荐",
+            href: "/recommend",
+        },
+        {
             label: "关于",
             href: "/about",
         }
