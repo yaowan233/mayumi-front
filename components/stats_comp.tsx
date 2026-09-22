@@ -445,12 +445,12 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
         return mapScores.some(score => (score.mod ?? []).some(m => m !== 'NF' && m !== map.mod));
     }, [mapScores, map.mod]);
     const scoreGridClass = isContainMods
-        ? "grid-cols-[40px_minmax(0,1fr)_64px_120px]"
-        : "grid-cols-[40px_minmax(0,1fr)_120px]";
+        ? "grid-cols-[24px_minmax(0,1fr)_84px] @min-[360px]:grid-cols-[32px_minmax(0,1fr)_48px_100px]"
+        : "grid-cols-[24px_minmax(0,1fr)_84px] @min-[360px]:grid-cols-[32px_minmax(0,1fr)_100px]";
 
     return (
         <Card
-            className="flex h-[500px] flex-col overflow-hidden border border-zinc-200 bg-white !p-0 shadow-lg dark:border-white/5 dark:bg-zinc-900"
+            className="@container flex h-[500px] min-w-0 flex-col overflow-hidden border border-zinc-200 bg-white !p-0 shadow-lg dark:border-white/5 dark:bg-zinc-900"
         >
             {/* 1. 地图头部信息 */}
             <Card.Header className="relative h-[140px] shrink-0 overflow-hidden z-0 !p-0">
@@ -495,13 +495,14 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                         <div className={`grid ${scoreGridClass} sticky top-0 z-30 gap-2 border-b border-zinc-200 bg-zinc-100 p-3 text-xs font-bold text-zinc-500 dark:border-white/[0.08] dark:bg-zinc-800`}>
                             <div className="text-center">#</div>
                             <div>Player</div>
-                            {isContainMods && <div className="text-center">Mods</div>}
-                            <div className="text-right pr-2">Score / Acc</div>
+                            {isContainMods && <div className="hidden text-center @min-[360px]:block">Mods</div>}
+                            <div className="text-right">Score / Acc</div>
                         </div>
 
                         {/* 列表内容 */}
                         {mapScores.map((score, idx) => {
                             const player = players?.find(p => p.uid.toString() === score.player);
+                            const mods = (score.mod ?? []).filter(m => m !== 'NF' && m !== map.mod).join('');
                             return (
                                 <div key={idx} className={`grid ${scoreGridClass} items-center gap-2 border-b border-zinc-200/70 p-3 text-sm transition-colors last:border-b-0 hover:bg-zinc-100 dark:border-white/[0.06] dark:hover:bg-white/5`}>
                                     <div className={`text-center font-bold ${idx < 3 ? 'text-primary' : 'text-zinc-500 dark:text-zinc-400'}`}>
@@ -509,23 +510,24 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                                     </div>
                                     <div className="min-w-0">
                                         <div className="flex min-w-0 items-center gap-2">
-                                            <Avatar size="sm" className="hidden sm:flex">
+                                            <Avatar size="sm" className="hidden shrink-0 @min-[360px]:flex">
                                                 <Avatar.Image src={`https://a.ppy.sh/${player?.uid ?? ""}`} alt={player?.name || score.player}/>
                                                 <Avatar.Fallback>{(player?.name || score.player)?.[0] ?? "?"}</Avatar.Fallback>
                                             </Avatar>
-                                            <span className="truncate text-small font-medium text-zinc-900 dark:text-zinc-100">
+                                            <span title={player?.name || score.player} className="min-w-0 break-all text-small font-medium text-zinc-900 dark:text-zinc-100 @min-[360px]:truncate">
                                                 {player?.name || score.player}
                                             </span>
                                         </div>
+                                        {mods && <div className="mt-1 break-all text-xs text-warning @min-[360px]:hidden"><span className="sr-only">Mods: </span>{mods}</div>}
                                     </div>
 
                                     {isContainMods && (
-                                        <div className="text-center text-xs text-warning">
-                                            {(score.mod ?? []).filter((m) => m !== 'NF' && m !== map.mod).join('')}
+                                        <div className="hidden break-all text-center text-xs text-warning @min-[360px]:block">
+                                            {mods}
                                         </div>
                                     )}
 
-                                    <div className="text-right pr-2">
+                                    <div className="text-right">
                                         {/* 修复 5: 分数颜色 */}
                                         <div className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{score.score.toLocaleString()}</div>
                                         <div className={`text-xs ${score.acc === 1 ? 'text-emerald-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
