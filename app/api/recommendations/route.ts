@@ -11,10 +11,12 @@ import { taikoOpportunity } from "@/lib/taiko-opportunity";
 import { stdOpportunity } from "@/lib/std-opportunity";
 import { botRecommendationDisplay } from "@/lib/recommendation-display";
 import { requestRecommendations } from "@/lib/recommendation-request";
+import { createRecommendationJobs } from "@/lib/recommendation-web-jobs";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 660;
 let active = 0;
+const webJobs = createRecommendationJobs();
 
 type CustomItem = {
     beatmap_id: number; beatmapset_id?: number; title?: string; artist?: string; version?: string;
@@ -35,9 +37,20 @@ export async function GET(request: Request) {
     if (session.status !== "authenticated") return Response.json({
         error: session.status === "unauthorized" ? "请先登录，或重新登录后使用推荐服务。" : "登录验证服务暂时不可用，请稍后重试。",
     }, { status: session.status === "unauthorized" ? 401 : 503, headers: { "Cache-Control": "no-store" } });
+    const params = new URL(request.url).searchParams;
+    if (params.has("job")) return webJobs.poll(session.uid, params.get("job")!);
     let filters: Filters;
     try { filters = parseFilters(new URL(request.url).searchParams); }
     catch (error) { return Response.json({ error: error instanceof Error ? error.message : "筛选条件无效" }, { status: 400 }); }
+    if (request.method === "POST") {
+        return webJobs.start(session.uid, JSON.stringify(filters), () => computeRecommendations(filters, new AbortController().signal));
+    }
+    return computeRecommendations(filters, request.signal);
+}
+
+export const POST = GET;
+
+async function computeRecommendations(filters: Filters, signal: AbortSignal) {
     const base = process.env.CUSTOM_RECOMMENDER_API_URL;
     if (!base) return Response.json({ error: "尚未配置定制推荐引擎地址，请联系管理员。" }, { status: 503 });
     if (active >= 2) return Response.json({ error: "推荐服务忙，请稍后重试" }, { status: 429, headers: { "Retry-After": "15" } });
@@ -46,8 +59,8 @@ export async function GET(request: Request) {
         const headers: Record<string, string> = { "Content-Type": "application/json" };
         if (process.env.CUSTOM_RECOMMENDER_API_TOKEN) headers.Authorization = `Bearer ${process.env.CUSTOM_RECOMMENDER_API_TOKEN}`;
         const personal = filters.source === "personal";
-        const referencePromise = loadRecommendationReference(base, headers, filters, request.signal);
-        const response = await requestRecommendations(base, headers, filters, request.signal);
+        const referencePromise = loadRecommendationReference(base, headers, filters, signal);
+        const response = await requestRecommendations(base, headers, filters, signal);
         if (response.status === 422) {
             const failure = await response.json().catch(() => ({}));
             if (failure.detail === "Similar-player evidence needs offline preparation for this profile"

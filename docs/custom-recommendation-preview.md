@@ -10,7 +10,9 @@
 
 链路：浏览器 → Next.js 同源 `/api/recommendations` → 配置的算法服务：条件发现用 `POST /recommend/custom`，按玩家推荐用 `POST /recommend/personal/jobs` 并轮询任务状态 → 现有推荐数据库。
 
-生产部署须在服务器环境中设置 `CUSTOM_RECOMMENDER_API_URL`，需要鉴权时同时设置 `CUSTOM_RECOMMENDER_API_TOKEN`。算法地址必须能从网页服务器访问；本机 `.env.local` 不随 Git 推送。个人推荐最长等待 630 秒，反向代理的读取超时也需覆盖该时长。
+生产部署须在服务器环境中设置 `CUSTOM_RECOMMENDER_API_URL`，需要鉴权时同时设置 `CUSTOM_RECOMMENDER_API_TOKEN`。算法地址必须能从网页服务器访问；本机 `.env.local` 不随 Git 推送。
+
+网页通过 POST `/api/recommendations` 提交任务，再以 GET `?job=...` 每两秒轮询，避免 CDN 截断长请求。每次请求均验证登录和任务所有者。Next.js 单进程最多 2 个计算任务、16 个保留任务，完成后保留 120 秒以复用重复请求；服务重启会丢失任务，需要重新推荐。当前仅支持常驻单进程部署，不适用于无状态多实例或 serverless。网关轮询限速应允许每用户每两秒一次；原有同步 GET 仅为兼容保留。
 
 ## 支持的功能
 

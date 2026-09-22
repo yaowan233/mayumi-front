@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { Button, Card, Slider } from "@heroui/react";
 import Image from "next/image";
 import { activeFilterChips } from "@/lib/recommendation-ux";
+import { fetchWebRecommendations, readRecommendationJson } from "@/lib/recommendation-client";
 import { recommendationInsights } from "@/lib/recommendation-insights";
 import { recommendationPpDisplay } from "@/lib/recommendation-pp";
 import { profileStyleFilters, referenceRanges, validProfileReference, type ProfileReference } from "@/lib/profile-reference";
@@ -168,7 +169,7 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
             try {
                 const params = new URLSearchParams({ mode: filters.mode, uid: profileUid, keyCounts: profileKeys });
                 const response = await fetch(`/api/recommendations/profile?${params}`, { signal: controller.signal });
-                const data = await response.json();
+                const data = await readRecommendationJson(response);
                 if (!response.ok) throw new Error(data.error || "画像读取失败");
                 if (!validProfileReference(data, filters.mode, Number(profileUid))) throw new Error("画像数据格式无效");
                 if (!controller.signal.aborted) setProfileState({ key: profileIdentity, data });
@@ -211,9 +212,7 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
         catch (reason) { setError(reason instanceof Error ? reason.message : "请检查条件"); return; }
         setLoading(true);
         try {
-            const response = await fetch(`/api/recommendations?${params}`, { signal: current.signal });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "推荐失败");
+            const data = await fetchWebRecommendations(params, current.signal);
             if (!current.signal.aborted) { setResult(data); setResultFilters(requestedFilters); }
         } catch (reason) {
             if (!current.signal.aborted) setError(reason instanceof Error ? reason.message : "网络异常，请重试");
