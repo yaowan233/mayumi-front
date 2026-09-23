@@ -17,6 +17,14 @@ test("BP replay switch works and resets across all modes", () => {
     }
 });
 
+test("Mod chip lists selected combinations and resets both filter fields", () => {
+    const filters = { ...personalDefaults(123), modSelections: "NM,HD" };
+    const chip = activeFilterChips(filters, 123).find(chip => chip.key === "mod")!;
+    assert.equal(chip.label, "Mod NM / HD");
+    assert.deepEqual(chip.reset, { mod: "any", modSelections: "" });
+    assert.ok(!activeFilterChips({ ...filters, ...chip.reset }, 123).some(chip => chip.key === "mod"));
+});
+
 test("default recommendations have no custom-condition chips", () => {
     assert.deepEqual(activeFilterChips(personalDefaults(123), 123), []);
     assert.deepEqual(activeFilterChips(defaults, 123), []);

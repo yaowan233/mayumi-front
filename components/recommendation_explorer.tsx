@@ -190,6 +190,7 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
             if (patch.mode) {
                 next.includeConverts = next.source === "personal" && ["fruits", "taiko"].includes(next.mode);
                 if (next.mod !== "any" && !modOptions(next.mode).includes(next.mod)) next.mod = "any";
+                next.modSelections = next.modSelections.split(",").filter(mod => (modOptions(next.mode) as string[]).includes(mod)).join(",");
                 if (!modOptions(next.mode).includes(next.referenceMod)) next.referenceMod = "NM";
             }
             return next;
@@ -284,7 +285,21 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
                                     })}
                                 </div>
                             </div>}
-                            <label className="block text-sm font-semibold">Mod<select className={inputClass} value={filters.mod} onChange={event => change("mod", event.target.value as Filters["mod"])}>{[...modOptions(filters.mode), "any"].map(mod => <option key={mod} value={mod}>{mod === "any" ? (filters.source === "personal" ? `引擎选择（支持的 ${modOptions(filters.mode).length} 种组合）` : "混合 NM / DT / HT") : mod}</option>)}</select></label>
+                            <div className="col-span-full flex items-start gap-3">
+                                <span className="shrink-0 py-2.5 text-sm font-semibold">Mod</span>
+                                <div><div role="group" aria-label="Mod 组合，可多选" className="flex flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-white/5">
+                                    <button type="button" aria-pressed={filters.mod === "any" && !filters.modSelections}
+                                        onClick={() => updateFilters({ mod: "any", modSelections: "" })}
+                                        className={`${keyButtonClass} ${filters.mod === "any" && !filters.modSelections ? "bg-primary text-white shadow-sm" : "text-zinc-500 hover:bg-white dark:text-zinc-400 dark:hover:bg-white/10"}`}>自动</button>
+                                    {modOptions(filters.mode).map(mod => {
+                                        const selected = filters.modSelections ? filters.modSelections.split(",") : filters.mod === "any" ? [] : [filters.mod];
+                                        const checked = selected.includes(mod);
+                                        return <button key={mod} type="button" aria-pressed={checked}
+                                            onClick={() => updateFilters({ mod: "any", modSelections: modOptions(filters.mode).filter(option => (checked ? selected.filter(value => value !== mod) : [...selected, mod]).includes(option)).join(",") })}
+                                            className={`${keyButtonClass} ${checked ? "bg-primary text-white shadow-sm" : "text-zinc-600 hover:bg-white dark:text-zinc-300 dark:hover:bg-white/10"}`}>{mod}</button>;
+                                    })}
+                                </div><p className="mt-1 text-xs text-zinc-500">可多选独立组合；HD + DT 请选 HDDT。未选时自动选择。</p></div>
+                            </div>
                             {filters.source === "personal" && <div className="flex items-center gap-3 self-center sm:col-span-2">
                                 <button type="button" role="switch" aria-checked={!filters.excludeRecordedPlays}
                                     aria-labelledby="include-bp-label" aria-describedby="include-bp-description"
@@ -308,8 +323,8 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
                                     {(["minBpm", "maxBpm"] as const).map((key, index) => <label key={key} className="text-xs text-zinc-500">{index ? "最高 BPM" : "最低 BPM"}<input className={inputClass} type="number" required min={0} max={1000} value={filters[key]} onChange={event => change(key, event.target.valueAsNumber)} /></label>)}
                                 </div></fieldset>
 
-                            <p className="order-20 col-span-full text-xs leading-5 text-zinc-500">星级、BPM 和时长均为 Mod 后数值。时长按首尾物件计算，不是音频长度；当前不限上架状态。</p>
-                            {["fruits", "taiko"].includes(filters.mode) && <label className="order-10 flex items-center gap-2 self-center text-sm"><input type="checkbox" className="accent-primary" checked={filters.includeConverts} onChange={event => change("includeConverts", event.target.checked)} />包含转谱<span className="text-xs text-zinc-500">玩家推荐默认包含，与 Bot 一致</span></label>}
+                            <p className="order-20 col-span-full text-xs leading-5 text-zinc-500">星级、BPM 和时长均为 Mod 后数值。</p>
+                            {["fruits", "taiko"].includes(filters.mode) && <label className="order-10 flex items-center gap-2 self-center text-sm"><input type="checkbox" className="accent-primary" checked={filters.includeConverts} onChange={event => change("includeConverts", event.target.checked)} />包含转谱</label>}
                                 </div>
                             </details>
                             <details className="order-20 col-span-full rounded-xl border border-zinc-200 p-3 dark:border-white/10" onToggle={event => { if (event.currentTarget.open) setProfileRequested(true); }}>

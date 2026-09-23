@@ -8,7 +8,7 @@ export function activeFilterChips(filters: Filters, currentUserId: number) {
     if (filters.minStars !== base.minStars || filters.maxStars !== base.maxStars) chips.push({ key: "stars", label: `★ ${filters.minStars}–${filters.maxStars}`, reset: { minStars: base.minStars, maxStars: base.maxStars, preferredStars: "" } });
     if (filters.maxLength !== base.maxLength) chips.push({ key: "length", label: `最长 ${filters.maxLength} 秒`, reset: { maxLength: base.maxLength, preferredLength: "" } });
     if (filters.minBpm !== base.minBpm || filters.maxBpm !== base.maxBpm) chips.push({ key: "bpm", label: `BPM ${filters.minBpm}–${filters.maxBpm}`, reset: { minBpm: base.minBpm, maxBpm: base.maxBpm, preferredBpm: "" } });
-    if (filters.mod !== base.mod) chips.push({ key: "mod", label: `Mod ${filters.mod}`, reset: { mod: base.mod } });
+    if (filters.modSelections || filters.mod !== base.mod) chips.push({ key: "mod", label: `Mod ${filters.modSelections ? filters.modSelections.split(",").join(" / ") : filters.mod}`, reset: { mod: base.mod, modSelections: "" } });
     if (filters.keyCounts || filters.keys) chips.push({ key: "keys", label: `${(filters.keyCounts || String(filters.keys)).split(",").join("K / ")}K`, reset: { keyCounts: "", keys: 0 } });
     if (filters.includeConverts !== base.includeConverts) chips.push({ key: "converts", label: filters.includeConverts ? "包含转谱" : "排除转谱", reset: { includeConverts: base.includeConverts } });
     if (!filters.excludeRecordedPlays) chips.push({ key: "replays", label: "允许 BP 内谱面", reset: { excludeRecordedPlays: true } });

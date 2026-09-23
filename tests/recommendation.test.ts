@@ -30,6 +30,23 @@ test("taiko combination mods survive request and response filtering", () => {
     }
 });
 
+test("multiple Mod combinations reach the engine and strictly filter results", () => {
+    for (const mode of ["osu", "taiko", "fruits", "mania"]) {
+        for (const source of ["personal", "conditions"]) {
+            const filters = parseFilters(new URLSearchParams({ source, uid: "123", mode, mod: "any", modSelections: "HD,NM,DT" }));
+            assert.deepEqual(toCustomRequest(filters).mods, ["NM", "DT", "HD"]);
+            for (const mod of ["NM", "HD", "DT"]) assert.ok(matchesFilters({ ...item, mods: mod }, filters));
+            assert.equal(matchesFilters({ ...item, mods: "HDDT" }, filters), false);
+        }
+    }
+    const taiko = parseFilters(new URLSearchParams("mode=taiko&mod=any&modSelections=DTHR,HDHRDT"));
+    assert.deepEqual(toCustomRequest(taiko).mods, ["DTHR", "HDHRDT"]);
+    for (const selection of ["HD,HD", "NM,", "any", "EZ", "DTHR"]) {
+        assert.throws(() => parseFilters(new URLSearchParams({ mode: "mania", mod: "any", modSelections: selection })));
+    }
+    assert.throws(() => parseFilters(new URLSearchParams("mod=NM&modSelections=HD,DT")));
+});
+
 test("personal defaults match the Bot request in all four modes", () => {
     for (const mode of ["osu", "taiko", "fruits", "mania"] as const) {
         assert.deepEqual(toCustomRequest(personalDefaults(3162675, mode)), {

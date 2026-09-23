@@ -17,6 +17,7 @@ export type Filters = {
     maxBpm: number;
     keys: number;
     keyCounts: string;
+    modSelections: string;
     mod: "any" | "NM" | "DT" | "HT" | "HD" | "HR" | "HDDT" | "HDHR" | "DTHR" | "HDHRDT";
     preferredStars: string;
     preferredBpm: string;
@@ -68,7 +69,7 @@ export type Recommendation = {
 };
 export type RecommendationResponse = { items: Recommendation[]; examined: number; notice: string; profileReference?: ProfileReference };
 export const defaults: Filters = {
-    source: "conditions", mode: "osu", uid: "", query: "", target: "balanced", featureRanges: "{}", keyCounts: "",
+    source: "conditions", mode: "osu", uid: "", query: "", target: "balanced", featureRanges: "{}", keyCounts: "", modSelections: "",
     minStars: 3, maxStars: 6, maxLength: 300, minBpm: 0, maxBpm: 1000, keys: 0, mod: "NM",
     preferredStars: "", preferredBpm: "", preferredLength: "", referenceId: "", referenceMod: "NM", diversity: 0, includeConverts: false, excludeRecordedPlays: true,
 };
@@ -88,6 +89,22 @@ export function selectedKeyCounts(raw: string): number[] {
     const values = raw.split(",").map(Number);
     if (new Set(values).size !== values.length) throw new Error("键数不能重复");
     return values.sort((first, second) => first - second);
+}
+
+export function selectedModOptions(raw: string, mode: Mode): Filters["referenceMod"][] {
+    if (!raw) return [];
+    const selected = raw.split(",");
+    const allowed = modOptions(mode);
+    if (selected.some(mod => !(allowed as string[]).includes(mod))) throw new Error("不支持的 Mod 组合");
+    if (new Set(selected).size !== selected.length) throw new Error("Mod 组合不能重复");
+    return allowed.filter(mod => selected.includes(mod));
+}
+
+export function requestedMods(filters: Filters): string[] {
+    const selected = selectedModOptions(filters.modSelections, filters.mode);
+    if (selected.length) return selected;
+    if (filters.mod !== "any") return [filters.mod];
+    return filters.source === "personal" ? ["NM", "DT", "HT", "HD", "HR", "HDDT", "HDHR"] : ["NM", "DT", "HT"];
 }
 
 export function parseFilters(params: URLSearchParams): Filters {
@@ -121,6 +138,8 @@ export function parseFilters(params: URLSearchParams): Filters {
     const mod = params.get("mod") ?? values.mod;
     if (!["any", ...modOptions(values.mode)].includes(mod)) throw new Error("不支持的 Mod");
     values.mod = mod as Filters["mod"];
+    values.modSelections = selectedModOptions(params.get("modSelections") ?? "", values.mode).join(",");
+    if (values.modSelections && values.mod !== "any") throw new Error("多选 Mod 不能与旧单选条件同时使用");
     values.uid = (params.get("uid") ?? "").trim();
     values.query = (params.get("query") ?? "").trim();
     if (values.query.length > 80) throw new Error("关键词最多 80 字");
@@ -157,7 +176,7 @@ export function toCustomRequest(filters: Filters) {
         player_id: Number(filters.uid), mode: filters.mode, target: filters.target,
         candidate_limit: 500, result_limit: 20,
         min_stars: filters.minStars, max_stars: filters.maxStars, max_length: filters.maxLength,
-        mods: filters.mod === "any" ? ["NM", "DT", "HT", "HD", "HR", "HDDT", "HDHR"] : [filters.mod],
+        mods: requestedMods(filters),
         exclude_recorded_plays: filters.excludeRecordedPlays,
         include_converts: ["fruits", "taiko"].includes(filters.mode) && filters.includeConverts,
         ...(filters.minBpm !== 0 ? { min_bpm: filters.minBpm } : {}),
@@ -167,7 +186,7 @@ export function toCustomRequest(filters: Filters) {
         ...(filters.featureRanges !== "{}" ? { feature_ranges: parseFeatureRanges(filters.featureRanges, filters.mode) } : {}),
     };
     return {
-        mode: filters.mode, mods: filters.mod === "any" ? ["NM", "DT", "HT"] : [filters.mod],
+        mode: filters.mode, mods: requestedMods(filters),
         target: undefined,
         min_stars: filters.minStars, max_stars: filters.maxStars, min_bpm: filters.minBpm, max_bpm: filters.maxBpm,
         max_length: filters.maxLength, key_count: filters.keys || null,
@@ -196,7 +215,7 @@ export function matchesFilters(item: Recommendation, filters: Filters): boolean 
     if (filters.keys && item.keys !== filters.keys) return false;
     const selected = selectedKeyCounts(filters.keyCounts);
     if (selected.length && (item.keys === undefined || !selected.includes(item.keys))) return false;
-    const allowedMods = filters.mod === "any" ? (filters.source === "personal" ? modOptions(filters.mode) : ["NM", "DT", "HT"]) : [filters.mod];
+    const allowedMods = !filters.modSelections && filters.mod === "any" && filters.source === "personal" ? modOptions(filters.mode) : requestedMods(filters);
     if (!allowedMods.includes(item.mods)) return false;
     return filters.query.toLocaleLowerCase().split(/\s+/).every(word =>
         `${item.title} ${item.artist} ${item.version}`.toLocaleLowerCase().includes(word));
