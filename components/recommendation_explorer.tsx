@@ -287,7 +287,7 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
                             </div>}
                             <div className="col-span-full flex items-start gap-3">
                                 <span className="shrink-0 py-2.5 text-sm font-semibold">Mod</span>
-                                <div><div role="group" aria-label="Mod 组合，可多选" className="flex flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-white/5">
+                                <div className="min-w-0"><div role="group" aria-label="Mod 组合，可多选" className="flex w-fit max-w-full flex-wrap gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-white/5">
                                     <button type="button" aria-pressed={filters.mod === "any" && !filters.modSelections}
                                         onClick={() => updateFilters({ mod: "any", modSelections: "" })}
                                         className={`${keyButtonClass} ${filters.mod === "any" && !filters.modSelections ? "bg-primary text-white shadow-sm" : "text-zinc-500 hover:bg-white dark:text-zinc-400 dark:hover:bg-white/10"}`}>自动</button>
