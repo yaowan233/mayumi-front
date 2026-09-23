@@ -79,6 +79,7 @@ export function personalDefaults(uid: number, mode: Mode = "osu"): Filters {
 }
 
 export function modOptions(mode: Mode): Filters["referenceMod"][] {
+    if (mode === "mania") return ["NM", "DT", "HT"];
     const common: Filters["referenceMod"][] = ["NM", "DT", "HT", "HD", "HR", "HDDT", "HDHR"];
     return mode === "taiko" ? [...common, "DTHR", "HDHRDT"] : common;
 }
@@ -104,7 +105,7 @@ export function requestedMods(filters: Filters): string[] {
     const selected = selectedModOptions(filters.modSelections, filters.mode);
     if (selected.length) return selected;
     if (filters.mod !== "any") return [filters.mod];
-    return filters.source === "personal" ? ["NM", "DT", "HT", "HD", "HR", "HDDT", "HDHR"] : ["NM", "DT", "HT"];
+    return filters.source === "personal" && filters.mode !== "mania" ? ["NM", "DT", "HT", "HD", "HR", "HDDT", "HDHR"] : ["NM", "DT", "HT"];
 }
 
 export function parseFilters(params: URLSearchParams): Filters {

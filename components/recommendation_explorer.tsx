@@ -298,7 +298,7 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
                                             onClick={() => updateFilters({ mod: "any", modSelections: modOptions(filters.mode).filter(option => (checked ? selected.filter(value => value !== mod) : [...selected, mod]).includes(option)).join(",") })}
                                             className={`${keyButtonClass} ${checked ? "bg-primary text-white shadow-sm" : "text-zinc-600 hover:bg-white dark:text-zinc-300 dark:hover:bg-white/10"}`}>{mod}</button>;
                                     })}
-                                </div><p className="mt-1 text-xs text-zinc-500">可多选独立组合；HD + DT 请选 HDDT。未选时自动选择。</p></div>
+                                </div><p className="mt-1 text-xs text-zinc-500">{filters.mode === "mania" ? "可多选 NM（无 Mod）、DT、HT。未选时自动选择。" : "可多选独立组合；HD + DT 请选 HDDT。未选时自动选择。"}</p></div>
                             </div>
                             {filters.source === "personal" && <div className="flex items-center gap-3 self-center sm:col-span-2">
                                 <button type="button" role="switch" aria-checked={!filters.excludeRecordedPlays}
