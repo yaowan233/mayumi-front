@@ -284,9 +284,20 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
                                     })}
                                 </div>
                             </div>}
+                            <label className="block text-sm font-semibold">Mod<select className={inputClass} value={filters.mod} onChange={event => change("mod", event.target.value as Filters["mod"])}>{[...modOptions(filters.mode), "any"].map(mod => <option key={mod} value={mod}>{mod === "any" ? (filters.source === "personal" ? `引擎选择（支持的 ${modOptions(filters.mode).length} 种组合）` : "混合 NM / DT / HT") : mod}</option>)}</select></label>
+                            {filters.source === "personal" && <div className="flex items-center gap-3 self-center sm:col-span-2">
+                                <button type="button" role="switch" aria-checked={!filters.excludeRecordedPlays}
+                                    aria-labelledby="include-bp-label" aria-describedby="include-bp-description"
+                                    onClick={() => change("excludeRecordedPlays", !filters.excludeRecordedPlays)}
+                                    className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${!filters.excludeRecordedPlays ? "bg-primary" : "bg-zinc-300 dark:bg-zinc-700"}`}>
+                                    <span aria-hidden="true" className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${!filters.excludeRecordedPlays ? "translate-x-5" : "translate-x-0"}`} />
+                                </button>
+                                <div><span id="include-bp-label" className="text-sm font-semibold">允许 BP 内谱面</span>
+                                    <p id="include-bp-description" className="text-xs text-zinc-500">包含已有成绩，寻找重刷机会；不保证入选。</p></div>
+                            </div>}
                             {!!chips.length && <div className="col-span-full flex flex-wrap gap-2" aria-label="已选择的筛选条件">{chips.map(chip => <button type="button" key={chip.key} aria-label={`移除条件：${chip.label}`} onClick={() => updateFilters(chip.reset)} className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">{chip.label} ×</button>)}</div>}
                             <details className="col-span-full rounded-xl border border-zinc-200 p-3 dark:border-white/10">
-                                <summary className="cursor-pointer text-sm font-semibold">基础筛选 · 难度、时长、Mod</summary>
+                                <summary className="cursor-pointer text-sm font-semibold">基础筛选 · 难度、时长、BPM</summary>
                                 <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                             <fieldset><legend className="text-sm font-semibold">星级范围</legend><div className="grid grid-cols-2 gap-3">
                                 <label className="text-xs text-zinc-500">最低 ★<input className={inputClass} type="number" required min={0} max={20} step={0.1} value={filters.minStars} onChange={event => change("minStars", event.target.valueAsNumber)} /></label>
@@ -297,10 +308,8 @@ export function RecommendationExplorer({ currentUserId, defaultMode = "osu" }: {
                                     {(["minBpm", "maxBpm"] as const).map((key, index) => <label key={key} className="text-xs text-zinc-500">{index ? "最高 BPM" : "最低 BPM"}<input className={inputClass} type="number" required min={0} max={1000} value={filters[key]} onChange={event => change(key, event.target.valueAsNumber)} /></label>)}
                                 </div></fieldset>
 
-                            <label className="block text-sm font-semibold">Mod<select className={inputClass} value={filters.mod} onChange={event => change("mod", event.target.value as Filters["mod"])}>{[...modOptions(filters.mode), "any"].map(mod => <option key={mod} value={mod}>{mod === "any" ? (filters.source === "personal" ? `引擎选择（支持的 ${modOptions(filters.mode).length} 种组合）` : "混合 NM / DT / HT") : mod}</option>)}</select></label>
                             <p className="order-20 col-span-full text-xs leading-5 text-zinc-500">星级、BPM 和时长均为 Mod 后数值。时长按首尾物件计算，不是音频长度；当前不限上架状态。</p>
                             {["fruits", "taiko"].includes(filters.mode) && <label className="order-10 flex items-center gap-2 self-center text-sm"><input type="checkbox" className="accent-primary" checked={filters.includeConverts} onChange={event => change("includeConverts", event.target.checked)} />包含转谱<span className="text-xs text-zinc-500">玩家推荐默认包含，与 Bot 一致</span></label>}
-                            {filters.mode === "taiko" && filters.source === "personal" && <label className="order-10 flex items-center gap-2 self-center text-sm"><input type="checkbox" className="accent-primary" checked={filters.excludeRecordedPlays} onChange={event => change("excludeRecordedPlays", event.target.checked)} />排除已有成绩的谱面<span className="text-xs text-zinc-500">取消后包含重刷提分机会</span></label>}
                                 </div>
                             </details>
                             <details className="order-20 col-span-full rounded-xl border border-zinc-200 p-3 dark:border-white/10" onToggle={event => { if (event.currentTarget.open) setProfileRequested(true); }}>

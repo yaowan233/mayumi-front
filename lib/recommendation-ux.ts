@@ -11,7 +11,7 @@ export function activeFilterChips(filters: Filters, currentUserId: number) {
     if (filters.mod !== base.mod) chips.push({ key: "mod", label: `Mod ${filters.mod}`, reset: { mod: base.mod } });
     if (filters.keyCounts || filters.keys) chips.push({ key: "keys", label: `${(filters.keyCounts || String(filters.keys)).split(",").join("K / ")}K`, reset: { keyCounts: "", keys: 0 } });
     if (filters.includeConverts !== base.includeConverts) chips.push({ key: "converts", label: filters.includeConverts ? "包含转谱" : "排除转谱", reset: { includeConverts: base.includeConverts } });
-    if (!filters.excludeRecordedPlays) chips.push({ key: "replays", label: "包含重刷", reset: { excludeRecordedPlays: true } });
+    if (!filters.excludeRecordedPlays) chips.push({ key: "replays", label: "允许 BP 内谱面", reset: { excludeRecordedPlays: true } });
     const ranges: FeatureRanges = JSON.parse(filters.featureRanges);
     for (const feature of featureSpecs[filters.mode]) {
         const range = ranges[feature.key];
