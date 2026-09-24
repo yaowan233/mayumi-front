@@ -29,6 +29,7 @@ export default async function StatsPage(props: {
             stage={stage ?? []}
             scores={scores ?? []}
             players={players?.players ?? []}
+            isTeamTournament={Array.isArray(players?.groups)}
             preview={preview}
         />
     );

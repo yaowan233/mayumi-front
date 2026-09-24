@@ -8,13 +8,12 @@ import {Stage} from "@/components/mappools";
 import {useRouter, useSearchParams} from "next/navigation";
 import {Player} from "@/app/tournaments/[tournament]/participants/page";
 import {siteConfig} from "@/config/site";
+import {parseLeaderboardResponse, type LeaderboardRow} from "@/lib/leaderboard-response";
 
 type SortDescriptor = {
     column: React.Key;
     direction: "ascending" | "descending";
 };
-
-type LeaderboardRow = Record<string, unknown>;
 
 const getKeyValue = (item: any, key: React.Key) => item?.[key as keyof typeof item];
 
@@ -56,13 +55,14 @@ const getModColor = (mod: string) => {
 
 // --- 主组件 ---
 
-export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = false}: {
+export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = false, isTeamTournament = false}: {
     roundInfo: TournamentRoundInfo[],
     stats: Stats[],
     stage: Stage[],
     scores: Score[],
     players?: Player[],
     preview?: boolean,
+    isTeamTournament?: boolean,
 }) => {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -73,6 +73,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
     const currentRound = useMemo(() =>
         roundInfo.find(r => r.stage_name === currentStageName) || roundInfo.at(-1),
     [roundInfo, currentStageName]);
+    const isTeamLeaderboard = isTeamTournament && !currentRound?.is_solo_qualifier;
 
     return (
         <div className="w-full flex flex-col gap-6">
@@ -130,10 +131,13 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
                     inert={isPending}
                     className={`flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
                 >
-                    {(currentRound.is_lobby || currentRound.is_solo_qualifier) && (
+                    {(isTeamLeaderboard || currentRound.is_lobby || currentRound.is_solo_qualifier) && (
                         <div className="flex flex-col gap-4">
-                            <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">总排行榜</h2>
-                            <LeaderboardPanel key={currentRound.stage_name} round={currentRound} preview={preview} />
+                            <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">{isTeamLeaderboard ? "队伍排行榜" : "总排行榜"}</h2>
+                            {isTeamLeaderboard && (
+                                <p className="px-2 text-sm text-default-500">同队同局成绩相加，每图取最高局分。Rating 为各图成绩与该图最高队伍成绩之比的总和；未打谱面贡献为 0。此榜为成绩表现排名，不代表赛事晋级名次。</p>
+                            )}
+                            <LeaderboardPanel key={`${currentRound.stage_name}:${isTeamLeaderboard}`} round={currentRound} preview={preview} isTeamLeaderboard={isTeamLeaderboard} />
                         </div>
                     )}
 
@@ -157,14 +161,14 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
     )
 }
 
-const LeaderboardPanel = ({round, preview}: { round: TournamentRoundInfo, preview: boolean }) => {
+const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: TournamentRoundInfo, preview: boolean, isTeamLeaderboard: boolean }) => {
     const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
 
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-        column: "平均排名",
-        direction: "ascending",
+        column: isTeamLeaderboard ? "Rating" : "平均排名",
+        direction: isTeamLeaderboard ? "descending" : "ascending",
     });
 
     useEffect(() => {
@@ -192,15 +196,7 @@ const LeaderboardPanel = ({round, preview}: { round: TournamentRoundInfo, previe
                 }
 
                 const data: unknown = await res.json();
-                if (!Array.isArray(data)) {
-                    throw new Error("排行榜接口返回了无效的数据格式");
-                }
-
-                const rows = data.filter(
-                    (item): item is LeaderboardRow =>
-                        typeof item === "object" && item !== null && !Array.isArray(item),
-                );
-                setLeaderboard(rows);
+                setLeaderboard(parseLeaderboardResponse(data));
             } catch (e) {
                 if (controller.signal.aborted) return;
                 console.error("Failed to load leaderboard", e);
@@ -334,7 +330,7 @@ const LeaderboardPanel = ({round, preview}: { round: TournamentRoundInfo, previe
                                 }}
                             >
                                 <span className="inline-flex items-center gap-1">
-                                    {column}
+                                    {column === "name" ? (isTeamLeaderboard ? "队伍" : "选手") : column}
                                     {isSorted && <span>{sortDescriptor.direction === "ascending" ? "↑" : "↓"}</span>}
                                 </span>
                             </th>
