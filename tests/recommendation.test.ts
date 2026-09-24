@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { defaults, personalDefaults, matchesFilters, parseFilters, toCustomRequest, type Recommendation } from "../lib/recommendation.ts";
+import { defaults, personalDefaults, matchesFilters, modOptions, parseFilters, toCustomRequest, type Recommendation } from "../lib/recommendation.ts";
 
 test("signed-in page defaults to the current player with engine-selected difficulty", () => {
     const filters = personalDefaults(123);
@@ -30,16 +30,45 @@ test("taiko combination mods survive request and response filtering", () => {
     }
 });
 
-test("personal defaults match the Bot request in all four modes", () => {
+test("multiple Mod combinations reach the engine and strictly filter results", () => {
+    for (const mode of ["osu", "taiko", "fruits", "mania"]) {
+        for (const source of ["personal", "conditions"]) {
+            const selection = mode === "mania" ? "HT,NM,DT" : "HD,NM,DT";
+            const expected = mode === "mania" ? ["NM", "DT", "HT"] : ["NM", "DT", "HD"];
+            const filters = parseFilters(new URLSearchParams({ source, uid: "123", mode, mod: "any", modSelections: selection }));
+            assert.deepEqual(toCustomRequest(filters).mods, expected);
+            for (const mod of expected) assert.ok(matchesFilters({ ...item, mods: mod }, filters));
+            assert.equal(matchesFilters({ ...item, mods: "HDDT" }, filters), false);
+        }
+    }
+    const taiko = parseFilters(new URLSearchParams("mode=taiko&mod=any&modSelections=DTHR,HDHRDT"));
+    assert.deepEqual(toCustomRequest(taiko).mods, ["DTHR", "HDHRDT"]);
+    for (const selection of ["HD,HD", "NM,", "any", "EZ", "DTHR"]) {
+        assert.throws(() => parseFilters(new URLSearchParams({ mode: "mania", mod: "any", modSelections: selection })));
+    }
+    assert.throws(() => parseFilters(new URLSearchParams("mod=NM&modSelections=HD,DT")));
+});
+
+test("personal defaults preserve engine defaults with Mania limited to speed mods", () => {
     for (const mode of ["osu", "taiko", "fruits", "mania"] as const) {
         assert.deepEqual(toCustomRequest(personalDefaults(3162675, mode)), {
             player_id: 3162675, mode, target: "balanced", candidate_limit: 500, result_limit: 20,
             min_stars: 0, max_stars: 20, max_length: 3600,
-            mods: ["NM", "DT", "HT", "HD", "HR", "HDDT", "HDHR"],
+            mods: mode === "mania" ? ["NM", "DT", "HT"] : ["NM", "DT", "HT", "HD", "HR", "HDDT", "HDHR"],
             exclude_recorded_plays: true, include_converts: ["fruits", "taiko"].includes(mode),
         });
         assert.deepEqual(toCustomRequest(parseFilters(new URLSearchParams(`source=personal&uid=3162675&mode=${mode}`))),
             toCustomRequest(personalDefaults(3162675, mode)));
+    }
+});
+
+test("Mania only exposes and accepts NM DT HT in all Mod selectors", () => {
+    assert.deepEqual(modOptions("mania"), ["NM", "DT", "HT"]);
+    for (const mod of ["HD", "HR", "HDDT", "HDHR", "DTHR", "HDHRDT"]) {
+        assert.throws(() => parseFilters(new URLSearchParams({ mode: "mania", mod })));
+        assert.throws(() => parseFilters(new URLSearchParams({ mode: "mania", mod: "any", modSelections: `NM,${mod}` })));
+        assert.throws(() => parseFilters(new URLSearchParams({ mode: "mania", referenceId: "1", referenceMod: mod })));
+        assert.equal(matchesFilters({ ...item, mods: mod }, personalDefaults(123, "mania")), false);
     }
 });
 

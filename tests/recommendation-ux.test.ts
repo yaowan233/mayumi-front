@@ -1,7 +1,29 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { activeFilterChips } from "../lib/recommendation-ux.ts";
-import { defaults, personalDefaults } from "../lib/recommendation.ts";
+import { defaults, personalDefaults, modes, parseFilters, toCustomRequest } from "../lib/recommendation.ts";
+
+test("BP replay switch works and resets across all modes", () => {
+    for (const mode of modes) {
+        const base = personalDefaults(123, mode);
+        assert.equal(base.excludeRecordedPlays, true);
+        const filters = parseFilters(new URLSearchParams({ source: "personal", uid: "123", mode, excludeRecordedPlays: "false" }));
+        assert.equal(toCustomRequest(filters).exclude_recorded_plays, false);
+        const chip = activeFilterChips(filters, 123).find(chip => chip.key === "replays");
+        assert.equal(chip?.label, "允许 BP 内谱面");
+        const reset = { ...filters, ...chip!.reset };
+        assert.equal(toCustomRequest(reset).exclude_recorded_plays, true);
+        assert.ok(!activeFilterChips(reset, 123).some(chip => chip.key === "replays"));
+    }
+});
+
+test("Mod chip lists selected combinations and resets both filter fields", () => {
+    const filters = { ...personalDefaults(123), modSelections: "NM,HD" };
+    const chip = activeFilterChips(filters, 123).find(chip => chip.key === "mod")!;
+    assert.equal(chip.label, "Mod NM / HD");
+    assert.deepEqual(chip.reset, { mod: "any", modSelections: "" });
+    assert.ok(!activeFilterChips({ ...filters, ...chip.reset }, 123).some(chip => chip.key === "mod"));
+});
 
 test("default recommendations have no custom-condition chips", () => {
     assert.deepEqual(activeFilterChips(personalDefaults(123), 123), []);
