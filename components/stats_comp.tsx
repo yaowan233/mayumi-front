@@ -1,8 +1,8 @@
 "use client"
 
 import {LeaderboardSkeleton} from "@/components/page_skeleton";
-import {Avatar, Card, Chip, Tabs} from "@heroui/react";
-import React, {useEffect, useMemo, useState} from "react";
+import {Avatar, Card, Chip, Spinner, Tabs} from "@heroui/react";
+import React, {useEffect, useMemo, useState, useTransition} from "react";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
 import {useRouter, useSearchParams} from "next/navigation";
@@ -66,6 +66,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
 }) => {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const [isPending, startTransition] = useTransition();
     const currentStageName = searchParams.get('stage') || roundInfo.at(-1)?.stage_name;
 
     // 使用 useMemo 缓存当前选中的 round 数据，避免每次渲染都 find
@@ -92,9 +93,12 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
                     className="w-full"
                     selectedKey={currentStageName}
                     onSelectionChange={(key) => {
+                        if (String(key) === currentStageName) return;
                         const query = new URLSearchParams(searchParams.toString());
                         query.set("stage", String(key));
-                        router.replace(`?${query.toString()}`);
+                        startTransition(() => {
+                            router.replace(`?${query.toString()}`, {scroll: false});
+                        });
                     }}
                 >
                     <Tabs.ListContainer className="w-full !rounded-none border-b border-zinc-200 !bg-transparent dark:border-white/[0.08]">
@@ -114,12 +118,22 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
             </div>
 
             {/* 2. 内容区域 */}
+            {isPending && (
+                <div role="status" className="flex items-center justify-center gap-2 text-sm text-default-500">
+                    <Spinner size="sm" aria-hidden="true" />
+                    <span>正在加载轮次数据…</span>
+                </div>
+            )}
             {currentRound && (
-                <div className="flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4">
+                <div
+                    aria-busy={isPending}
+                    inert={isPending}
+                    className={`flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
+                >
                     {(currentRound.is_lobby || currentRound.is_solo_qualifier) && (
                         <div className="flex flex-col gap-4">
                             <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">总排行榜</h2>
-                            <LeaderboardPanel round={currentRound} preview={preview} />
+                            <LeaderboardPanel key={currentRound.stage_name} round={currentRound} preview={preview} />
                         </div>
                     )}
 
