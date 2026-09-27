@@ -346,11 +346,12 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
                             {columns.map((columnKey) => {
                                 const keyStr = columnKey.toString();
                                 const rawVal = getKeyValue(row, columnKey);
-                                const displayVal = rawVal ?? "-";
+                                const isNumericRating = keyStr === "Rating" && typeof rawVal === "number" && Number.isFinite(rawVal);
+                                const displayVal = isNumericRating ? rawVal.toFixed(4) : rawVal ?? "-";
                                 const style = getCellStyle(keyStr, rawVal);
                                 return (
                                     <td key={keyStr} className="whitespace-nowrap px-4 py-3">
-                                        <span className={style}>{keyStr === "#" ? row.virtual_rank : displayVal}</span>
+                                        <span className={style} title={isNumericRating ? String(rawVal) : undefined}>{keyStr === "#" ? row.virtual_rank : displayVal}</span>
                                     </td>
                                 );
                             })}
