@@ -110,6 +110,14 @@ export default async function RootLayout({
                                     <span className="text-default-600 text-sm">Powered by</span>
                                     <p className="text-primary text-sm">HeroUI</p>
                                 </a>
+                                <a
+                                    className="mt-2 text-sm text-default-600 hover:underline"
+                                    href="https://beian.miit.gov.cn/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    沪ICP备2026049450号
+                                </a>
                             </footer>
                         </div>
                     </UserProvider>
