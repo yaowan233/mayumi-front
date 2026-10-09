@@ -36,9 +36,13 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
     tournament_name: string,
     tournamentPlayers: TournamentPlayers
 }) => {
-    const [scheduleStages, setScheduleStages] = useState<ScheduleStage []>(tabs);
     const searchParams = useSearchParams();
     const pathname = usePathname();
+    const {data: scheduleStages = tabs, mutate: mutateSchedule} = useSWR(`${siteConfig.backend_url}/api/schedule?tournament_name=${encodeURIComponent(tournament_name)}`,
+        (url: string) => requestDraw<ScheduleStage[]>(url), {fallbackData: tabs, refreshInterval: 15000});
+    const setScheduleStages: Dispatch<SetStateAction<ScheduleStage[]>> = next => {
+        void mutateSchedule(current => typeof next === "function" ? next(current ?? tabs) : next, {revalidate: false});
+    };
     const {data: draw} = useSWR(`${siteConfig.backend_url}/api/tournament-draw/${encodeURIComponent(tournament_name)}/public`,
         (url: string) => requestDraw<{state: TournamentDraw | null}>(url), {refreshInterval: 15000, shouldRetryOnError: false});
     const publishedDraw = draw?.state?.matches.length ? draw.state : null;
@@ -182,7 +186,7 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
     const localDateTime = hasMounted ? getLocalDateTimeParts(match_info.datetime) : null;
     const dateStr = localDateTime?.date ?? "--/--";
     const timeStr = localDateTime?.time ?? "--:--";
-    const utcTimeStr = formatUtcDateTime(match_info.datetime) ?? "UTC 时间格式无效";
+    const utcTimeStr = formatUtcDateTime(match_info.datetime) ?? "时间待定";
 
     return (
         <div className="w-full">
@@ -230,17 +234,17 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 {/* 2. 队伍 1 (靠右对齐) */}
                 <div className={`flex items-center justify-center md:justify-end gap-3 min-w-0 ${notStarted? "opacity-100" : isTeam1Win ? "opacity-100 font-bold" : "opacity-30"}`}>
                     <span className="text-lg truncate text-center md:text-right hidden  text-default-700 sm:block">
-                        {match_info.team1.name}
+                        {match_info.team1?.name || "待定"}
                     </span>
 
                     <span className="text-lg truncate text-center md:text-right sm:hidden  text-default-700 max-w-[150px]">
-                        {match_info.team1.name}
+                        {match_info.team1?.name || "待定"}
                     </span>
 
                     <img
-                        alt={match_info.team1.name}
+                        alt={match_info.team1?.name || "待定"}
                         className="w-10 h-10 rounded-md md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
-                        src={match_info.team1.avatar_url || "https://a.ppy.sh"}
+                        src={match_info.team1?.avatar_url || "https://a.ppy.sh"}
                     />
                 </div>
 
@@ -260,18 +264,18 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 {/* 4. 队伍 2 (靠左对齐) */}
                 <div className={`flex items-center  justify-center md:justify-start gap-3 min-w-0 ${notStarted? "opacity-100" : isTeam2Win ? "opacity-100 font-bold" : "opacity-30"}`}>
                     <img
-                        alt={match_info.team2.name}
+                        alt={match_info.team2?.name || "待定"}
                         className="w-10 h-10 rounded-md md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
-                        src={match_info.team2.avatar_url || "https://a.ppy.sh"}
+                        src={match_info.team2?.avatar_url || "https://a.ppy.sh"}
                     />
                     {/* PC端名字 (保持不变) */}
                     <span className="text-lg truncate text-center md:text-left text-default-700 hidden sm:block">
-                        {match_info.team2.name}
+                        {match_info.team2?.name || "待定"}
                     </span>
 
                     {/* 移动端名字：关键修改 */}
                     <span className="text-lg truncate text-center md:text-left text-default-700 sm:hidden max-w-[150px]">
-                        {match_info.team2.name}
+                        {match_info.team2?.name || "待定"}
                     </span>
                 </div>
 
@@ -341,24 +345,24 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_play
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                 <div className="flex flex-col gap-3 min-w-0">
-                    <Chip color="accent" variant="soft" className="self-center">{match_info.team1.name} 热手图</Chip>
+                    <Chip color="accent" variant="soft" className="self-center">{match_info.team1?.name || "待定"} 热手图</Chip>
                     <div className="w-full">
                         {match_info.team1_warmup ?
                             <MapComp map={match_info.team1_warmup}/> :
                             <div className="text-center text-default-400 py-4">暂无热手图</div>
                         }
                     </div>
-                    <WarmupSelect uid={match_info.team1.uid} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
+                    <WarmupSelect uid={match_info.team1?.uid ?? []} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
                 </div>
                 <div className="flex flex-col gap-3 min-w-0">
-                    <Chip color="danger" variant="soft" className="self-center">{match_info.team2.name} 热手图</Chip>
+                    <Chip color="danger" variant="soft" className="self-center">{match_info.team2?.name || "待定"} 热手图</Chip>
                     <div className="w-full">
                         {match_info.team2_warmup ?
                             <MapComp map={match_info.team2_warmup}/> :
                             <div className="text-center text-default-400 py-4">暂无热手图</div>
                         }
                     </div>
-                    <WarmupSelect uid={match_info.team2.uid} team={2} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
+                    <WarmupSelect uid={match_info.team2?.uid ?? []} team={2} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
                 </div>
             </div>
         </div>
@@ -866,15 +870,15 @@ type LobbyInfo = {
 }
 
 export type MatchInfo = {
-    datetime: string;
+    datetime: string | null;
     is_winner_bracket: boolean;
     match_id: string;
     match_url?: string[];
     referee?: SimpleInfo[];
     streamer?: SimpleInfo[];
     commentators?: SimpleInfo[];
-    team1: SimpleInfo
-    team2: SimpleInfo
+    team1: SimpleInfo | null
+    team2: SimpleInfo | null
     team1_score?: number;
     team2_score?: number;
     team1_warmup?: map;

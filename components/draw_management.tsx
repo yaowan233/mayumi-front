@@ -4,19 +4,24 @@ import {DrawManagementSkeleton} from "@/components/page_skeleton";
 import {useContext, useState} from "react";
 import useSWR from "swr";
 import NextLink from "next/link";
-import {Button, Input, Label, TextField} from "@heroui/react";
+import {Button, Input, Label, Modal, TextField} from "@heroui/react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
-import {localDateTimeInputToUtc, utcDateTimeToLocalInput} from "@/lib/datetime";
+import {formatLocalDateTime, localDateTimeInputToUtc, utcDateTimeToLocalInput} from "@/lib/datetime";
 import {DRAW_STATUS, DrawRequestError, drawRoundGroups, drawSlotLabel, requestDraw, type DrawManagementResponse, type DrawResponse, type DrawMatch, type DrawRound, type TournamentDraw} from "@/lib/tournament_draw";
 import {TournamentDrawBoard} from "@/components/tournament_draw";
 
 const validBo = (value: string) => !value.trim() || (Number.isInteger(Number(value)) && Number(value) >= 3 && Number(value) <= 23 && Number(value) % 2 === 1);
 
+type SchedulePreview = {
+    revision: number;
+    matches: {id: string; stage_name: string; team1: string; team2: string; datetime: string | null; exists: boolean}[];
+};
+
 export function DrawManagement({tournamentName}: {tournamentName: string}) {
     const user = useContext(CurrentUserContext)?.currentUser;
     const url = `${siteConfig.backend_url}/api/tournament-draw/${encodeURIComponent(tournamentName)}`;
-    const {data, error, mutate} = useSWR(user?.uid ? [url, user.uid] : null, ([endpoint]: [string, number]) => requestDraw<DrawManagementResponse>(endpoint), {revalidateOnFocus: false});
+    const {data, error, mutate} = useSWR(user?.uid ? [url, user.uid] : null, ([endpoint]: [string, number]) => requestDraw<DrawManagementResponse>(endpoint), {refreshInterval: 15000});
     if (user === null) return <p>请先登录。</p>;
     if (error) return <div className="flex items-center gap-3"><p role="alert">{error.message}</p><Button variant="secondary" onPress={() => void mutate()}>重试</Button></div>;
     if (!data) return <DrawManagementSkeleton/>;
@@ -37,6 +42,7 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
     const [error, setError] = useState("");
     const [selectedId, setSelectedId] = useState<string>();
     const [confirmation, setConfirmation] = useState<{path: string; body: Record<string, unknown>; message: string} | null>(null);
+    const [schedulePreview, setSchedulePreview] = useState<SchedulePreview | null>(null);
     const available = data.entrants.map(p => p.id);
     const ordered = [...order.filter(id => available.includes(id)), ...available.filter(id => !order.includes(id))];
     const selected = ordered.filter(id => !excluded.includes(id));
@@ -48,10 +54,21 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
         try {
             const response = await requestDraw<DrawResponse>(`${url}/${path}`, {...body, revision: data.revision}, method);
             await onChange(response);
-            setMessage(path === "publish" ? "对阵图已发布，公开赛程页会自动更新。" : "草稿已保存，晋级关系已更新。发布后观众即可看到。" );
+            setMessage(path === "to-schedule" ? "赛程草稿已生成。请到赛程管理确认比赛时间和待定选手，再发布。" : path === "publish" ? "对阵图已发布，公开赛程页会自动更新。" : "草稿已保存，晋级关系已更新。发布后观众即可看到。" );
+            setSchedulePreview(null);
+            if (path === "to-schedule") await onReload();
         } catch (e) {
             if (e instanceof DrawRequestError && e.dependentMatches.length) setConfirmation({path, body, message: `${e.message}（${e.dependentMatches.join("、")}）`});
             else setError(e instanceof Error ? e.message : "操作失败，请重试");
+        } finally {setPending(false);}
+    };
+
+    const previewSchedule = async () => {
+        setPending(true); setError(""); setMessage("");
+        try {
+            setSchedulePreview(await requestDraw<SchedulePreview>(`${url}/schedule-preview`, {revision: data.revision}));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "预览生成失败，请重试");
         } finally {setPending(false);}
     };
 
@@ -66,11 +83,33 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
             <div className="flex flex-wrap items-center gap-2">
                 <NextLink href={`/tournaments/${encodeURIComponent(tournamentName)}/schedule?view=bracket`} className="mr-2 text-sm text-primary">查看公开对阵图</NextLink>
                 <Button variant="secondary" isDisabled={pending} onPress={() => {setConfirmation(null); void onReload().catch(() => setError("重新加载失败，请重试"));}}>重新加载</Button>
+                {data.state && <Button variant="secondary" isDisabled={pending} onPress={() => void previewSchedule()}>生成赛程草稿</Button>}
                 {data.can_publish && <Button variant="primary" isDisabled={pending || !data.state || !data.has_changes} onPress={() => void execute("publish", {})}>发布对阵图</Button>}
             </div>
         </div>
         {message && <p role="status" className="text-sm text-default-600">{message}</p>}
+        {message.startsWith("赛程草稿已生成") && <NextLink href={`/tournament-management/${encodeURIComponent(tournamentName)}/scheduler`} className="self-start text-sm text-primary">前往赛程管理确认时间</NextLink>}
         {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        <Modal isOpen={schedulePreview !== null} onOpenChange={open => {if (!open && !pending) setSchedulePreview(null);}}>
+            <Modal.Backdrop><Modal.Container size="lg"><Modal.Dialog>
+                <Modal.CloseTrigger isDisabled={pending}/>
+                <Modal.Header><Modal.Heading>确认生成赛程草稿</Modal.Heading></Modal.Header>
+                <Modal.Body className="flex flex-col gap-4">
+                    <p className="text-sm text-default-600">将补齐缺少的轮次和比赛，保留已有赛程及人员、MP 链接。轮空和无需加赛的比赛会跳过。</p>
+                    <p className="rounded-xl bg-warning/10 p-3 text-sm">比赛时间需要你确认：已有时间会保留，未设置时间的比赛保持“时间待定”。确认后请到赛程管理安排时间和待定选手，再发布。</p>
+                    {schedulePreview && <>
+                        <p className="text-sm">新增 {schedulePreview.matches.filter(m => !m.exists).length} 场 · 已有 {schedulePreview.matches.filter(m => m.exists).length} 场 · 时间待定 {schedulePreview.matches.filter(m => !m.datetime).length} 场</p>
+                        <div className="max-h-80 overflow-auto rounded-xl border border-default-200">
+                            <table className="w-full text-left text-sm"><thead><tr className="bg-default-100"><th className="p-3">轮次 / 对阵</th><th className="p-3">比赛时间</th></tr></thead><tbody>
+                                {schedulePreview.matches.map(item => <tr key={item.id} className="border-t border-default-200"><td className="p-3"><span className="text-xs text-default-500">{item.stage_name} · {item.id} · {item.exists ? "已存在" : "新增"}</span><p>{item.team1} 对 {item.team2}</p></td><td className="p-3">{formatLocalDateTime(item.datetime) || "时间待定"}</td></tr>)}
+                            </tbody></table>
+                        </div>
+                        {schedulePreview.revision !== data.revision && <p role="alert" className="text-sm text-danger">对阵图已更新，请关闭并重新生成预览。</p>}
+                    </>}
+                </Modal.Body>
+                <Modal.Footer><Button variant="ghost" isDisabled={pending} onPress={() => setSchedulePreview(null)}>取消</Button><Button variant="primary" isDisabled={pending || !schedulePreview?.matches.length || schedulePreview.revision !== data.revision} isPending={pending} onPress={() => void execute("to-schedule", {})}>确认生成草稿</Button></Modal.Footer>
+            </Modal.Dialog></Modal.Container></Modal.Backdrop>
+        </Modal>
         {data.state?.warnings?.length ? <details className="rounded-xl border border-warning/30 p-4"><summary className="cursor-pointer text-sm font-medium">导入提示（{data.state.warnings.length}）</summary><ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-default-500">{data.state.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul></details> : null}
         {confirmation && <div role="alert" className="rounded-xl border border-warning/40 bg-warning/10 p-4">
             <p>{confirmation.message}</p><div className="mt-3 flex gap-2"><Button variant="danger" isDisabled={pending} onPress={() => void execute(confirmation.path, {...confirmation.body, reset_dependents: true}, "PUT")}>确认修改并清除后续比分</Button><Button variant="secondary" onPress={() => setConfirmation(null)}>取消</Button></div>

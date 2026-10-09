@@ -133,8 +133,8 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
             s.is_lobby ? (s.name && s.match_time) : (s.team1 && s.team2 && s.match_time)
         );
 
-        if (!isValid) {
-            setErrMsg('请填写当前轮次所有必填字段 (*)');
+        if (action === "publish" && !isValid) {
+            setErrMsg('发布前请确认当前轮次的比赛时间和参赛双方；尚未确认时可以先保存草稿。');
             return;
         }
 
@@ -773,7 +773,7 @@ interface Schedule {
     is_lobby: boolean;
     is_winner_bracket: boolean;
     name?: string;
-    match_time: string;
+    match_time: string | null;
     match_url: string[];
     referee?: string[];
     streamer?: string[];
