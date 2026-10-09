@@ -2,7 +2,7 @@
 
 import {useMemo, useRef, useState} from "react";
 import {Avatar, Button, Input, Label, TextField} from "@heroui/react";
-import {formatUtcDateTime} from "@/lib/datetime";
+import {TournamentTime} from "@/components/tournament_time";
 import {DRAW_STATUS, drawSlotLabel, formatMatchScore, layoutDraw, visibleDraw, type DrawMatch, type TournamentDraw} from "@/lib/tournament_draw";
 
 export function TournamentDrawBoard({state: savedState, onSelect, selectedId}: {state: TournamentDraw; onSelect?: (match: DrawMatch) => void; selectedId?: string}) {
@@ -84,7 +84,7 @@ export function TournamentDrawBoard({state: savedState, onSelect, selectedId}: {
                                     <span className="font-mono font-bold">{match.status === "bye" || match.status === "unneeded" ? "—" : formatMatchScore(match.scores[index])}</span>
                                 </div>;
                             })}
-                            <div className="truncate px-3 pt-1 text-[10px] text-default-500">{formatUtcDateTime(match.datetime) || "时间待定"}</div>
+                            <div className="truncate px-3 pt-1 text-[10px] text-default-500">{match.datetime ? <TournamentTime value={match.datetime}/> : "时间待定"}</div>
                         </button>;
                     })}
                 </div>
@@ -92,7 +92,7 @@ export function TournamentDrawBoard({state: savedState, onSelect, selectedId}: {
         </div>
         {!onSelect && selected && <div className="rounded-xl border border-default-200 p-4 text-sm dark:border-white/10" role="status">
             <p className="font-semibold">{selected.id} · {drawSlotLabel(state, selected, 0)} {selected.scores.map(formatMatchScore).join(" : ")} {drawSlotLabel(state, selected, 1)}</p>
-            <p className="mt-1 text-default-500">{DRAW_STATUS[selected.status]} · {formatUtcDateTime(selected.datetime) || "时间待定"}</p>
+            <p className="mt-1 text-default-500">{DRAW_STATUS[selected.status]} · {selected.datetime ? <TournamentTime value={selected.datetime}/> : "时间待定"}</p>
             <div className="mt-2 flex flex-wrap gap-2">{state.matches.flatMap(m => m.sources.map((source, i) => "match_id" in source && source.match_id === selected.id ? <Button key={`${m.id}:${i}`} size="sm" variant="secondary" onPress={() => {setDetailId(m.id); const point = layout.positions[m.id]; viewport.current?.scrollTo({left: Math.max(0, point.x * zoom - 30), top: Math.max(0, point.y * zoom - 80), behavior: "smooth"});}}>{source.kind === "winner" ? "胜者" : "败者"} → {m.id}</Button> : null))}</div>
         </div>}
     </div>;
