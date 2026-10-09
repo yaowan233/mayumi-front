@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
+import Image from "next/image";
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Providers } from "./providers";
@@ -117,6 +118,22 @@ export default async function RootLayout({
                                     rel="noopener noreferrer"
                                 >
                                     沪ICP备2026049450号
+                                </a>
+                                <a
+                                    className="mt-1 flex items-center gap-1 text-sm text-default-600 hover:underline"
+                                    href="https://beian.mps.gov.cn/#/query/webSearch?code=31011202023641"
+                                    rel="noreferrer"
+                                    target="_blank"
+                                >
+                                    <Image
+                                        src="/beian-icon.png"
+                                        alt=""
+                                        width={20}
+                                        height={20}
+                                        className="shrink-0"
+                                        unoptimized
+                                    />
+                                    沪公网安备31011202023641号
                                 </a>
                             </footer>
                         </div>
