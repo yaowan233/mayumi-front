@@ -8,14 +8,14 @@ import {Button, Input, Label, Modal, TextField} from "@heroui/react";
 import CurrentUserContext from "@/app/user_context";
 import {siteConfig} from "@/config/site";
 import {formatLocalDateTime, localDateTimeInputToUtc, utcDateTimeToLocalInput} from "@/lib/datetime";
-import {DRAW_STATUS, DrawRequestError, drawRoundGroups, drawSlotLabel, requestDraw, type DrawManagementResponse, type DrawResponse, type DrawMatch, type DrawRound, type TournamentDraw} from "@/lib/tournament_draw";
+import {DRAW_STATUS, DrawRequestError, drawRoundGroups, drawSlotLabel, requestDraw, visibleDraw, type DrawManagementResponse, type DrawResponse, type DrawMatch, type DrawRound, type TournamentDraw} from "@/lib/tournament_draw";
 import {TournamentDrawBoard} from "@/components/tournament_draw";
 
 const validBo = (value: string) => !value.trim() || (Number.isInteger(Number(value)) && Number(value) >= 3 && Number(value) <= 23 && Number(value) % 2 === 1);
 
 type SchedulePreview = {
     revision: number;
-    matches: {id: string; stage_name: string; team1: string; team2: string; datetime: string | null; exists: boolean}[];
+    matches: {id: string; stage_name: string; team1: string; team2: string; datetime: string | null; exists: boolean; moved?: boolean}[];
 };
 
 export function DrawManagement({tournamentName}: {tournamentName: string}) {
@@ -48,13 +48,15 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
     const selected = ordered.filter(id => !excluded.includes(id));
     const match = data.state?.matches.find(m => m.id === selectedId);
     const hasSavedSchedule = (data.saved_schedule?.match_count ?? 0) > 0;
+    const visibleRounds = data.state ? visibleDraw(data.state).rounds : [];
+    const stages = data.state ? [...new Set(data.state.rounds.map(round => round.stage_name ?? round.name))] : [];
 
     const execute = async (path: string, body: Record<string, unknown>, method = "POST") => {
         setPending(true); setError(""); setMessage(""); setConfirmation(null);
         try {
             const response = await requestDraw<DrawResponse>(`${url}/${path}`, {...body, revision: data.revision}, method);
             await onChange(response);
-            setMessage(path === "to-schedule" ? "赛程草稿已生成。请到赛程管理确认比赛时间和待定选手，再发布。" : path === "publish" ? "对阵图已发布，公开赛程页会自动更新。" : "草稿已保存，晋级关系已更新。发布后观众即可看到。" );
+            setMessage(path === "to-schedule" ? "赛程草稿已生成。请到赛程管理确认比赛时间和待定选手，再发布。" : path.endsWith("/stage") ? "所属阶段已保存。生成赛程草稿时，这一轮比赛会归入所选阶段，已有比赛的时间和人员会保留。" : path === "publish" ? "对阵图已发布，公开赛程页会自动更新。" : "草稿已保存，晋级关系已更新。发布后观众即可看到。" );
             setSchedulePreview(null);
             if (path === "to-schedule") await onReload();
         } catch (e) {
@@ -95,13 +97,13 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
                 <Modal.CloseTrigger isDisabled={pending}/>
                 <Modal.Header><Modal.Heading>确认生成赛程草稿</Modal.Heading></Modal.Header>
                 <Modal.Body className="flex flex-col gap-4">
-                    <p className="text-sm text-default-600">将补齐缺少的轮次和比赛，保留已有赛程及人员、MP 链接。轮空和无需加赛的比赛会跳过。</p>
+                    <p className="text-sm text-default-600">按每轮所属阶段补齐比赛；已调整阶段的比赛会移入对应阶段，保留时间、人员和 MP 链接。轮空和无需加赛的比赛会跳过。</p>
                     <p className="rounded-xl bg-warning/10 p-3 text-sm">比赛时间需要你确认：已有时间会保留，未设置时间的比赛保持“时间待定”。确认后请到赛程管理安排时间和待定选手，再发布。</p>
                     {schedulePreview && <>
-                        <p className="text-sm">新增 {schedulePreview.matches.filter(m => !m.exists).length} 场 · 已有 {schedulePreview.matches.filter(m => m.exists).length} 场 · 时间待定 {schedulePreview.matches.filter(m => !m.datetime).length} 场</p>
+                        <p className="text-sm">新增 {schedulePreview.matches.filter(m => !m.exists).length} 场 · 已有 {schedulePreview.matches.filter(m => m.exists).length} 场 · 调整阶段 {schedulePreview.matches.filter(m => m.moved).length} 场 · 时间待定 {schedulePreview.matches.filter(m => !m.datetime).length} 场</p>
                         <div className="max-h-80 overflow-auto rounded-xl border border-default-200">
                             <table className="w-full text-left text-sm"><thead><tr className="bg-default-100"><th className="p-3">轮次 / 对阵</th><th className="p-3">比赛时间</th></tr></thead><tbody>
-                                {schedulePreview.matches.map(item => <tr key={item.id} className="border-t border-default-200"><td className="p-3"><span className="text-xs text-default-500">{item.stage_name} · {item.id} · {item.exists ? "已存在" : "新增"}</span><p>{item.team1} 对 {item.team2}</p></td><td className="p-3">{formatLocalDateTime(item.datetime) || "时间待定"}</td></tr>)}
+                                {schedulePreview.matches.map(item => <tr key={item.id} className="border-t border-default-200"><td className="p-3"><span className="text-xs text-default-500">{item.stage_name} · {item.id} · {item.moved ? "移入此阶段" : item.exists ? "已存在" : "新增"}</span><p>{item.team1} 对 {item.team2}</p></td><td className="p-3">{formatLocalDateTime(item.datetime) || "时间待定"}</td></tr>)}
                             </tbody></table>
                         </div>
                         {schedulePreview.revision !== data.revision && <p role="alert" className="text-sm text-danger">对阵图已更新，请关闭并重新生成预览。</p>}
@@ -141,6 +143,13 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
             </div>
         </details>
         {data.state && <>
+            <details open className="rounded-2xl border border-default-200 dark:border-white/10">
+                <summary className="cursor-pointer p-5 font-bold">每轮所属阶段</summary>
+                <p className="px-5 pb-4 text-sm text-default-500">胜败者组可分别选择阶段，例如把败者组第 1 轮安排在 RO16。同一阶段共用 BO；轮空列已隐藏。保存后点击「生成赛程草稿」核对并确认。</p>
+                <div className="grid gap-3 px-5 pb-5 lg:grid-cols-2">
+                    {visibleRounds.map(round => <RoundStageEditor key={`${round.id}:${data.revision}`} round={round} number={visibleRounds.filter(item => item.bracket === round.bracket).findIndex(item => item.id === round.id) + 1} stages={stages} pending={pending} onSave={stage_name => void execute(`rounds/${round.id}/stage`, {stage_name}, "PUT")}/>)}
+                </div>
+            </details>
             <TournamentDrawBoard state={data.state} selectedId={selectedId} onSelect={item => {setSelectedId(item.id); setConfirmation(null);}}/>
             {match && <MatchEditor key={`${match.id}:${data.revision}`} match={match} state={data.state} pending={pending} onSave={body => void execute(`matches/${match.id}`, body, "PUT")}/>}
             <details className="rounded-2xl border border-default-200 dark:border-white/10"><summary className="cursor-pointer p-5 font-bold">轮次名称与 BO</summary><div className="grid gap-4 px-5 pb-5 lg:grid-cols-2">
@@ -164,6 +173,16 @@ function MatchEditor({match, state, pending, onSave}: {match: DrawMatch; state: 
             <TextField value={time} onChange={setTime} isDisabled={pending}><Label>比赛时间（可留空）</Label><Input type="datetime-local" variant="secondary"/></TextField>
             <Button variant="primary" isDisabled={pending || (canScore && !validScores) || Boolean(time && !localDateTimeInputToUtc(time))} onPress={() => onSave({scores: canScore ? scores.map(Number) : null, datetime: time ? localDateTimeInputToUtc(time) : null})}>保存比赛</Button>
         </div>
+    </div>;
+}
+
+function RoundStageEditor({round, number, stages, pending, onSave}: {round: DrawRound; number: number; stages: string[]; pending: boolean; onSave: (stage: string) => void}) {
+    const current = round.stage_name ?? round.name;
+    const [stage, setStage] = useState(current);
+    return <div className="flex flex-wrap items-end gap-3 rounded-xl border border-default-200 p-3 dark:border-white/10">
+        <div className="w-full"><p className="text-sm font-medium">{round.bracket === "winner" ? "胜者组" : round.bracket === "loser" ? "败者组" : "总决赛"}第 {number} 轮 · {round.id}</p><p className="text-xs text-default-500">当前：{round.name}</p></div>
+        <label className="flex flex-1 flex-col gap-2 text-sm">所属阶段<select value={stage} disabled={pending} onChange={event => setStage(event.target.value)} className="h-10 rounded-xl border border-default-200 bg-surface px-3">{stages.map(name => <option key={name} value={name}>{name}</option>)}</select></label>
+        <Button variant="secondary" isDisabled={pending || stage === current} onPress={() => onSave(stage)}>保存阶段</Button>
     </div>;
 }
 
