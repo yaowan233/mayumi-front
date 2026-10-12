@@ -878,7 +878,7 @@ export type MatchInfo = {
     team2_placeholder?: string | null;
     is_conditional?: boolean;
     is_possible?: boolean;
-    possible_pairings?: {team1: string; team2: string}[];
+    possible_pairings?: {team1: string; team2: string; match_time?: string | null}[];
     possibility_key?: string;
     datetime: string | null;
     is_winner_bracket: boolean;
@@ -897,7 +897,7 @@ export type MatchInfo = {
 
 function expandMatchPossibilities(matches: MatchInfo[]): MatchInfo[] {
     return matches.flatMap(match => match.possible_pairings?.length
-        ? match.possible_pairings.map((pair, index) => ({...match, team1_placeholder: pair.team1, team2_placeholder: pair.team2, possibility_key: String(index)}))
+        ? match.possible_pairings.map((pair, index) => ({...match, datetime: pair.match_time !== undefined ? pair.match_time : match.datetime, team1_placeholder: pair.team1, team2_placeholder: pair.team2, possibility_key: String(index)}))
         : [match]);
 }
 

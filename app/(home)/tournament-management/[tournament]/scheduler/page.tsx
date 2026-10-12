@@ -39,6 +39,7 @@ import {
 import {getDraftSection, publishTournamentDraft, saveDraftSection} from "@/lib/tournament_drafts";
 import {DraftAction, DraftSaveActions} from "@/components/draft_save_actions";
 import {ManagementBackLink} from "@/components/management_back_link";
+import {getPairingTime, setPairingTime, type SchedulePairing} from "@/lib/schedule_options";
 
 const subscribeToHydration = () => () => undefined;
 const useHasMounted = () => useSyncExternalStore(subscribeToHydration, () => true, () => false);
@@ -130,7 +131,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         setErrMsg('');
         const currentSchedules = scheduleInfo.filter(s => s.stage_name === selectedRound);
         const isValid = currentSchedules.every(s =>
-            s.is_lobby ? (s.name && s.match_time) : ((s.team1 || s.team1_placeholder) && (s.team2 || s.team2_placeholder) && s.match_time && !s.is_automatic_advance)
+            s.is_lobby ? (s.name && s.match_time) : ((s.team1 || s.team1_placeholder) && (s.team2 || s.team2_placeholder) && (s.possible_pairings?.length ? s.possible_pairings.every(pair => getPairingTime(s, pair)) : s.match_time) && !s.is_automatic_advance)
         );
 
         if (action === "publish" && !isValid) {
@@ -332,22 +333,29 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
     onChange: (schedule: Schedule) => void;
     onDelete: () => void;
     isTeamMode?: boolean;
-    possiblePairing?: {team1: string; team2: string};
+    possiblePairing?: SchedulePairing;
 }) => {
     const hasMounted = useHasMounted();
+    const matchTime = possiblePairing ? getPairingTime(schedule, possiblePairing) : schedule.match_time;
+    const changeTime = (time: string | null) => {
+        const pair = possiblePairing ?? {team1: schedule.team1 ?? "", team2: schedule.team2 ?? ""};
+        const hasOption = schedule.possible_match_times?.some(item => item.team1 === pair.team1 && item.team2 === pair.team2);
+        const updated = possiblePairing || hasOption ? setPairingTime(schedule, pair, time) : schedule;
+        onChange(possiblePairing ? updated : {...updated, match_time: time});
+    };
 
     const title = schedule.is_lobby
         ? (schedule.name || "未命名 Lobby")
         : `${possiblePairing?.team1 || schedule.team1 || schedule.team1_placeholder || "待定"} vs ${possiblePairing?.team2 || schedule.team2 || schedule.team2_placeholder || "待定"}`;
-    const subtitle = hasMounted && schedule.match_time
-        ? formatLocalDateTime(schedule.match_time, {
+    const subtitle = hasMounted && matchTime
+        ? formatLocalDateTime(matchTime, {
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
         }) ?? "时间格式无效"
         : "时间未定";
-    const utcTime = formatUtcDateTime(schedule.match_time) ?? "UTC 时间格式无效";
+    const utcTime = formatUtcDateTime(matchTime) ?? "时间未定";
 
     return (
         <Card
@@ -359,7 +367,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                             <div className="flex w-full items-center justify-between gap-4 pr-2">
                                 <div className="flex flex-col">
                                     <span className="text-lg font-bold text-foreground">{title}</span>
-                                    {schedule.is_possible && <span className="mt-1 text-xs text-default-500">可能对阵 · {schedule.draw_match_id} · 共用时间和人员，赛果确定后只保留实际对阵</span>}
+                                    {schedule.is_possible && <span className="mt-1 text-xs text-default-500">可能对阵 · {schedule.draw_match_id} · 可分别安排时间，赛果确定后沿用实际对阵的时间</span>}
                                     {schedule.is_conditional && <span className="mt-1 text-xs text-warning">条件比赛：败者组冠军赢得首场总决赛后进行</span>}
                                     {schedule.is_automatic_advance && <span className="mt-1 text-xs text-warning">轮空条目：请从对阵管理生成赛程草稿清理</span>}
                                     <Tooltip>
@@ -421,16 +429,16 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                     <Input
                                         type="datetime-local"
                                         variant="secondary"
-                                        value={hasMounted ? utcDateTimeToLocalInput(schedule.match_time) : ""}
+                                        value={hasMounted ? utcDateTimeToLocalInput(matchTime) : ""}
                                         onChange={e => {
                                             const val = e.target.value;
                                             if (!val) {
-                                                onChange({...schedule, match_time: ""});
+                                                changeTime(null);
                                                 return;
                                             }
 
                                             const utcValue = localDateTimeInputToUtc(val);
-                                            if (utcValue) onChange({...schedule, match_time: utcValue});
+                                            if (utcValue) changeTime(utcValue);
                                         }}
                                     />
                                 </TextField>
@@ -780,7 +788,8 @@ interface Schedule {
     is_possible?: boolean;
     is_conditional?: boolean;
     is_automatic_advance?: boolean;
-    possible_pairings?: {team1: string; team2: string}[];
+    possible_pairings?: SchedulePairing[];
+    possible_match_times?: SchedulePairing[] | null;
     tournament_name: string;
     stage_name: string;
     match_id: string;
