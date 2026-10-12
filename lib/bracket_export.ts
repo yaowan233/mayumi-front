@@ -14,9 +14,9 @@ export interface BracketScheduleInput {
     stage_name: string;
     is_lobby: boolean;
     is_winner_bracket: boolean;
-    match_time: string;
-    team1: string;
-    team2: string;
+    match_time: string | null;
+    team1: string | null;
+    team2: string | null;
     team1_score?: number;
     team2_score?: number;
 }
@@ -236,11 +236,18 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
     }[] = [];
     const matchIds = new Set<string>();
     let skippedLobbies = 0;
+    let skippedUnresolved = 0;
     for (const schedule of schedules) {
         const roundIndex = rounds.findIndex((round) => round.stage_name === schedule.stage_name);
         const round = rounds[roundIndex];
         if (schedule.is_lobby || round.is_lobby) {
             skippedLobbies++;
+            continue;
+        }
+        // Draft schedules may contain byes or seats awaiting an upstream result.
+        // The client only supports matches with two confirmed entrants.
+        if (!schedule.team1?.trim() || !schedule.team2?.trim()) {
+            skippedUnresolved++;
             continue;
         }
         if (!schedule.match_id || matchIds.has(schedule.match_id)) throw new Error("赛程存在空白或重复的比赛 ID");
@@ -260,7 +267,7 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
             ID: id, Team1Acronym: team1, Team2Acronym: team2, Team1Score: score1, Team2Score: score2,
             Completed: score1 !== score2,
             Losers: !schedule.is_winner_bracket, PicksBans: [], Current: false,
-            Date: requiredDate(schedule.match_time, `“${schedule.stage_name}”的对阵`),
+            Date: requiredDate(schedule.match_time ?? undefined, `“${schedule.stage_name}”的对阵`),
             ConditionalMatches: [], Position: {X: roundIndex * 400, Y: exportedRound.Matches.length * 150},
         });
         if (Math.max(score1, score2) > pointsToWin || (score1 === score2 && score1 >= pointsToWin)) {
@@ -269,6 +276,7 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
         exportedRound.Matches.push(id);
     }
     if (skippedLobbies) warnings.push(`已跳过 ${skippedLobbies} 场多人 Lobby，比赛端对阵仅支持双方比赛；对应轮次和图池仍保留`);
+    if (skippedUnresolved) warnings.push(`已跳过 ${skippedUnresolved} 场参赛双方未确定或轮空的对阵；对应轮次和图池仍保留，待双方确定后请重新导出`);
 
     return {
         bracket: {

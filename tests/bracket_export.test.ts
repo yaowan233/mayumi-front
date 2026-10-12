@@ -78,14 +78,57 @@ test("lobbies are explicitly skipped while later head-to-head matches retain val
     assert.ok(warnings.some((warning) => warning.includes("1 场多人 Lobby")));
 });
 
+test("RO16 with Pinkiepink awaiting an opponent does not block bracket export", () => {
+    const input = fixture();
+    input.meta.is_group = false;
+    input.participants.players[0].name = "Pinkiepink";
+    input.rounds.unshift({stage_name: "RO16", is_lobby: false});
+    Object.assign(input.schedules[0], {team1: "Pinkiepink", team2: "Player 2"});
+    input.schedules.unshift({...input.schedules[0], match_id: "pending", stage_name: "RO16", team2: "", match_time: "", team1_score: 0, team2_score: 0});
+    const before = structuredClone(input);
+
+    const {bracket, warnings} = generateBracket(input);
+    assert.equal(bracket.Matches.length, 1);
+    assert.deepEqual(bracket.Rounds[0].Matches, []);
+    assert.deepEqual(bracket.Rounds[1].Matches, [1]);
+    assert.equal(bracket.Matches[0].Team1Acronym, bracket.Teams[0].Acronym);
+    assert.ok(warnings.some((warning) => warning.includes("1 场") && warning.includes("未确定")));
+    assert.deepEqual(input, before);
+});
+
+test("blank and null draft seats are skipped without leaving gaps in exported match references", () => {
+    for (const [team1, team2] of [[null, "队伍 B"], ["队伍 A", null], ["", "队伍 B"], ["队伍 A", "  "], [null, null], ["", ""]]) {
+        const input = fixture();
+        const complete = {...input.schedules[0], match_id: "uuid-2"};
+        input.schedules.push({...complete, match_id: "", team1, team2, match_time: null}, complete);
+        const {bracket, warnings} = generateBracket(input);
+        assert.deepEqual(bracket.Matches.map((match) => match.ID), [1, 2]);
+        assert.deepEqual(bracket.Rounds[0].Matches, [1, 2]);
+        assert.ok(warnings.some((warning) => warning.includes("1 场") && warning.includes("未确定")));
+    }
+});
+
+test("an entirely unresolved round still exports its entrants and mappool", () => {
+    const input = fixture();
+    Object.assign(input.schedules[0], {team2: "", match_time: null});
+    const {bracket, warnings} = generateBracket(input);
+    assert.deepEqual(bracket.Matches, []);
+    assert.deepEqual(bracket.Rounds[0].Matches, []);
+    assert.equal(bracket.Rounds[0].Beatmaps.length, 13);
+    assert.equal(bracket.Teams.length, 2);
+    assert.ok(warnings.some((warning) => warning.includes("未确定")));
+});
+
 test("rejects broken references, ambiguous slots, duplicate matches and invalid data", () => {
     const cases: [RegExp, (input: BracketExportInput) => void][] = [
         [/对阵/, (input) => {input.schedules[0].team1 = "Unknown";}],
+        [/对阵/, (input) => {input.schedules[0].team2 = input.schedules[0].team1;}],
         [/用户信息/, (input) => {input.participants.players = [];}],
         [/重复/, (input) => {input.maps[1].number = input.maps[0].number;}],
         [/比赛 ID/, (input) => {input.schedules.push({...input.schedules[0]});}],
         [/对应轮次/, (input) => {input.maps[0].stage_name = "missing";}],
         [/有效日期/, (input) => {input.schedules[0].match_time = "bad";}],
+        [/有效日期/, (input) => {input.schedules[0].match_time = null;}],
         [/正整数 ID/, (input) => {input.maps[0].map_id = 2147483648;}],
         [/具体模式/, (input) => {input.meta.mode = "all";}],
     ];
