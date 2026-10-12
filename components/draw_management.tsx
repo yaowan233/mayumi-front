@@ -15,7 +15,7 @@ const validBo = (value: string) => !value.trim() || (Number.isInteger(Number(val
 
 type SchedulePreview = {
     revision: number;
-    matches: {id: string; stage_name: string; team1: string; team2: string; datetime: string | null; exists: boolean; moved?: boolean}[];
+    matches: {id: string; stage_name: string; team1: string; team2: string; datetime: string | null; exists: boolean; moved?: boolean; removed?: boolean; conditional?: boolean; possible_pairings?: {team1: string; team2: string}[]}[];
 };
 
 export function DrawManagement({tournamentName}: {tournamentName: string}) {
@@ -97,13 +97,13 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
                 <Modal.CloseTrigger isDisabled={pending}/>
                 <Modal.Header><Modal.Heading>确认生成赛程草稿</Modal.Heading></Modal.Header>
                 <Modal.Body className="flex flex-col gap-4">
-                    <p className="text-sm text-default-600">按每轮所属阶段补齐比赛；已调整阶段的比赛会移入对应阶段，保留时间、人员和 MP 链接。轮空和无需加赛的比赛会跳过。</p>
-                    <p className="rounded-xl bg-warning/10 p-3 text-sm">比赛时间需要你确认：已有时间会保留，未设置时间的比赛保持“时间待定”。确认后请到赛程管理安排时间和待定选手，再发布。</p>
+                    <p className="text-sm text-default-600">补齐未来比赛。一方已确定时，分别列出不同对手的可能对阵，共用时间和人员，赛果确定后只保留实际对阵。已生成的必然轮空会在确认后从草稿中移除。</p>
+                    <p className="rounded-xl bg-warning/10 p-3 text-sm">比赛时间需要你确认：已有时间会保留，未设置时间的比赛保持“时间待定”。请到赛程管理确认时间和人员后再发布，待定对手会随赛果自动更新。</p>
                     {schedulePreview && <>
-                        <p className="text-sm">新增 {schedulePreview.matches.filter(m => !m.exists).length} 场 · 已有 {schedulePreview.matches.filter(m => m.exists).length} 场 · 调整阶段 {schedulePreview.matches.filter(m => m.moved).length} 场 · 时间待定 {schedulePreview.matches.filter(m => !m.datetime).length} 场</p>
+                        <p className="text-sm">新增 {schedulePreview.matches.filter(m => !m.exists && !m.removed).length} 场 · 保留 {schedulePreview.matches.filter(m => m.exists && !m.removed).length} 场 · 调整阶段 {schedulePreview.matches.filter(m => m.moved).length} 场 · 清理轮空 {schedulePreview.matches.filter(m => m.removed).length} 场</p>
                         <div className="max-h-80 overflow-auto rounded-xl border border-default-200">
                             <table className="w-full text-left text-sm"><thead><tr className="bg-default-100"><th className="p-3">轮次 / 对阵</th><th className="p-3">比赛时间</th></tr></thead><tbody>
-                                {schedulePreview.matches.map(item => <tr key={item.id} className="border-t border-default-200"><td className="p-3"><span className="text-xs text-default-500">{item.stage_name} · {item.id} · {item.moved ? "移入此阶段" : item.exists ? "已存在" : "新增"}</span><p>{item.team1} 对 {item.team2}</p></td><td className="p-3">{formatLocalDateTime(item.datetime) || "时间待定"}</td></tr>)}
+                                {schedulePreview.matches.flatMap(item => (item.possible_pairings?.length ? item.possible_pairings : [{team1: item.team1, team2: item.team2}]).map((pair, index) => <tr key={`${item.id}:${index}`} className="border-t border-default-200"><td className="p-3"><span className="text-xs text-default-500">{item.stage_name} · {item.id} · {item.removed ? "移除轮空 / 无需进行" : item.moved ? "移入此阶段" : item.exists ? "已存在" : "新增"}{item.possible_pairings?.length ? " · 可能对阵" : ""}</span><p>{pair.team1} 对 {pair.team2}</p>{item.conditional && <p className="text-xs text-warning">条件比赛：败者组冠军赢得首场总决赛后进行</p>}</td><td className="p-3">{formatLocalDateTime(item.datetime) || "时间待定"}</td></tr>))}
                             </tbody></table>
                         </div>
                         {schedulePreview.revision !== data.revision && <p role="alert" className="text-sm text-danger">对阵图已更新，请关闭并重新生成预览。</p>}

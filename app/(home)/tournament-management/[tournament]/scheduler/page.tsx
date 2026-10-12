@@ -130,11 +130,11 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         setErrMsg('');
         const currentSchedules = scheduleInfo.filter(s => s.stage_name === selectedRound);
         const isValid = currentSchedules.every(s =>
-            s.is_lobby ? (s.name && s.match_time) : (s.team1 && s.team2 && s.match_time)
+            s.is_lobby ? (s.name && s.match_time) : ((s.team1 || s.team1_placeholder) && (s.team2 || s.team2_placeholder) && s.match_time && !s.is_automatic_advance)
         );
 
         if (action === "publish" && !isValid) {
-            setErrMsg('发布前请确认当前轮次的比赛时间和参赛双方；尚未确认时可以先保存草稿。');
+            setErrMsg('发布前请确认当前轮次的比赛时间。未来对手可保留晋级来源；如有轮空条目，请从对阵管理重新生成赛程草稿清理。');
             return;
         }
 
@@ -149,10 +149,10 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
             const previousMatchUrls = getStageMatchUrls(lastSavedSchedulesRef.current, selectedRound);
             const matchUrls = getStageMatchUrls(payload, selectedRound);
             const matchUrlsChanged = JSON.stringify(previousMatchUrls) !== JSON.stringify(matchUrls);
-            await saveDraftSection(tournamentName, "schedule", payload);
+            const saved = await saveDraftSection(tournamentName, "schedule", payload);
             draftSaved = true;
-            setScheduleInfo(payload);
-            lastSavedSchedulesRef.current = payload;
+            setScheduleInfo(saved.data);
+            lastSavedSchedulesRef.current = saved.data;
 
             let syncSummary = "";
             if (selectedRound && matchUrlsChanged && matchUrls.length > 0) {
@@ -267,9 +267,9 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                         return (
                             <Tabs.Panel key={item.stage_name} id={item.stage_name} className="pt-6">
                                 <div className="flex flex-col gap-4">
-                                    {schedulesForRound.map(({schedule, originalIndex}) => (
+                                    {schedulesForRound.flatMap(({schedule, originalIndex}) => (schedule.possible_pairings?.length ? schedule.possible_pairings : [undefined]).map((possiblePairing, possibilityIndex) => (
                                         <ScheduleCard
-                                            key={schedule.match_id}
+                                            key={`${schedule.match_id}:${possibilityIndex}`}
                                             index={originalIndex}
                                             schedule={schedule}
                                             staffMembers={staffMembers}
@@ -277,8 +277,9 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                                             onChange={(newData: Schedule) => updateSchedule(originalIndex, newData)}
                                             onDelete={() => removeSchedule(originalIndex)}
                                             isTeamMode={tournamentInfo?.is_group && !isSoloRound}
+                                            possiblePairing={possiblePairing}
                                         />
-                                    ))}
+                                    )))}
                                     <Button variant="secondary" size="sm" className="h-10 border-2 border-dashed" onPress={addSchedule}>
                                         <span className="flex items-center gap-2 text-sm">
                                             <PlusIcon/>
@@ -323,7 +324,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
 
 // --- 子组件：赛程卡片 ---
 // 接收 participants (参赛单位) 和 staffMembers (工作人员) 分开处理
-const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, onDelete, isTeamMode}: {
+const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, onDelete, isTeamMode, possiblePairing}: {
     index: number;
     schedule: Schedule;
     staffMembers: Player[];
@@ -331,12 +332,13 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
     onChange: (schedule: Schedule) => void;
     onDelete: () => void;
     isTeamMode?: boolean;
+    possiblePairing?: {team1: string; team2: string};
 }) => {
     const hasMounted = useHasMounted();
 
     const title = schedule.is_lobby
         ? (schedule.name || "未命名 Lobby")
-        : `${schedule.team1 || "TBD"} vs ${schedule.team2 || "TBD"}`;
+        : `${possiblePairing?.team1 || schedule.team1 || schedule.team1_placeholder || "待定"} vs ${possiblePairing?.team2 || schedule.team2 || schedule.team2_placeholder || "待定"}`;
     const subtitle = hasMounted && schedule.match_time
         ? formatLocalDateTime(schedule.match_time, {
             month: 'short',
@@ -357,6 +359,9 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                             <div className="flex w-full items-center justify-between gap-4 pr-2">
                                 <div className="flex flex-col">
                                     <span className="text-lg font-bold text-foreground">{title}</span>
+                                    {schedule.is_possible && <span className="mt-1 text-xs text-default-500">可能对阵 · {schedule.draw_match_id} · 共用时间和人员，赛果确定后只保留实际对阵</span>}
+                                    {schedule.is_conditional && <span className="mt-1 text-xs text-warning">条件比赛：败者组冠军赢得首场总决赛后进行</span>}
+                                    {schedule.is_automatic_advance && <span className="mt-1 text-xs text-warning">轮空条目：请从对阵管理生成赛程草稿清理</span>}
                                     <Tooltip>
                                         <Tooltip.Trigger className="mt-1 w-fit cursor-help font-mono text-xs text-default-400">
                                             {subtitle}
@@ -439,7 +444,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                 <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
                                     <div className="flex flex-col gap-2">
                                         <span className="text-sm text-default-500">Team 1 (Blue)</span>
-                                        <TeamSelect
+                                        {schedule.is_possible || schedule.team1_from_draw ? <p className="rounded-lg bg-default-200 p-3 text-sm">{possiblePairing?.team1 || schedule.team1 || schedule.team1_placeholder || "待定"}</p> : <TeamSelect
                                             label={isTeamMode ? "选择队伍" : "选择选手"}
                                             items={participants}
                                             selectedKey={schedule.team1}
@@ -447,8 +452,8 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                                 ...schedule,
                                                 team1: key as string
                                             })}
-                                        />
-                                        <TextField>
+                                        />}
+                                        <TextField isDisabled={schedule.is_possible}>
                                             <Label>分数</Label>
                                             <Input type="number" placeholder="0" variant="secondary"
                                                    value={schedule.team1_score?.toString() ?? ""} onChange={e => onChange({
@@ -459,7 +464,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                     </div>
                                     <div className="flex flex-col gap-2">
                                         <span className="text-sm text-default-500">Team 2 (Red)</span>
-                                        <TeamSelect
+                                        {schedule.is_possible || schedule.team2_from_draw ? <p className="rounded-lg bg-default-200 p-3 text-sm">{possiblePairing?.team2 || schedule.team2 || schedule.team2_placeholder || "待定"}</p> : <TeamSelect
                                             label={isTeamMode ? "选择队伍" : "选择选手"}
                                             items={participants}
                                             selectedKey={schedule.team2}
@@ -467,8 +472,8 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                                                 ...schedule,
                                                 team2: key as string
                                             })}
-                                        />
-                                        <TextField>
+                                        />}
+                                        <TextField isDisabled={schedule.is_possible}>
                                             <Label>分数</Label>
                                             <Input type="number" placeholder="0" variant="secondary"
                                                    value={schedule.team2_score?.toString() ?? ""} onChange={e => onChange({
@@ -549,7 +554,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         <div className="flex justify-end pt-4">
                             <Button onPress={onDelete}  variant="danger">
                                 <TrashIcon/>
-                                <span>删除此赛程</span>
+                                <span>{schedule.is_possible ? "删除这场所有可能对阵" : "删除此赛程"}</span>
                             </Button>
                         </div>
                     </div>
@@ -767,6 +772,15 @@ const MultiSelect = ({items, selectedKeys, onSelectionChange, placeholder = "添
 }
 
 interface Schedule {
+    draw_match_id?: string;
+    team1_placeholder?: string | null;
+    team1_from_draw?: boolean;
+    team2_from_draw?: boolean;
+    team2_placeholder?: string | null;
+    is_possible?: boolean;
+    is_conditional?: boolean;
+    is_automatic_advance?: boolean;
+    possible_pairings?: {team1: string; team2: string}[];
     tournament_name: string;
     stage_name: string;
     match_id: string;

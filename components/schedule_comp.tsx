@@ -118,10 +118,10 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
             <div>
                 {renderBracketHeader("胜者组 / Winner Bracket", "success")}
                 <Accordion className="flex flex-col gap-2" hideSeparator>
-                    {(schedule.match_info || []).filter((match) => match.is_winner_bracket).map((match_info, index) => (
+                    {expandMatchPossibilities(schedule.match_info || []).filter((match) => match.is_winner_bracket).map((match_info, index) => (
                         <Accordion.Item
                             key={index}
-                            id={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
+                            id={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
                             className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
                             <Accordion.Heading>
@@ -146,10 +146,10 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                 <div>
                     {renderBracketHeader("败者组 / Loser Bracket", "danger")}
                     <Accordion className="flex flex-col gap-2" hideSeparator>
-                        {(schedule.match_info || []).filter((match) => !match.is_winner_bracket).map((match_info, index) => (
+                        {expandMatchPossibilities(schedule.match_info || []).filter((match) => !match.is_winner_bracket).map((match_info, index) => (
                             <Accordion.Item
                                 key={index}
-                                id={`${match_info.team1?.name ?? '?'} vs ${match_info.team2?.name ?? '?'}`}
+                                id={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
                                 className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                             >
                                 <Accordion.Heading>
@@ -187,9 +187,12 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
     const dateStr = localDateTime?.date ?? "--/--";
     const timeStr = localDateTime?.time ?? "--:--";
     const utcTimeStr = formatUtcDateTime(match_info.datetime) ?? "时间待定";
+    const team1Name = match_info.team1?.name || match_info.team1_placeholder || "待定";
+    const team2Name = match_info.team2?.name || match_info.team2_placeholder || "待定";
 
     return (
         <div className="w-full">
+            {(match_info.is_possible || match_info.is_conditional) && <p className="mb-1 text-center text-xs text-default-500">{match_info.is_possible ? `可能对阵 · ${match_info.draw_match_id ?? "等待晋级"}` : ""}{match_info.is_conditional ? " · 败者组冠军赢得首场总决赛后进行" : ""}</p>}
             <div className="grid grid-cols-1 md:grid-cols-[100px_1fr_auto_1fr_100px] items-center gap-y-2 md:gap-x-4 py-2 w-full">
 
                 {/* 1. 左侧：时间区域 (PC端显示，移动端隐藏或变样式) */}
@@ -234,15 +237,15 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 {/* 2. 队伍 1 (靠右对齐) */}
                 <div className={`flex items-center justify-center md:justify-end gap-3 min-w-0 ${notStarted? "opacity-100" : isTeam1Win ? "opacity-100 font-bold" : "opacity-30"}`}>
                     <span className="text-lg truncate text-center md:text-right hidden  text-default-700 sm:block">
-                        {match_info.team1?.name || "待定"}
+                        {team1Name}
                     </span>
 
                     <span className="text-lg truncate text-center md:text-right sm:hidden  text-default-700 max-w-[150px]">
-                        {match_info.team1?.name || "待定"}
+                        {team1Name}
                     </span>
 
                     <img
-                        alt={match_info.team1?.name || "待定"}
+                        alt={team1Name}
                         className="w-10 h-10 rounded-md md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
                         src={match_info.team1?.avatar_url || "https://a.ppy.sh"}
                     />
@@ -264,18 +267,18 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
                 {/* 4. 队伍 2 (靠左对齐) */}
                 <div className={`flex items-center  justify-center md:justify-start gap-3 min-w-0 ${notStarted? "opacity-100" : isTeam2Win ? "opacity-100 font-bold" : "opacity-30"}`}>
                     <img
-                        alt={match_info.team2?.name || "待定"}
+                        alt={team2Name}
                         className="w-10 h-10 rounded-md md:w-12 md:h-12 min-w-[40px] md:min-w-[48px] object-cover bg-surface-secondary"
                         src={match_info.team2?.avatar_url || "https://a.ppy.sh"}
                     />
                     {/* PC端名字 (保持不变) */}
                     <span className="text-lg truncate text-center md:text-left text-default-700 hidden sm:block">
-                        {match_info.team2?.name || "待定"}
+                        {team2Name}
                     </span>
 
                     {/* 移动端名字：关键修改 */}
                     <span className="text-lg truncate text-center md:text-left text-default-700 sm:hidden max-w-[150px]">
-                        {match_info.team2?.name || "待定"}
+                        {team2Name}
                     </span>
                 </div>
 
@@ -870,6 +873,13 @@ type LobbyInfo = {
 }
 
 export type MatchInfo = {
+    draw_match_id?: string;
+    team1_placeholder?: string | null;
+    team2_placeholder?: string | null;
+    is_conditional?: boolean;
+    is_possible?: boolean;
+    possible_pairings?: {team1: string; team2: string}[];
+    possibility_key?: string;
     datetime: string | null;
     is_winner_bracket: boolean;
     match_id: string;
@@ -883,6 +893,12 @@ export type MatchInfo = {
     team2_score?: number;
     team1_warmup?: map;
     team2_warmup?: map;
+}
+
+function expandMatchPossibilities(matches: MatchInfo[]): MatchInfo[] {
+    return matches.flatMap(match => match.possible_pairings?.length
+        ? match.possible_pairings.map((pair, index) => ({...match, team1_placeholder: pair.team1, team2_placeholder: pair.team2, possibility_key: String(index)}))
+        : [match]);
 }
 
 type SimpleInfo = {
