@@ -4,20 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run typecheck",
     "start": "next start",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "test:group-model-api": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test --experimental-strip-types tests/group_model_api_validation.test.ts"
   },
   "dependencies": {
     "@heroui/react": "^3.2.6",
     "@heroui/styles": "^3.2.6",
-    "@react-aria/i18n": "^3.13.1",
     "@react-aria/ssr": "^3.10.1",
-    "@react-aria/visually-hidden": "^3.9.1",
-    "@react-stately/data": "^3.16.1",
-    "@react-types/combobox": "^3.15.0",
-    "@sentry/nextjs": "^10.76.2",
+    "@sentry/nextjs": "^11.6.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/typography": "^0.5.20",
     "@tiptap/extension-image": "^3.31.4",
@@ -29,25 +26,13 @@
     "@tiptap/pm": "^3.31.4",
     "@tiptap/react": "^3.31.4",
     "@tiptap/starter-kit": "^3.31.4",
-    "@types/node": "^24.19.2",
-    "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0",
-    "autoprefixer": "^10.6.1",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "cmdk": "^1.1.1",
     "echarts": "^6.1.0",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "~16.4.0",
     "file-saver": "^2.0.5",
-    "intl-messageformat": "^10.7.18",
     "jszip": "^3.10.2",
     "next": "~16.4.0",
     "next-themes": "^0.4.6",
-    "postcss": "^8.5.29",
     "react": "^19.3.0",
-    "react-dnd": "^16.0.1",
-    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.3.0",
     "react-markdown": "^10.1.0",
     "remark-breaks": "^4.0.0",
@@ -55,20 +40,22 @@
     "swr": "^2.5.1",
     "tailwind-variants": "^3.3.1",
     "tailwindcss": "^4.3.3",
-    "typescript": "^5.9.3",
-    "undici": "^7.30.0"
+    "undici": "^8.11.2"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
-    "cross-env": "^10.1.0"
+    "@types/node": "^24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "~16.4.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "overrides": {
     "@tailwindcss/typography": {
       "postcss-selector-parser": "^7.1.6"
     },
-    "minimatch": "^10.2.1",
-    "glob": {
-      "minimatch": "^10.2.1"
-    }
+    "minimatch": "^10.2.1"
   }
 }

@@ -2,20 +2,21 @@
 
 ## Technologies Used
 
-- [Next.js 13](https://nextjs.org/docs/getting-started)
-- [NextUI v2](https://nextui.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
+- [Next.js 16](https://nextjs.org/docs/app)
+- [HeroUI v3](https://www.heroui.com/)
+- [Tailwind CSS 4](https://tailwindcss.com/)
 - [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Framer Motion](https://www.framer.com/motion/)
+- [TypeScript 7](https://www.typescriptlang.org/)
 - [next-themes](https://github.com/pacocoursey/next-themes)
 
 ## How to Use
 
 ### Install dependencies
 
+使用 Node.js 24，与 GitHub Actions 和 Docker 保持一致。
+
 ```bash
-npm install
+npm ci
 ```
 
 ### Run the development server
@@ -23,6 +24,20 @@ npm install
 ```bash
 npm run dev
 ```
+
+### Build and check
+
+```bash
+npm run build
+npm run lint
+npm run typecheck
+```
+
+`typecheck` 使用 TypeScript 7。由于 TypeScript 7 尚未提供编译器 API，
+`typescript` 通过 npm alias 指向 `@typescript/typescript6`，供 ESLint 和 Next.js 插件使用；
+`@typescript/native` 则提供 TypeScript 7 的 `tsc`，采用 [TypeScript 官方的双版本方案](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/#running-side-by-side-with-typescript-6-0)。
+`build` 在 Next.js 构建和兼容编译器检查完成后，再运行 TypeScript 7 检查。
+ESLint 暂保留在 9，因为 `eslint-config-next` 使用的 React、Import、JSX 无障碍插件尚未声明支持 ESLint 10。
 
 ## 群模型安全配置页
 

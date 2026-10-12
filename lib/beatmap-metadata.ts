@@ -1,4 +1,4 @@
-import { ProxyAgent } from "undici";
+import { Dispatcher1Wrapper, ProxyAgent } from "undici";
 
 type Metadata = { title: string; artist: string; version: string; beatmapset_id: number };
 type Cached = { value: Metadata | null; expires: number };
@@ -69,12 +69,13 @@ export function createMetadataLoader(fetcher: typeof fetch = fetch) {
     };
 }
 
-let proxyAgent: ProxyAgent | undefined;
+let proxyAgent: Dispatcher1Wrapper | undefined;
 const metadataFetch: typeof fetch = (input, init) => {
     const proxy = process.env.OSU_METADATA_PROXY_URL;
     if (!proxy) return fetch(input, init);
-    proxyAgent ??= new ProxyAgent(proxy);
-    const options: RequestInit & { dispatcher: ProxyAgent } = { ...init, dispatcher: proxyAgent };
+    // Node's built-in fetch uses the v1 handler contract; Undici 8 uses v2.
+    proxyAgent ??= new Dispatcher1Wrapper(new ProxyAgent(proxy));
+    const options: RequestInit & { dispatcher: Dispatcher1Wrapper } = { ...init, dispatcher: proxyAgent };
     return fetch(input, options);
 };
 

@@ -17,9 +17,12 @@ if (isGroupModelConfigPage) {
 Sentry.init({
   enabled: !isGroupModelConfigPage,
   dsn: "https://d703c7ec4a4ead7ec5252a6d7b7c3274@o4505384033189888.ingest.us.sentry.io/4506771213647872",
-  // Adds request headers and IP for users, for more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: !isGroupModelConfigPage,
+  // v11 replaces sendDefaultPii with dataCollection. Preserve the existing
+  // opt-in on ordinary pages; config pages keep telemetry disabled entirely.
+  dataCollection: {
+    userInfo: !isGroupModelConfigPage,
+    frameContextLines: 7,
+  },
   integrations: isGroupModelConfigPage ? [] : [
     // Replay may only be enabled for the client-side
     Sentry.replayIntegration(),

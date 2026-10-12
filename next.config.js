@@ -73,6 +73,5 @@ module.exports = withSentryConfig(nextConfig, {
 
     // An auth token is required for uploading source maps.
     authToken: process.env.SENTRY_AUTH_TOKEN,
-    hideSourceMaps: true,
     silent: false, // Can be used to suppress logs
 });
