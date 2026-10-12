@@ -9,6 +9,7 @@ import {LinkIcon} from "@/components/icons"; // 假设你有这个图标，或�
 import {usePathname, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {formatUtcDateTime, getLocalDateTimeParts, parseUtcDateTime} from "@/lib/datetime";
+import {expandMatchPossibilities, type PossibleSchedulePairing} from "@/lib/schedule_possibilities";
 import {TournamentDrawBoard} from "@/components/tournament_draw";
 import {formatMatchScore, requestDraw, type TournamentDraw} from "@/lib/tournament_draw";
 import {
@@ -878,7 +879,7 @@ export type MatchInfo = {
     team2_placeholder?: string | null;
     is_conditional?: boolean;
     is_possible?: boolean;
-    possible_pairings?: {team1: string; team2: string; match_time?: string | null}[];
+    possible_pairings?: PossibleSchedulePairing[];
     possibility_key?: string;
     datetime: string | null;
     is_winner_bracket: boolean;
@@ -893,12 +894,6 @@ export type MatchInfo = {
     team2_score?: number;
     team1_warmup?: map;
     team2_warmup?: map;
-}
-
-function expandMatchPossibilities(matches: MatchInfo[]): MatchInfo[] {
-    return matches.flatMap(match => match.possible_pairings?.length
-        ? match.possible_pairings.map((pair, index) => ({...match, datetime: pair.match_time !== undefined ? pair.match_time : match.datetime, team1_placeholder: pair.team1, team2_placeholder: pair.team2, possibility_key: String(index)}))
-        : [match]);
 }
 
 type SimpleInfo = {

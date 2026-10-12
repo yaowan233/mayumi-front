@@ -10,12 +10,13 @@ import {siteConfig} from "@/config/site";
 import {formatLocalDateTime, localDateTimeInputToUtc, utcDateTimeToLocalInput} from "@/lib/datetime";
 import {DRAW_STATUS, DrawRequestError, drawRoundGroups, drawSlotLabel, requestDraw, visibleDraw, type DrawManagementResponse, type DrawResponse, type DrawMatch, type DrawRound, type TournamentDraw} from "@/lib/tournament_draw";
 import {TournamentDrawBoard} from "@/components/tournament_draw";
+import {isScheduleVisible} from "@/lib/schedule_possibilities";
 
 const validBo = (value: string) => !value.trim() || (Number.isInteger(Number(value)) && Number(value) >= 3 && Number(value) <= 23 && Number(value) % 2 === 1);
 
 type SchedulePreview = {
     revision: number;
-    matches: {id: string; stage_name: string; team1: string; team2: string; datetime: string | null; exists: boolean; moved?: boolean; removed?: boolean; conditional?: boolean; possible_pairings?: {team1: string; team2: string; match_time?: string | null}[]}[];
+    matches: {id: string; stage_name: string; team1: string; team2: string; datetime: string | null; exists: boolean; moved?: boolean; removed?: boolean; conditional?: boolean; is_future_pending?: boolean; possible_pairings?: {team1: string; team2: string; match_time?: string | null}[]}[];
 };
 
 export function DrawManagement({tournamentName}: {tournamentName: string}) {
@@ -97,13 +98,13 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
                 <Modal.CloseTrigger isDisabled={pending}/>
                 <Modal.Header><Modal.Heading>确认生成赛程草稿</Modal.Heading></Modal.Header>
                 <Modal.Body className="flex flex-col gap-4">
-                    <p className="text-sm text-default-600">补齐未来比赛。一方已确定时，分别列出不同对手的可能对阵，每种对阵可单独安排时间。赛果确定后只保留实际对阵，并沿用对应时间。已生成的必然轮空会在确认后从草稿中移除。</p>
+                    <p className="text-sm text-default-600">只显示已确定比赛和直接下一场的两种候选，可分别安排时间。更远轮次等选手确定后自动显示。赛果确定后只保留实际对阵，并沿用对应时间。已生成的必然轮空会在确认后从草稿中移除。</p>
                     <p className="rounded-xl bg-warning/10 p-3 text-sm">比赛时间需要你确认：已有时间会保留，未设置时间的比赛保持“时间待定”。请到赛程管理确认时间和人员后再发布，待定对手会随赛果自动更新。</p>
                     {schedulePreview && <>
-                        <p className="text-sm">新增 {schedulePreview.matches.filter(m => !m.exists && !m.removed).length} 场 · 保留 {schedulePreview.matches.filter(m => m.exists && !m.removed).length} 场 · 调整阶段 {schedulePreview.matches.filter(m => m.moved).length} 场 · 清理轮空 {schedulePreview.matches.filter(m => m.removed).length} 场</p>
+                        <p className="text-sm">新增 {schedulePreview.matches.filter(m => isScheduleVisible(m) && !m.exists && !m.removed).length} 场 · 保留 {schedulePreview.matches.filter(m => isScheduleVisible(m) && m.exists && !m.removed).length} 场 · 调整阶段 {schedulePreview.matches.filter(m => isScheduleVisible(m) && m.moved).length} 场 · 清理轮空 {schedulePreview.matches.filter(m => m.removed).length} 场</p>
                         <div className="max-h-80 overflow-auto rounded-xl border border-default-200">
                             <table className="w-full text-left text-sm"><thead><tr className="bg-default-100"><th className="p-3">轮次 / 对阵</th><th className="p-3">比赛时间</th></tr></thead><tbody>
-                                {schedulePreview.matches.flatMap(item => (item.possible_pairings?.length ? item.possible_pairings : [{team1: item.team1, team2: item.team2}]).map((pair, index) => <tr key={`${item.id}:${index}`} className="border-t border-default-200"><td className="p-3"><span className="text-xs text-default-500">{item.stage_name} · {item.id} · {item.removed ? "移除轮空 / 无需进行" : item.moved ? "移入此阶段" : item.exists ? "已存在" : "新增"}{item.possible_pairings?.length ? " · 可能对阵" : ""}</span><p>{pair.team1} 对 {pair.team2}</p>{item.conditional && <p className="text-xs text-warning">条件比赛：败者组冠军赢得首场总决赛后进行</p>}</td><td className="p-3">{formatLocalDateTime(pair.match_time !== undefined ? pair.match_time : item.datetime) || "时间待定"}</td></tr>))}
+                                {schedulePreview.matches.filter(isScheduleVisible).flatMap(item => (item.possible_pairings?.length ? item.possible_pairings : [{team1: item.team1, team2: item.team2}]).map((pair, index) => <tr key={`${item.id}:${index}`} className="border-t border-default-200"><td className="p-3"><span className="text-xs text-default-500">{item.stage_name} · {item.id} · {item.removed ? "移除轮空 / 无需进行" : item.moved ? "移入此阶段" : item.exists ? "已存在" : "新增"}{item.possible_pairings?.length ? " · 可能对阵" : ""}</span><p>{pair.team1} 对 {pair.team2}</p>{item.conditional && <p className="text-xs text-warning">条件比赛：败者组冠军赢得首场总决赛后进行</p>}</td><td className="p-3">{formatLocalDateTime(pair.match_time !== undefined ? pair.match_time : item.datetime) || "时间待定"}</td></tr>))}
                             </tbody></table>
                         </div>
                         {schedulePreview.revision !== data.revision && <p role="alert" className="text-sm text-danger">对阵图已更新，请关闭并重新生成预览。</p>}

@@ -26,6 +26,7 @@ import {
 } from "@heroui/react";
 import Link from "next/link";
 import {siteConfig} from "@/config/site";
+import {isScheduleVisible} from "@/lib/schedule_possibilities";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {TournamentInfo} from "@/components/homepage";
 import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
@@ -129,13 +130,13 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
 
     const handleSave = async (action: DraftAction) => {
         setErrMsg('');
-        const currentSchedules = scheduleInfo.filter(s => s.stage_name === selectedRound);
+        const currentSchedules = scheduleInfo.filter(s => s.stage_name === selectedRound && isScheduleVisible(s));
         const isValid = currentSchedules.every(s =>
             s.is_lobby ? (s.name && s.match_time) : ((s.team1 || s.team1_placeholder) && (s.team2 || s.team2_placeholder) && (s.possible_pairings?.length ? s.possible_pairings.every(pair => getPairingTime(s, pair)) : s.match_time) && !s.is_automatic_advance)
         );
 
         if (action === "publish" && !isValid) {
-            setErrMsg('发布前请确认当前轮次的比赛时间。未来对手可保留晋级来源；如有轮空条目，请从对阵管理重新生成赛程草稿清理。');
+            setErrMsg('发布前请确认当前显示比赛的时间，每种可能对阵都需要安排时间。后续轮次会在选手确定后显示。');
             return;
         }
 
@@ -263,11 +264,12 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                     {roundInfo.map((item) => {
                         const schedulesForRound = scheduleInfo
                             .map((schedule, index) => ({schedule, originalIndex: index}))
-                            .filter(({schedule}) => schedule.stage_name === item.stage_name);
+                            .filter(({schedule}) => schedule.stage_name === item.stage_name && isScheduleVisible(schedule));
 
                         return (
                             <Tabs.Panel key={item.stage_name} id={item.stage_name} className="pt-6">
                                 <div className="flex flex-col gap-4">
+                                    {!schedulesForRound.length && scheduleInfo.some(s => s.stage_name === item.stage_name && s.is_future_pending) && <p className="text-sm text-default-500">本轮对手尚未确定，选手确定或可列出直接下一场候选时会自动显示。</p>}
                                     {schedulesForRound.flatMap(({schedule, originalIndex}) => (schedule.possible_pairings?.length ? schedule.possible_pairings : [undefined]).map((possiblePairing, possibilityIndex) => (
                                         <ScheduleCard
                                             key={`${schedule.match_id}:${possibilityIndex}`}
@@ -786,6 +788,7 @@ interface Schedule {
     team2_from_draw?: boolean;
     team2_placeholder?: string | null;
     is_possible?: boolean;
+    is_future_pending?: boolean;
     is_conditional?: boolean;
     is_automatic_advance?: boolean;
     possible_pairings?: SchedulePairing[];
