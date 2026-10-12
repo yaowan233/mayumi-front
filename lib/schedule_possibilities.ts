@@ -1,3 +1,5 @@
+import {parseUtcDateTime} from "./datetime.ts";
+
 export type ScheduleParticipant = {
     name: string;
     avatar_url: string;
@@ -23,8 +25,16 @@ type MatchPossibilities = {
     possible_pairings?: PossibleSchedulePairing[];
 };
 
+export function sortSchedulesByTime<T>(items: readonly T[], getTime: (item: T) => string | null | undefined): T[] {
+    return [...items].sort((a, b) => {
+        const aTime = parseUtcDateTime(getTime(a))?.getTime() ?? Infinity;
+        const bTime = parseUtcDateTime(getTime(b))?.getTime() ?? Infinity;
+        return aTime === bTime ? 0 : aTime < bTime ? -1 : 1;
+    });
+}
+
 export function expandMatchPossibilities<T extends MatchPossibilities>(matches: T[]): T[] {
-    return matches.flatMap(match => match.possible_pairings?.length
+    const expanded = matches.flatMap(match => match.possible_pairings?.length
         ? match.possible_pairings.map((pair, index) => ({
             ...match,
             datetime: pair.match_time !== undefined ? pair.match_time : match.datetime,
@@ -35,4 +45,5 @@ export function expandMatchPossibilities<T extends MatchPossibilities>(matches: 
             possibility_key: String(index),
         }))
         : [match]);
+    return sortSchedulesByTime(expanded, match => match.datetime);
 }

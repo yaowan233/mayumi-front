@@ -26,7 +26,7 @@ import {
 } from "@heroui/react";
 import Link from "next/link";
 import {siteConfig} from "@/config/site";
-import {isScheduleVisible} from "@/lib/schedule_possibilities";
+import {isScheduleVisible, sortSchedulesByTime} from "@/lib/schedule_possibilities";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {TournamentInfo} from "@/components/homepage";
 import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
@@ -265,12 +265,17 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                         const schedulesForRound = scheduleInfo
                             .map((schedule, index) => ({schedule, originalIndex: index}))
                             .filter(({schedule}) => schedule.stage_name === item.stage_name && isScheduleVisible(schedule));
+                        const scheduleCards = sortSchedulesByTime(
+                            schedulesForRound.flatMap(entry => (entry.schedule.possible_pairings?.length
+                                ? entry.schedule.possible_pairings : [undefined]).map((possiblePairing, possibilityIndex) => ({...entry, possiblePairing, possibilityIndex}))),
+                            ({schedule, possiblePairing}) => possiblePairing ? getPairingTime(schedule, possiblePairing) : schedule.match_time,
+                        );
 
                         return (
                             <Tabs.Panel key={item.stage_name} id={item.stage_name} className="pt-6">
                                 <div className="flex flex-col gap-4">
                                     {!schedulesForRound.length && scheduleInfo.some(s => s.stage_name === item.stage_name && s.is_future_pending) && <p className="text-sm text-default-500">本轮对手尚未确定，选手确定或可列出直接下一场候选时会自动显示。</p>}
-                                    {schedulesForRound.flatMap(({schedule, originalIndex}) => (schedule.possible_pairings?.length ? schedule.possible_pairings : [undefined]).map((possiblePairing, possibilityIndex) => (
+                                    {scheduleCards.map(({schedule, originalIndex, possiblePairing, possibilityIndex}) => (
                                         <ScheduleCard
                                             key={`${schedule.match_id}:${possibilityIndex}`}
                                             index={originalIndex}
@@ -282,7 +287,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                                             isTeamMode={tournamentInfo?.is_group && !isSoloRound}
                                             possiblePairing={possiblePairing}
                                         />
-                                    )))}
+                                    ))}
                                     <Button variant="secondary" size="sm" className="h-10 border-2 border-dashed" onPress={addSchedule}>
                                         <span className="flex items-center gap-2 text-sm">
                                             <PlusIcon/>

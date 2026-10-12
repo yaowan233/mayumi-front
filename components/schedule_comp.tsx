@@ -119,9 +119,9 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
             <div>
                 {renderBracketHeader("胜者组 / Winner Bracket", "success")}
                 <Accordion className="flex flex-col gap-2" hideSeparator>
-                    {expandMatchPossibilities(schedule.match_info || []).filter((match) => match.is_winner_bracket).map((match_info, index) => (
+                    {expandMatchPossibilities(schedule.match_info || []).filter((match) => match.is_winner_bracket).map((match_info) => (
                         <Accordion.Item
-                            key={index}
+                            key={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
                             id={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
                             className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                         >
@@ -147,9 +147,9 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                 <div>
                     {renderBracketHeader("败者组 / Loser Bracket", "danger")}
                     <Accordion className="flex flex-col gap-2" hideSeparator>
-                        {expandMatchPossibilities(schedule.match_info || []).filter((match) => !match.is_winner_bracket).map((match_info, index) => (
+                        {expandMatchPossibilities(schedule.match_info || []).filter((match) => !match.is_winner_bracket).map((match_info) => (
                             <Accordion.Item
-                                key={index}
+                                key={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
                                 id={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
                                 className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
                             >
