@@ -9,7 +9,7 @@ import {canConfigureTournamentBracket, resolveManagedTournament} from "@/lib/tou
 import {getBracketConfiguration, saveBracketConfiguration, type SharedBracketSettings} from "@/lib/bracket_settings";
 import {
     BRACKET_ACRONYM_MAX_LENGTH, calculateBracketBestOf, generateBracket,
-    getBracketAcronymErrors, getBracketEntrants, getBracketOptionsError, getDefaultBracketAcronyms,
+    getBracketAcronymErrors, getBracketEntrants, getBracketOptionsError, getBracketRounds, getDefaultBracketAcronyms,
     type BracketExportInput,
 } from "@/lib/bracket_export";
 
@@ -20,7 +20,7 @@ interface ExportSettings {
 
 function initialSettings(data: BracketExportInput, saved: SharedBracketSettings): ExportSettings {
     const settings: ExportSettings = {
-        rounds: Object.fromEntries(data.rounds.filter((round) => !round.is_lobby).map((round) => [round.stage_name, {bestOf: "", banCount: "1"}])),
+        rounds: Object.fromEntries(getBracketRounds(data).rounds.filter((round) => !round.is_lobby).map((round) => [round.stage_name, {bestOf: "", banCount: "1"}])),
         acronyms: getDefaultBracketAcronyms(getBracketEntrants(data)),
     };
     for (const name of Object.keys(settings.rounds)) {
@@ -79,7 +79,8 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
     const [saveMessage, setSaveMessage] = useState("");
     const [result, setResult] = useState<{message: string; warnings: string[]} | null>(null);
     const entrants = useMemo(() => getBracketEntrants(data), [data]);
-    const configurableRounds = data.rounds.filter((round) => !round.is_lobby);
+    const {rounds, warnings: roundWarnings} = useMemo(() => getBracketRounds(data), [data]);
+    const configurableRounds = rounds.filter((round) => !round.is_lobby);
     const acronymErrors = getBracketAcronymErrors(entrants, settings.acronyms);
     const roundOptions = Object.fromEntries(configurableRounds.map((round) => {
         const fields = settings.rounds[round.stage_name];
@@ -129,11 +130,12 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
                 <div className="flex flex-wrap gap-3">
                     <Button variant="secondary" isDisabled={pending !== null} onPress={onReload}>重新加载</Button>
                     <Button variant="secondary" isDisabled={Boolean(hasErrors) || pending !== null} isPending={pending === "save"} onPress={() => handleSave(false)}>保存配置</Button>
-                    <Button variant="primary" isDisabled={Boolean(hasErrors) || pending !== null || data.rounds.length === 0 || entrants.length === 0} isPending={pending === "export"} onPress={() => handleSave(true)}>保存并导出 bracket.json</Button>
+                    <Button variant="primary" isDisabled={Boolean(hasErrors) || pending !== null || rounds.length === 0 || entrants.length === 0} isPending={pending === "export"} onPress={() => handleSave(true)}>保存并导出 bracket.json</Button>
                 </div>
             </div>
             {saveMessage && <p role="status" className="text-sm text-default-500">{saveMessage}</p>}
             {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+            {roundWarnings.length > 0 && <ul className="list-disc space-y-1 pl-5 text-sm text-default-500">{roundWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>}
             {result && <div role="status" className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-default-600">
                 <p>{result.message}。首次载入时请登录比赛端，以补全谱面资料。</p>
                 {result.warnings.length > 0 && <ul className="mt-2 list-disc space-y-1 pl-5">{result.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>}
@@ -149,7 +151,7 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
                         const fields = settings.rounds[round.stage_name];
                         const options = roundOptions[round.stage_name];
                         const optionsError = getBracketOptionsError(options);
-                        const count = data.maps.filter((map) => map.stage_name === round.stage_name).length;
+                        const count = data.maps.filter((map) => map.stage_name.trim() === round.stage_name.trim()).length;
                         const calculated = optionsError ? null : calculateBracketBestOf(count, options.banCount);
                         const bestOf = options.bestOf ?? calculated?.bestOf;
                         const note = optionsError || (options.bestOf === undefined ? calculated?.warning : count < options.bestOf + 2 * options.banCount ? `当前图池不足以支持 BO${options.bestOf} 和每方 ${options.banCount} Ban，请检查图池。` : null);

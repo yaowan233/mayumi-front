@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {calculateBracketBestOf, generateBracket, getBracketEntrants, getDefaultBracketAcronyms, type BracketExportInput} from "../lib/bracket_export.ts";
+import {calculateBracketBestOf, generateBracket, getBracketEntrants, getBracketRounds, getDefaultBracketAcronyms, type BracketExportInput} from "../lib/bracket_export.ts";
 
 function fixture(): BracketExportInput {
     return {
@@ -78,6 +78,60 @@ test("lobbies are explicitly skipped while later head-to-head matches retain val
     assert.ok(warnings.some((warning) => warning.includes("1 场多人 Lobby")));
 });
 
+test("deleted Qua and Ro16 pools are skipped without restoring removed rounds", () => {
+    const input = fixture();
+    input.rounds = [
+        {stage_name: "资格赛", start_time: "2026-09-14", is_lobby: true, is_solo_qualifier: true},
+        {stage_name: "半决赛", start_time: "2026-10-17", is_lobby: false},
+        {stage_name: "决赛", start_time: "2026-10-24", is_lobby: false},
+        {stage_name: "总决赛", start_time: "2026-10-31", is_lobby: false},
+    ];
+    input.maps.forEach((map) => {map.stage_name = "半决赛";});
+    input.maps.unshift(...["Qua", "Qua", "Ro16"].map((stage_name) => ({...input.maps[0], stage_name, map_id: 0, mod: "", number: 0})));
+    input.schedules[0].stage_name = "半决赛";
+    const before = structuredClone(input);
+    const {bracket, warnings} = generateBracket(input);
+    assert.deepEqual(bracket.Rounds.map((round) => round.Name), input.rounds.map((round) => round.stage_name));
+    assert.equal(bracket.Rounds[1].Beatmaps.length, 13);
+    assert.deepEqual(bracket.Rounds[1].Matches, [1]);
+    assert.equal(bracket.Matches.length, 1);
+    assert.ok(warnings.some((warning) => warning.includes("Qua") && warning.includes("2 张谱面") && warning.includes("跳过")));
+    assert.ok(warnings.some((warning) => warning.includes("Ro16") && warning.includes("1 张谱面") && warning.includes("跳过")));
+    assert.equal(getBracketEntrants(input).length, 2);
+    assert.deepEqual(input, before);
+});
+
+test("orphaned matches cannot add player entrants or affect surviving match IDs", () => {
+    const input = fixture();
+    input.schedules.unshift({...input.schedules[0], stage_name: "Qua", match_id: "", team1: "Player 1", team2: "Player 2", match_time: "bad"});
+    const {bracket, warnings} = generateBracket(input);
+    assert.equal(getBracketEntrants(input).length, 2);
+    assert.deepEqual(bracket.Rounds.map((round) => round.Name), ["Final"]);
+    assert.equal(bracket.Matches.length, 1);
+    assert.deepEqual(bracket.Rounds[0].Matches, [1]);
+    assert.ok(warnings.some((warning) => warning.includes("Qua") && warning.includes("1 场赛程")));
+});
+
+test("orphaned data cannot enable export when all saved rounds have been deleted", () => {
+    const input = fixture();
+    input.rounds = [];
+    assert.deepEqual(getBracketRounds(input).rounds, []);
+    assert.throws(() => generateBracket(input), /暂无已保存轮次/);
+});
+
+test("surrounding whitespace matches saved rounds without creating duplicate rounds", () => {
+    const input = fixture();
+    input.maps[0].stage_name = " Final ";
+    input.schedules[0].stage_name = "Final ";
+    const {bracket, warnings} = generateBracket(input);
+    assert.equal(bracket.Rounds.length, 1);
+    assert.equal(bracket.Rounds[0].Beatmaps.length, 13);
+    assert.deepEqual(bracket.Rounds[0].Matches, [1]);
+    assert.deepEqual(warnings, []);
+    input.rounds.push({...input.rounds[0], stage_name: " Final "});
+    assert.throws(() => generateBracket(input), /轮次名称为空或重复/);
+});
+
 test("RO16 with Pinkiepink awaiting an opponent does not block bracket export", () => {
     const input = fixture();
     input.meta.is_group = false;
@@ -126,7 +180,7 @@ test("rejects broken references, ambiguous slots, duplicate matches and invalid 
         [/用户信息/, (input) => {input.participants.players = [];}],
         [/重复/, (input) => {input.maps[1].number = input.maps[0].number;}],
         [/比赛 ID/, (input) => {input.schedules.push({...input.schedules[0]});}],
-        [/对应轮次/, (input) => {input.maps[0].stage_name = "missing";}],
+        [/对应轮次/, (input) => {input.maps[0].stage_name = " ";}],
         [/有效日期/, (input) => {input.schedules[0].match_time = "bad";}],
         [/有效日期/, (input) => {input.schedules[0].match_time = null;}],
         [/正整数 ID/, (input) => {input.maps[0].map_id = 2147483648;}],

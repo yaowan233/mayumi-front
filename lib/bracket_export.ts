@@ -55,7 +55,36 @@ export interface BracketEntrant {
     players: Player[];
 }
 
-export function getBracketEntrants({meta, participants, rounds}: BracketExportInput): BracketEntrant[] {
+// Removing a round can leave pools and schedules behind. Saved rounds remain authoritative.
+export function getBracketRounds(input: BracketExportInput): {rounds: BracketRoundInput[]; warnings: string[]} {
+    const rounds = [...input.rounds];
+    const names = new Set<string>();
+    const warnings: string[] = [];
+    for (const round of rounds) {
+        const name = round.stage_name.trim();
+        if (!name || names.has(name)) throw new Error(`轮次名称为空或重复：${round.stage_name}`);
+        names.add(name);
+    }
+    const orphaned = new Map<string, {maps: number; schedules: number}>();
+    for (const [kind, items] of [["maps", input.maps], ["schedules", input.schedules]] as const) {
+        for (const item of items) {
+            const name = item.stage_name.trim();
+            if (!name) throw new Error("图池或赛程缺少对应轮次名称，请先填写轮次名称");
+            if (names.has(name)) continue;
+            const counts = orphaned.get(name) ?? {maps: 0, schedules: 0};
+            counts[kind]++;
+            orphaned.set(name, counts);
+        }
+    }
+    for (const [name, counts] of orphaned) {
+        warnings.push(`“${name}”不在当前已保存轮次中，已跳过其残留数据（${counts.maps} 张谱面、${counts.schedules} 场赛程）`);
+    }
+    return {rounds, warnings};
+}
+
+export function getBracketEntrants(input: BracketExportInput): BracketEntrant[] {
+    const {meta, participants} = input;
+    const {rounds} = getBracketRounds(input);
     const entrants: BracketEntrant[] = [];
     const playersById = new Map(participants.players.map((player) => [player.uid, player]));
     if (meta.is_group) {
@@ -154,11 +183,11 @@ function requiredDate(value: string | undefined, label: string): string {
 export function generateBracket(input: BracketExportInput, options: BracketExportOptions = {}) {
     const optionsError = getBracketOptionsError(options);
     if (optionsError) throw new Error(optionsError);
-    const {meta, participants, rounds, maps, schedules} = input;
+    const {meta, maps, schedules} = input;
+    const {rounds, warnings} = getBracketRounds(input);
     const ruleset = RULESETS[meta.mode];
     if (!ruleset) throw new Error("比赛端每份配置仅支持一个游戏模式，请先为赛事设置具体模式");
     if (rounds.length === 0) throw new Error("暂无已保存轮次，请先添加轮次");
-    const warnings: string[] = [];
     const teams: {
         FullName: string; Acronym: string; FlagName: string; Players: ReturnType<typeof exportPlayer>[];
         SeedingResults: never[]; Seed: string; LastYearPlacing: string;
@@ -184,21 +213,12 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
     }
     if (teams.length === 0) throw new Error("暂无可导出的参赛选手或已审核队伍");
 
-    const roundNames = new Set<string>();
-    for (const round of rounds) {
-        if (!round.stage_name.trim() || roundNames.has(round.stage_name)) throw new Error(`轮次名称为空或重复：${round.stage_name}`);
-        roundNames.add(round.stage_name);
-    }
-    for (const item of [...maps, ...schedules]) {
-        if (!roundNames.has(item.stage_name)) throw new Error(`“${item.stage_name}”缺少对应轮次，请先保存轮次信息`);
-    }
-
     const exportedRounds = rounds.map((round) => {
         const settings = options.rounds?.[round.stage_name] ?? options;
         const settingsError = getBracketOptionsError(settings);
         if (settingsError) throw new Error(`${round.stage_name}：${settingsError}`);
         const banCount = settings.banCount ?? 1;
-        const roundMaps = maps.filter((map) => map.stage_name === round.stage_name);
+        const roundMaps = maps.filter((map) => map.stage_name.trim() === round.stage_name.trim());
         const slots = new Set<string>();
         const modOrder = new Map<string, number>();
         const beatmaps = roundMaps.map((map) => {
@@ -238,7 +258,8 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
     let skippedLobbies = 0;
     let skippedUnresolved = 0;
     for (const schedule of schedules) {
-        const roundIndex = rounds.findIndex((round) => round.stage_name === schedule.stage_name);
+        const roundIndex = rounds.findIndex((round) => round.stage_name.trim() === schedule.stage_name.trim());
+        if (roundIndex < 0) continue;
         const round = rounds[roundIndex];
         if (schedule.is_lobby || round.is_lobby) {
             skippedLobbies++;
