@@ -98,7 +98,7 @@ function DrawEditor({data, url, tournamentName, onChange, onReload}: {
                 <Modal.CloseTrigger isDisabled={pending}/>
                 <Modal.Header><Modal.Heading>确认生成赛程草稿</Modal.Heading></Modal.Header>
                 <Modal.Body className="flex flex-col gap-4">
-                    <p className="text-sm text-default-600">只显示已确定比赛和直接下一场的两种候选，可分别安排时间。更远轮次等选手确定后自动显示。赛果确定后只保留实际对阵，并沿用对应时间。已生成的必然轮空会在确认后从草稿中移除。</p>
+                    <p className="text-sm text-default-600">前置轮次全部结束后，才显示下一轮比赛。同一轮内只显示已确定比赛和直接下一场的候选，可分别安排时间。赛果确定后只保留实际对阵，并沿用对应时间。已生成的必然轮空会在确认后从草稿中移除。</p>
                     <p className="rounded-xl bg-warning/10 p-3 text-sm">比赛时间需要你确认：已有时间会保留，未设置时间的比赛保持“时间待定”。请到赛程管理确认时间和人员后再发布，待定对手会随赛果自动更新。</p>
                     {schedulePreview && <>
                         <p className="text-sm">新增 {schedulePreview.matches.filter(m => isScheduleVisible(m) && !m.exists && !m.removed).length} 场 · 保留 {schedulePreview.matches.filter(m => isScheduleVisible(m) && m.exists && !m.removed).length} 场 · 调整阶段 {schedulePreview.matches.filter(m => isScheduleVisible(m) && m.moved).length} 场 · 清理轮空 {schedulePreview.matches.filter(m => m.removed).length} 场</p>

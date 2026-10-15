@@ -274,7 +274,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                         return (
                             <Tabs.Panel key={item.stage_name} id={item.stage_name} className="pt-6">
                                 <div className="flex flex-col gap-4">
-                                    {!schedulesForRound.length && scheduleInfo.some(s => s.stage_name === item.stage_name && s.is_future_pending) && <p className="text-sm text-default-500">本轮对手尚未确定，选手确定或可列出直接下一场候选时会自动显示。</p>}
+                                    {!schedulesForRound.length && scheduleInfo.some(s => s.stage_name === item.stage_name && s.is_future_pending) && <p className="text-sm text-default-500">前置轮次全部结束后，本轮已确定的比赛及可安排的候选对阵会自动显示。</p>}
                                     {scheduleCards.map(({schedule, originalIndex, possiblePairing, possibilityIndex}) => (
                                         <ScheduleCard
                                             key={`${schedule.match_id}:${possibilityIndex}`}
