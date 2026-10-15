@@ -9,19 +9,21 @@ import {canConfigureTournamentBracket, resolveManagedTournament} from "@/lib/tou
 import {getBracketConfiguration, saveBracketConfiguration, type SharedBracketSettings} from "@/lib/bracket_settings";
 import {
     BRACKET_ACRONYM_MAX_LENGTH, calculateBracketBestOf, generateBracket,
-    getBracketAcronymErrors, getBracketEntrants, getBracketOptionsError, getBracketRounds, getDefaultBracketAcronyms,
+    getBracketAcronymErrors, getBracketEntrants, getBracketFlagNameErrors, getBracketOptionsError, getBracketRounds, getDefaultBracketAcronyms,
     type BracketExportInput,
 } from "@/lib/bracket_export";
 
 interface ExportSettings {
     rounds: Record<string, {bestOf: string; banCount: string}>;
     acronyms: Record<string, string>;
+    flagNames: Record<string, string>;
 }
 
 function initialSettings(data: BracketExportInput, saved: SharedBracketSettings): ExportSettings {
     const settings: ExportSettings = {
         rounds: Object.fromEntries(getBracketRounds(data).rounds.filter((round) => !round.is_lobby).map((round) => [round.stage_name, {bestOf: "", banCount: "1"}])),
         acronyms: getDefaultBracketAcronyms(getBracketEntrants(data)),
+        flagNames: {},
     };
     for (const name of Object.keys(settings.rounds)) {
         const round = saved.rounds[name];
@@ -29,6 +31,7 @@ function initialSettings(data: BracketExportInput, saved: SharedBracketSettings)
     }
     for (const key of Object.keys(settings.acronyms)) {
         if (typeof saved.acronyms[key] === "string") settings.acronyms[key] = saved.acronyms[key];
+        if (typeof saved.flagNames?.[key] === "string") settings.flagNames[key] = saved.flagNames[key];
     }
     return settings;
 }
@@ -82,6 +85,7 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
     const {rounds, warnings: roundWarnings} = useMemo(() => getBracketRounds(data), [data]);
     const configurableRounds = rounds.filter((round) => !round.is_lobby);
     const acronymErrors = getBracketAcronymErrors(entrants, settings.acronyms);
+    const flagNameErrors = getBracketFlagNameErrors(entrants, settings.acronyms, settings.flagNames);
     const roundOptions = Object.fromEntries(configurableRounds.map((round) => {
         const fields = settings.rounds[round.stage_name];
         return [round.stage_name, {
@@ -89,7 +93,7 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
             banCount: fields.banCount.trim() ? Number(fields.banCount) : NaN,
         }];
     }));
-    const hasErrors = Object.keys(acronymErrors).length > 0 || Object.values(roundOptions).some((options) => getBracketOptionsError(options));
+    const hasErrors = Object.keys(acronymErrors).length > 0 || Object.keys(flagNameErrors).length > 0 || Object.values(roundOptions).some((options) => getBracketOptionsError(options));
 
     const updateSettings = (next: ExportSettings) => {
         setSettings(next);
@@ -106,12 +110,12 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
         setPending(exportFile ? "export" : "save");
         let saved = false;
         try {
-            const response = await saveBracketConfiguration(tournamentName, revision, roundOptions, settings.acronyms);
+            const response = await saveBracketConfiguration(tournamentName, revision, roundOptions, settings.acronyms, settings.flagNames);
             saved = true;
             setRevision(response.revision);
             setSaveMessage("配置已保存，赛事主办和直播成员重新加载后即可使用。");
             if (exportFile) {
-                const {bracket, warnings} = generateBracket(data, {rounds: roundOptions, acronyms: settings.acronyms});
+                const {bracket, warnings} = generateBracket(data, {rounds: roundOptions, acronyms: settings.acronyms, flagNames: settings.flagNames});
                 saveAs(new Blob([JSON.stringify(bracket, null, 2)], {type: "application/json;charset=utf-8"}), "bracket.json");
                 setResult({message: `已生成 ${bracket.Teams.length} 个参赛单位、${bracket.Rounds.length} 个轮次和 ${bracket.Matches.length} 场对阵`, warnings});
             }
@@ -126,7 +130,7 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
-                <p className="text-sm text-default-500">使用已保存的赛事数据（含草稿）。BO、Ban 和简称由主办与直播成员共享，修改后请保存。</p>
+                <p className="text-sm text-default-500">使用已保存的赛事数据（含草稿）。BO、Ban、简称和旗帜名由主办与直播成员共享，修改后请保存。</p>
                 <div className="flex flex-wrap gap-3">
                     <Button variant="secondary" isDisabled={pending !== null} onPress={onReload}>重新加载</Button>
                     <Button variant="secondary" isDisabled={Boolean(hasErrors) || pending !== null} isPending={pending === "save"} onPress={() => handleSave(false)}>保存配置</Button>
@@ -180,8 +184,9 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
 
             <Card variant="secondary" className="!gap-0 !p-0">
                 <Card.Header className="flex flex-col items-start gap-1 border-b border-default-200 !p-5 dark:border-white/10">
-                    <h2 className="text-lg font-bold">参赛简称</h2>
+                    <h2 className="text-lg font-bold">参赛简称与旗帜</h2>
                     <p className="text-sm text-default-500">简称用于比赛端对阵显示，最多 {BRACKET_ACRONYM_MAX_LENGTH} 个字符且不能重复。完整队名和用户名会保留。</p>
+                    <p className="text-sm text-default-500">旗帜名留空时使用简称，也可填写国家代码（如 CN）或自定义队旗文件名（不含扩展名）。自定义 PNG 或 JPG 队旗请放入比赛端赛事目录的 Flags 文件夹。</p>
                 </Card.Header>
                 <Card.Content className="grid gap-4 !p-5 md:grid-cols-2">
                     {entrants.map((entrant) => <div key={entrant.key} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-default-200 p-4 dark:border-white/10">
@@ -193,6 +198,11 @@ function BracketExportEditor({data, initial, initialRevision, tournamentName, on
                             <Label>简称</Label>
                             <Input variant="secondary" fullWidth/>
                             <FieldError>{acronymErrors[entrant.key]}</FieldError>
+                        </TextField>
+                        <TextField isDisabled={pending !== null} className="w-full" value={settings.flagNames[entrant.key] ?? ""} isInvalid={Boolean(flagNameErrors[entrant.key])} validationBehavior="aria" onChange={(value) => updateSettings({...settings, flagNames: {...settings.flagNames, [entrant.key]: value}})} aria-label={`${entrant.name} 旗帜名`}>
+                            <Label>旗帜名（留空使用简称）</Label>
+                            <Input variant="secondary" placeholder={settings.acronyms[entrant.key]?.trim()} fullWidth/>
+                            <FieldError>{flagNameErrors[entrant.key]}</FieldError>
                         </TextField>
                     </div>)}
                     {entrants.length === 0 && <p className="text-default-500">暂无可导出的参赛选手或已审核队伍。</p>}

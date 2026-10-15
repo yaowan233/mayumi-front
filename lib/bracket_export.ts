@@ -44,6 +44,7 @@ export interface BracketRoundOptions {
 export interface BracketExportOptions extends BracketRoundOptions {
     rounds?: Record<string, BracketRoundOptions>;
     acronyms?: Record<string, string>;
+    flagNames?: Record<string, string>;
 }
 
 export const BRACKET_ACRONYM_MAX_LENGTH = 3;
@@ -139,6 +140,17 @@ export function getBracketAcronymErrors(entrants: BracketEntrant[], acronyms: Re
     return errors;
 }
 
+export function getBracketFlagNameErrors(entrants: BracketEntrant[], acronyms: Record<string, string>, flagNames: Record<string, string>): Record<string, string> {
+    const errors: Record<string, string> = {};
+    for (const entrant of entrants) {
+        const value = flagNames[entrant.key]?.trim() || acronyms[entrant.key]?.trim() || "";
+        if (Array.from(value).length > 255 || /[<>:"/\\|?*]/.test(value) || Array.from(value).some((char) => char.charCodeAt(0) < 32)) {
+            errors[entrant.key] = "旗帜名最多 255 个字符，不能含文件名非法字符或控制字符";
+        }
+    }
+    return errors;
+}
+
 export function getBracketOptionsError({bestOf, banCount = 1}: BracketRoundOptions): string | null {
     if (bestOf !== undefined && (!Number.isInteger(bestOf) || bestOf < 3 || bestOf > 23 || bestOf % 2 === 0)) {
         return "BO 请输入 3–23 之间的奇数，或留空自动计算";
@@ -195,7 +207,7 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
     const teamKeys = new Map<string, string>();
     const soloKeys = new Map<string, string>();
 
-    const addTeam = (name: string, acronym: string, players: Player[], lookup: Map<string, string>, flag = "") => {
+    const addTeam = (name: string, acronym: string, players: Player[], lookup: Map<string, string>, flag: string) => {
         if (!name.trim() || lookup.has(name)) throw new Error(`参赛名称为空或重复：${name}`);
         lookup.set(name, acronym);
         teams.push({FullName: name, Acronym: acronym, FlagName: flag, Players: players.map(exportPlayer), SeedingResults: [], Seed: "", LastYearPlacing: "N/A"});
@@ -206,10 +218,12 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
     const acronymErrors = getBracketAcronymErrors(entrants, acronyms);
     const invalidEntrant = entrants.find((entrant) => acronymErrors[entrant.key]);
     if (invalidEntrant) throw new Error(`${invalidEntrant.name}：${acronymErrors[invalidEntrant.key]}`);
+    const flagNameErrors = getBracketFlagNameErrors(entrants, acronyms, options.flagNames ?? {});
+    const invalidFlag = entrants.find((entrant) => flagNameErrors[entrant.key]);
+    if (invalidFlag) throw new Error(`${invalidFlag.name}：${flagNameErrors[invalidFlag.key]}`);
     for (const entrant of entrants) {
-        const country = entrant.players[0]?.country ?? "";
         addTeam(entrant.name, acronyms[entrant.key].trim(), entrant.players, entrant.kind === "team" ? teamKeys : soloKeys,
-            entrant.kind === "player" && /^[A-Z]{2}$/.test(country) ? country : "");
+            options.flagNames?.[entrant.key]?.trim() || acronyms[entrant.key].trim());
     }
     if (teams.length === 0) throw new Error("暂无可导出的参赛选手或已审核队伍");
 

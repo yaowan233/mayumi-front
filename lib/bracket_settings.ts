@@ -4,6 +4,7 @@ import type {BracketExportInput, BracketRoundOptions} from "./bracket_export";
 export interface SharedBracketSettings {
     rounds: Record<string, {bestOf: number | null; banCount: number}>;
     acronyms: Record<string, string>;
+    flagNames?: Record<string, string>;
 }
 
 export interface BracketSettingsResponse {
@@ -18,7 +19,7 @@ async function readResponse<T>(response: Response): Promise<T> {
         try {
             const error = await response.json();
             if (typeof error.detail === "string") message = error.detail;
-            else if (response.status === 422) message = "配置格式无效，请检查各轮 BO、Ban 和参赛简称";
+            else if (response.status === 422) message = "配置格式无效，请检查各轮 BO、Ban、参赛简称和旗帜名";
         } catch { /* Keep the HTTP status if the response is not JSON. */ }
         throw new Error(message);
     }
@@ -35,10 +36,11 @@ export async function getBracketConfiguration(tournamentName: string) {
     }));
 }
 
-export async function saveBracketConfiguration(tournamentName: string, revision: number, rounds: Record<string, BracketRoundOptions>, acronyms: Record<string, string>) {
+export async function saveBracketConfiguration(tournamentName: string, revision: number, rounds: Record<string, BracketRoundOptions>, acronyms: Record<string, string>, flagNames: Record<string, string> = {}) {
     const settings: SharedBracketSettings = {
         rounds: Object.fromEntries(Object.entries(rounds).map(([name, round]) => [name, {bestOf: round.bestOf ?? null, banCount: round.banCount ?? 1}])),
         acronyms,
+        flagNames,
     };
     return readResponse<BracketSettingsResponse>(await fetch(`${bracketUrl(tournamentName)}/settings`, {
         method: "PUT", credentials: "include", headers: {"Content-Type": "application/json"},

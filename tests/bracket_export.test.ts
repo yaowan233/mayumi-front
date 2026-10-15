@@ -66,6 +66,46 @@ test("solo events resolve names to one-player teams and preserve legacy UTC sche
     assert.equal(bracket.Matches[0].Date, "2026-09-10T12:00:00.000Z");
 });
 
+test("team exports include a flag name for each approved team", () => {
+    const {bracket} = generateBracket(fixture());
+    assert.deepEqual(bracket.Teams.map((team) => team.FlagName), bracket.Teams.map((team) => team.Acronym));
+});
+
+test("custom flag names override acronym defaults for both teams and solo entrants", () => {
+    const input = fixture();
+    input.rounds.push({stage_name: "Solo", is_lobby: false, is_solo_qualifier: true});
+    input.participants.players[1].country = "JP";
+    const before = structuredClone(input);
+    const {bracket} = generateBracket(input, {
+        acronyms: {"team:队伍 A": "ABC", "player:1": "XYZ"},
+        flagNames: {"team:队伍 B": "  队旗 B  ", "player:1": "CN", "player:2": "   "},
+    });
+    assert.deepEqual(bracket.Teams.map((team) => [team.FullName, team.FlagName]), [
+        ["队伍 A", "ABC"], ["队伍 B", "队旗 B"], ["Player 1", "CN"], ["Player 2", "P2"],
+    ]);
+    assert.deepEqual(input, before);
+});
+
+test("blank flags follow edited acronyms while explicit flag names stay unchanged", () => {
+    const {bracket} = generateBracket(fixture(), {
+        acronyms: {"team:队伍 A": "NEW", "team:队伍 B": "ALT"},
+        flagNames: {"team:队伍 A": " ", "team:队伍 B": "CN"},
+    });
+    assert.deepEqual(bracket.Teams.map((team) => team.FlagName), ["NEW", "CN"]);
+    const sameFlags = generateBracket(fixture(), {flagNames: {"team:队伍 A": "CN", "team:队伍 B": "CN"}});
+    assert.deepEqual(sameFlags.bracket.Teams.map((team) => team.FlagName), ["CN", "CN"]);
+});
+
+test("flag names reject invalid filenames including invalid acronym defaults", () => {
+    for (const value of ["../flag", "Flags\\flag", "A\nB", "A:B", "x".repeat(256)]) {
+        assert.throws(() => generateBracket(fixture(), {flagNames: {"team:队伍 A": value}}), /旗帜名/);
+    }
+    assert.throws(() => generateBracket(fixture(), {acronyms: {"team:队伍 A": "A/B"}}), /旗帜名/);
+    assert.equal(generateBracket(fixture(), {
+        acronyms: {"team:队伍 A": "A/B"}, flagNames: {"team:队伍 A": "custom"},
+    }).bracket.Teams[0].FlagName, "custom");
+});
+
 test("lobbies are explicitly skipped while later head-to-head matches retain valid round IDs", () => {
     const input = fixture();
     input.rounds.unshift({stage_name: "Qualifier", is_lobby: true});
