@@ -343,6 +343,7 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
     possiblePairing?: SchedulePairing;
 }) => {
     const hasMounted = useHasMounted();
+    const matchUrls = schedule.match_url?.length ? schedule.match_url : [""];
     const matchTime = possiblePairing ? getPairingTime(schedule, possiblePairing) : schedule.match_time;
     const changeTime = (time: string | null) => {
         const pair = possiblePairing ?? {team1: schedule.team1 ?? "", team2: schedule.team2 ?? ""};
@@ -543,23 +544,23 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         <div className="flex flex-col gap-2">
                             <span className="text-sm font-medium text-foreground">比赛链接</span>
                             <span className="text-xs text-default-500">保存草稿后会自动同步当前轮次的 MP 成绩；启用结果公开控制的轮次需在统计管理中确认公开。</span>
-                            {(schedule.match_url || [""]).map((url: string, i: number) => (
+                            {matchUrls.map((url: string, i: number) => (
                                 <div key={i} className="flex items-center gap-2">
                                     <Input className="flex-1" variant="secondary" value={url} placeholder="https://osu.ppy.sh/community/matches/..."
                                            onChange={e => {
-                                                const newUrls = [...(schedule.match_url || [""])];
+                                                const newUrls = [...matchUrls];
                                                 newUrls[i] = e.target.value;
                                                 onChange({...schedule, match_url: newUrls});
                                             }}/>
-                                    {i === (schedule.match_url?.length || 1) - 1 ? (
+                                    {i === matchUrls.length - 1 ? (
                                         <Button isIconOnly className="shrink-0" size="sm" variant="secondary" onPress={() => onChange({
                                             ...schedule,
-                                            match_url: [...(schedule.match_url || []), ""]
+                                            match_url: [...matchUrls, ""]
                                         })}>+</Button>
                                     ) : (
                                         <Button isIconOnly className="shrink-0" size="sm" variant="secondary" onPress={() => onChange({
                                             ...schedule,
-                                            match_url: schedule.match_url.filter((_: string, idx: number) => idx !== i)
+                                            match_url: matchUrls.filter((_: string, idx: number) => idx !== i)
                                         })}>-</Button>
                                     )}
                                 </div>
