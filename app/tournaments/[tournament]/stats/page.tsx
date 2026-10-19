@@ -3,6 +3,8 @@ import {backendServerUrl} from "@/lib/backend_server";
 import {Stage} from "@/components/mappools";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {cookies} from "next/headers";
+import {TournamentLoadError} from "@/components/tournament_load_error";
+import {readStatisticsResponse, StatisticsRequestError} from "@/lib/statistics-response";
 
 
 export default async function StatsPage(props: {
@@ -14,13 +16,25 @@ export default async function StatsPage(props: {
     const preview = previewValue === "1" || previewValue === "true";
     const uuid = preview ? (await cookies()).get("uuid")?.value : undefined;
     const cookieHeader = uuid ? `uuid=${encodeURIComponent(uuid)}` : undefined;
-    const [stats, roundInfo, stage, scores, players] = await Promise.all([
+    const result = await Promise.all([
         getStats(params.tournament, preview, cookieHeader),
         getRoundInfo(params.tournament),
         getStages(params.tournament),
         getScores(params.tournament, preview, cookieHeader),
         getPlayers(params.tournament, 60),
-    ]);
+    ]).then(
+        data => ({data, error: null}),
+        (error: unknown) => ({
+            data: null,
+            error: error instanceof StatisticsRequestError
+                ? error.message
+                : "统计数据加载失败，请稍后重试",
+        }),
+    );
+    if (!result.data) {
+        return <TournamentLoadError error={result.error ?? "统计数据加载失败，请稍后重试"} />;
+    }
+    const [stats, roundInfo, stage, scores, players] = result.data;
 
     return (
         <StatsComp
@@ -74,10 +88,7 @@ async function getPrivateStatisticsResource<T>(
         cache: "no-store",
         headers: cookieHeader ? {Cookie: cookieHeader} : undefined,
     });
-    if (!response.ok) {
-        throw new Error(`统计${preview ? "预览" : ""}请求失败 (${response.status})`);
-    }
-    return response.json();
+    return readStatisticsResponse<T>(response, `统计${preview ? "预览" : "数据"}`);
 }
 
 
@@ -106,9 +117,9 @@ interface Score {
 }
 
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {
-    const data = await fetch(backendServerUrl() + `/api/tournament-round-info?tournament_name=${tournament_name}`,
+    const data = await fetch(backendServerUrl() + `/api/tournament-round-info?tournament_name=${encodeURIComponent(tournament_name)}`,
         {next: {revalidate: 0}});
-    return await data.json();
+    return readStatisticsResponse<TournamentRoundInfo[]>(data, "轮次信息");
 }
 
 interface TournamentRoundInfo {
@@ -120,13 +131,13 @@ interface TournamentRoundInfo {
 }
 
 async function getStages(tournament_name: string): Promise<Stage[]> {
-    const res = await fetch(backendServerUrl() + '/api/map_pools?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/map_pools?tournament_name=' + encodeURIComponent(tournament_name),
         {next: {revalidate: 0}})
-    return await res.json()
+    return readStatisticsResponse<Stage[]>(res, "图池")
 }
 
 async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
-    const res = await fetch(backendServerUrl() + '/api/players?tournament_name=' + tournament_name,
+    const res = await fetch(backendServerUrl() + '/api/players?tournament_name=' + encodeURIComponent(tournament_name),
         {next: {revalidate: revalidate_time}})
-    return await res.json()
+    return readStatisticsResponse<TournamentPlayers>(res, "参赛成员")
 }

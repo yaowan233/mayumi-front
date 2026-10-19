@@ -9,6 +9,7 @@ import {useRouter, useSearchParams} from "next/navigation";
 import {Player} from "@/app/tournaments/[tournament]/participants/page";
 import {siteConfig} from "@/config/site";
 import {parseLeaderboardResponse, type LeaderboardRow} from "@/lib/leaderboard-response";
+import {getStatisticsRoundSelection} from "@/lib/statistics-rounds";
 
 type SortDescriptor = {
     column: React.Key;
@@ -67,12 +68,11 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
     const searchParams = useSearchParams();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    const currentStageName = searchParams.get('stage') || roundInfo.at(-1)?.stage_name;
-
-    // 使用 useMemo 缓存当前选中的 round 数据，避免每次渲染都 find
-    const currentRound = useMemo(() =>
-        roundInfo.find(r => r.stage_name === currentStageName) || roundInfo.at(-1),
-    [roundInfo, currentStageName]);
+    const requestedStage = searchParams.get('stage');
+    const {visibleRounds, currentRound} = useMemo(() =>
+        getStatisticsRoundSelection(roundInfo, stats, scores, requestedStage),
+    [roundInfo, stats, scores, requestedStage]);
+    const currentStageName = currentRound?.stage_name;
     const isTeamLeaderboard = isTeamTournament && !currentRound?.is_solo_qualifier;
 
     return (
@@ -89,7 +89,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
             )}
 
             {/* 1. Tabs 区域 */}
-            <div className="w-full">
+            {visibleRounds.length > 0 && <div className="w-full">
                 <Tabs
                     className="w-full"
                     selectedKey={currentStageName}
@@ -107,7 +107,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
                             aria-label="Round Selection"
                             className="mx-auto !w-max !min-w-full max-w-5xl justify-start gap-6 !rounded-none !bg-transparent !px-6 !py-0 md:justify-center md:!px-0"
                         >
-                            {roundInfo.map((round) => (
+                            {visibleRounds.map((round) => (
                                 <Tabs.Tab key={round.stage_name} id={round.stage_name} className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
                                     {round.stage_name}
                                     <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
@@ -116,13 +116,18 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
                         </Tabs.List>
                     </Tabs.ListContainer>
                 </Tabs>
-            </div>
+            </div>}
 
             {/* 2. 内容区域 */}
             {isPending && (
                 <div role="status" className="flex items-center justify-center gap-2 text-sm text-default-500">
                     <Spinner size="sm" aria-hidden="true" />
                     <span>正在加载轮次数据…</span>
+                </div>
+            )}
+            {!currentRound && (
+                <div role="status" className="flex min-h-[40vh] items-center justify-center px-4 text-default-400">
+                    暂无统计数据
                 </div>
             )}
             {currentRound && (
