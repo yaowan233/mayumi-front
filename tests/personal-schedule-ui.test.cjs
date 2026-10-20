@@ -63,6 +63,20 @@ test("guests and non-participants keep the ordinary match list", async () => {
     assert.equal(elements(tree, node => node.type === PersonalScheduleSection).length, 0);
 });
 
+test("multiple personal candidates can all stay expanded", async () => {
+    const {TeamComp, PersonalScheduleSection} = await renderComponents(1);
+    const mine = match("possible", 1);
+    mine.is_possible = true;
+    mine.possible_pairings = [2, 3].map(uid => ({
+        team1: mine.team1.name, team1_info: mine.team1,
+        team2: `Player ${uid}`, team2_info: {name: `Player ${uid}`, uid: [uid]},
+    }));
+    const tree = TeamComp({schedule: {stage_name: "QF", match_info: [mine]}, tournament_players: {players: []}});
+    const accordion = elements(tree, node => node.type === PersonalScheduleSection)[0].props.children;
+    assert.equal(accordion.props.allowsMultipleExpanded, true);
+    assert.deepEqual(accordion.props.defaultExpandedKeys, ["possible:0", "possible:1"]);
+});
+
 test("qualifier lobbies keep their existing list without a personal section", async () => {
     const {GroupComp, PersonalScheduleSection} = await renderComponents(1);
     const lobby = {lobby_name: "Lobby A", match_id: "lobby", datetime: "2026-10-24T12:00:00Z", participants: [{name: "Me", uid: [1]}]};

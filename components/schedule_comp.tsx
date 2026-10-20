@@ -120,7 +120,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
     if (schedule.match_info == undefined) return null;
 
     const renderMatches = (matches: MatchInfo[], personal = false) => (
-        <Accordion className="flex flex-col gap-2" hideSeparator
+        <Accordion className="flex flex-col gap-2" hideSeparator allowsMultipleExpanded={personal}
                    defaultExpandedKeys={personal ? matches.map(match => `${match.match_id}:${match.possibility_key ?? "actual"}`) : undefined}>
             {matches.map(match_info => (
                 <Accordion.Item
