@@ -27,7 +27,7 @@ import {
 } from "@heroui/react";
 import Link from "next/link";
 import {siteConfig} from "@/config/site";
-import {isScheduleVisible, sortSchedulesByTime} from "@/lib/schedule_possibilities";
+import {isScheduleVisible} from "@/lib/schedule_possibilities";
 import {TournamentPlayers, Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {TournamentInfo} from "@/components/homepage";
 import {canPublishManagedTournament, resolveManagedTournament} from "@/lib/tournament_management";
@@ -268,11 +268,9 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
                         const schedulesForRound = scheduleInfo
                             .map((schedule, index) => ({schedule, originalIndex: index}))
                             .filter(({schedule}) => schedule.stage_name === item.stage_name && isScheduleVisible(schedule));
-                        const scheduleCards = sortSchedulesByTime(
-                            schedulesForRound.flatMap(entry => (entry.schedule.possible_pairings?.length
-                                ? entry.schedule.possible_pairings : [undefined]).map((possiblePairing, possibilityIndex) => ({...entry, possiblePairing, possibilityIndex}))),
-                            ({schedule, possiblePairing}) => possiblePairing ? getPairingTime(schedule, possiblePairing) : schedule.match_time,
-                        );
+                        // Keep cards in their current order while times are edited.
+                        const scheduleCards = schedulesForRound.flatMap(entry => (entry.schedule.possible_pairings?.length
+                            ? entry.schedule.possible_pairings : [undefined]).map((possiblePairing, possibilityIndex) => ({...entry, possiblePairing, possibilityIndex})));
 
                         return (
                             <Tabs.Panel key={item.stage_name} id={item.stage_name} className="pt-6">

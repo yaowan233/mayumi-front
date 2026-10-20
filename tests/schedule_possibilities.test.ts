@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {expandMatchPossibilities, sortSchedulesByTime} from "../lib/schedule_possibilities.ts";
-import {getPairingTime} from "../lib/schedule_options.ts";
 
 test("each candidate card gets its actual participant avatar and independent time", () => {
     const a = {name: "A", uid: [1], avatar_url: "https://a.ppy.sh/1"};
@@ -57,21 +56,4 @@ test("time sorting compares instants, preserves ties and puts unset or invalid t
     assert.deepEqual(sortSchedulesByTime(items, item => item.time).map(item => item.id),
         ["earlier", "offset", "legacy-tie", "unset", "invalid"]);
     assert.equal(items[0].id, "unset");
-});
-
-test("management sorting uses each saved candidate time and retains original edit indices", () => {
-    const ab = {team1: "A", team2: "B", match_time: "2026-10-17T14:00:00Z"};
-    const ac = {team1: "A", team2: "C", match_time: "2026-10-17T10:00:00Z"};
-    const schedule = {match_time: null, possible_match_times: [
-        {...ab, match_time: "2026-10-17T09:00:00Z"}, ac,
-    ]};
-    const cards = [
-        {schedule, possiblePairing: ac, originalIndex: 4},
-        {schedule, possiblePairing: ab, originalIndex: 4},
-        {schedule: {match_time: "2026-10-17T09:30:00Z"}, possiblePairing: undefined, originalIndex: 2},
-    ];
-    const sorted = sortSchedulesByTime(cards, card => card.possiblePairing
-        ? getPairingTime(card.schedule, card.possiblePairing) : card.schedule.match_time);
-    assert.deepEqual(sorted.map(card => card.originalIndex), [4, 2, 4]);
-    assert.equal(sorted[0].possiblePairing, ab);
 });
