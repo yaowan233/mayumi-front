@@ -20,8 +20,13 @@ const Accordion = Object.assign(component("Accordion"), Object.fromEntries(
 ));
 const Input = component("Input");
 const Button = component("Button");
+const FieldError = component("FieldError");
+const linkValidation = {};
+new Function("exports", ts.transpileModule(readFileSync(new URL("../lib/match-links.ts", pathToFileURL(__filename)), "utf8"), {
+    compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022},
+}).outputText)(linkValidation);
 const stubs = {
-    React, Accordion, Input, Button,
+    React, Accordion, Input, Button, FieldError, getMatchUrlError: linkValidation.getMatchUrlError,
     Tooltip: Object.assign(component("Tooltip"), {Trigger: component("Trigger"), Content: component("Content")}),
     Card: component("Card"), TextField: component("TextField"), Label: component("Label"),
     Separator: component("Separator"), TrashIcon: component("TrashIcon"), MultiSelect: component("MultiSelect"),
@@ -44,6 +49,7 @@ function renderLinks(matchUrls) {
         inputs: () => findElements(render(), node => node.type === Input && node.props.placeholder?.includes("community/matches")),
         buttons: () => findElements(render(), node => node.type === Button && ["+", "-"].includes(node.props.children)),
         urls: () => schedule.match_url,
+        errors: () => findElements(render(), node => node.type === FieldError).map(node => node.props.children).filter(Boolean),
     };
 }
 
@@ -84,4 +90,11 @@ test("missing and blank MP link lists also provide the initial input", () => {
         assert.equal(card.inputs().length, 1);
         assert.equal(card.inputs()[0].props.value, "");
     }
+});
+
+test("beatmap links display an inline error that clears when corrected to an MP link", () => {
+    const card = renderLinks(["https://osu.ppy.sh/b/4692822"]);
+    assert.match(card.errors()[0], /MP 房间链接/);
+    card.inputs()[0].props.onChange({target: {value: "https://osu.ppy.sh/community/matches/123"}});
+    assert.deepEqual(card.errors(), []);
 });

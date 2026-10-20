@@ -13,6 +13,7 @@ import {
     Chip,
     Description,
     EmptyState,
+    FieldError,
     Input,
     Label,
     ListBox,
@@ -41,6 +42,7 @@ import {getDraftSection, publishTournamentDraft, saveDraftSection} from "@/lib/t
 import {DraftAction, DraftSaveActions} from "@/components/draft_save_actions";
 import {ManagementBackLink} from "@/components/management_back_link";
 import {getPairingTime, setPairingTime, type SchedulePairing} from "@/lib/schedule_options";
+import {getMatchUrlError, normalizeMatchUrls} from "@/lib/match-links";
 
 const subscribeToHydration = () => () => undefined;
 const useHasMounted = () => useSyncExternalStore(subscribeToHydration, () => true, () => false);
@@ -146,6 +148,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         try {
             const payload = scheduleInfo.map((schedule) => ({
                 ...schedule,
+                match_url: normalizeMatchUrls(schedule.match_url),
                 match_time: toUtcISOString(schedule.match_time) ?? schedule.match_time,
             }));
             const previousMatchUrls = getStageMatchUrls(lastSavedSchedulesRef.current, selectedRound);
@@ -543,15 +546,18 @@ const ScheduleCard = ({index, schedule, staffMembers, participants, onChange, on
                         {/* 4. 链接管理 ... (保持不变) */}
                         <div className="flex flex-col gap-2">
                             <span className="text-sm font-medium text-foreground">比赛链接</span>
-                            <span className="text-xs text-default-500">保存草稿后会自动同步当前轮次的 MP 成绩；启用结果公开控制的轮次需在统计管理中确认公开。</span>
+                            <span className="text-xs text-default-500">仅支持 osu! MP 房间链接，不支持谱面链接。保存草稿后会自动同步当前轮次的 MP 成绩；启用结果公开控制的轮次需在统计管理中确认公开。</span>
                             {matchUrls.map((url: string, i: number) => (
                                 <div key={i} className="flex items-center gap-2">
-                                    <Input className="flex-1" variant="secondary" value={url} placeholder="https://osu.ppy.sh/community/matches/..."
-                                           onChange={e => {
+                                    <TextField className="flex-1" isInvalid={!!getMatchUrlError(url)}>
+                                        <Input aria-label={`MP 链接 ${i + 1}`} variant="secondary" value={url} placeholder="https://osu.ppy.sh/community/matches/..."
+                                               onChange={e => {
                                                 const newUrls = [...matchUrls];
                                                 newUrls[i] = e.target.value;
                                                 onChange({...schedule, match_url: newUrls});
-                                            }}/>
+                                               }}/>
+                                        <FieldError>{getMatchUrlError(url)}</FieldError>
+                                    </TextField>
                                     {i === matchUrls.length - 1 ? (
                                         <Button isIconOnly className="shrink-0" size="sm" variant="secondary" onPress={() => onChange({
                                             ...schedule,
@@ -844,7 +850,7 @@ async function syncStagePlays(
     const response = await fetch(`${siteConfig.backend_url}/api/get-stage-plays?${query}`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({match_urls: matchUrls}),
+        body: JSON.stringify({match_urls: normalizeMatchUrls(matchUrls)}),
         credentials: "include",
         cache: "no-store",
     });
