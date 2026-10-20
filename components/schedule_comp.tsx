@@ -10,6 +10,7 @@ import {usePathname, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {formatUtcDateTime, getLocalDateTimeParts, parseUtcDateTime} from "@/lib/datetime";
 import {expandMatchPossibilities, type PossibleSchedulePairing} from "@/lib/schedule_possibilities";
+import {partitionMyMatches} from "@/lib/personal-schedule";
 import {TournamentDrawBoard} from "@/components/tournament_draw";
 import {formatMatchScore, requestDraw, type TournamentDraw} from "@/lib/tournament_draw";
 import {
@@ -96,6 +97,13 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
     )
 }
 
+const PersonalScheduleSection = ({children}: {children: React.ReactNode}) => (
+    <section aria-label="我的比赛" className="rounded-2xl border-2 border-primary/50 bg-primary/5 p-4 shadow-sm sm:p-5">
+        <h2 className="mb-4 text-xl font-black text-primary">我的比赛</h2>
+        {children}
+    </section>
+);
+
 // ---------------------- TeamComp (分组/双败) ----------------------
 const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: {
     schedule: ScheduleStage,
@@ -103,7 +111,43 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
     tournament_players: TournamentPlayers,
     setSchedule: Dispatch<SetStateAction<ScheduleStage[]>>
 }) => {
+    const currentUser = useContext(CurrentUserContext);
+    const {mine, others} = partitionMyMatches(
+        expandMatchPossibilities(schedule.match_info ?? []),
+        currentUser?.currentUser?.uid,
+        tournament_players.groups,
+    );
     if (schedule.match_info == undefined) return null;
+
+    const renderMatches = (matches: MatchInfo[], personal = false) => (
+        <Accordion className="flex flex-col gap-2" hideSeparator
+                   defaultExpandedKeys={personal ? matches.map(match => `${match.match_id}:${match.possibility_key ?? "actual"}`) : undefined}>
+            {matches.map(match_info => (
+                <Accordion.Item
+                    key={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
+                    id={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
+                    className={`rounded-xl border bg-white px-4 py-2 transition-colors dark:bg-zinc-950 ${personal ? "border-primary/30 hover:bg-primary/5" : "border-zinc-200 hover:bg-zinc-50 dark:border-white/[0.08] dark:hover:bg-zinc-900"}`}
+                >
+                    <Accordion.Heading>
+                        <Accordion.Trigger className="w-full bg-transparent py-1 hover:!bg-transparent data-[hover=true]:!bg-transparent data-[hovered=true]:!bg-transparent">
+                            <div className="min-w-0 flex-1">
+                                {personal && <p className="text-left text-xs font-semibold text-primary">{match_info.is_winner_bracket ? "胜者组" : "败者组"}</p>}
+                                <VSInfoComp match_info={match_info}/>
+                            </div>
+                            <Accordion.Indicator className="ml-3 h-4 w-4 shrink-0" />
+                        </Accordion.Trigger>
+                    </Accordion.Heading>
+                    <Accordion.Panel>
+                        <Accordion.Body className="pt-3 pb-4">
+                            <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
+                                           tournament_name={tournament_name} tournament_players={tournament_players}
+                                           setSchedule={setSchedule}/>
+                        </Accordion.Body>
+                    </Accordion.Panel>
+                </Accordion.Item>
+            ))}
+        </Accordion>
+    );
 
     // 提取公共的 Section Title 组件
     const renderBracketHeader = (title: string, color: "success" | "danger" | "primary") => (
@@ -116,59 +160,16 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
     );
     return (
         <div className="flex flex-col gap-6">
-            <div>
+            {mine.length > 0 && <PersonalScheduleSection>{renderMatches(mine, true)}</PersonalScheduleSection>}
+            {others.some(match => match.is_winner_bracket) && <div>
                 {renderBracketHeader("胜者组 / Winner Bracket", "success")}
-                <Accordion className="flex flex-col gap-2" hideSeparator>
-                    {expandMatchPossibilities(schedule.match_info || []).filter((match) => match.is_winner_bracket).map((match_info) => (
-                        <Accordion.Item
-                            key={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
-                            id={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
-                            className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
-                        >
-                            <Accordion.Heading>
-                                <Accordion.Trigger className="w-full bg-transparent py-1 hover:!bg-transparent data-[hover=true]:!bg-transparent data-[hovered=true]:!bg-transparent">
-                                    <VSInfoComp match_info={match_info}/>
-                                    <Accordion.Indicator className="ml-3 h-4 w-4 shrink-0" />
-                                </Accordion.Trigger>
-                            </Accordion.Heading>
-                            <Accordion.Panel>
-                                <Accordion.Body className="pt-3 pb-4">
-                                    <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
-                                                   tournament_name={tournament_name} tournament_players={tournament_players}
-                                                   setSchedule={setSchedule}/>
-                                </Accordion.Body>
-                            </Accordion.Panel>
-                        </Accordion.Item>
-                    ))}
-                </Accordion>
-            </div>
+                {renderMatches(others.filter(match => match.is_winner_bracket))}
+            </div>}
 
-            {schedule.match_info?.some((match) => !match.is_winner_bracket) && (
+            {others.some(match => !match.is_winner_bracket) && (
                 <div>
                     {renderBracketHeader("败者组 / Loser Bracket", "danger")}
-                    <Accordion className="flex flex-col gap-2" hideSeparator>
-                        {expandMatchPossibilities(schedule.match_info || []).filter((match) => !match.is_winner_bracket).map((match_info) => (
-                            <Accordion.Item
-                                key={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
-                                id={`${match_info.match_id}:${match_info.possibility_key ?? "actual"}`}
-                                className="rounded-xl border border-zinc-200 bg-white px-4 py-2 transition-colors hover:bg-zinc-50 dark:border-white/[0.08] dark:bg-zinc-950 dark:hover:bg-zinc-900"
-                            >
-                                <Accordion.Heading>
-                                    <Accordion.Trigger className="w-full bg-transparent py-1 hover:!bg-transparent data-[hover=true]:!bg-transparent data-[hovered=true]:!bg-transparent">
-                                        <VSInfoComp match_info={match_info}/>
-                                        <Accordion.Indicator className="ml-3 h-4 w-4 shrink-0" />
-                                    </Accordion.Trigger>
-                                </Accordion.Heading>
-                                <Accordion.Panel>
-                                    <Accordion.Body className="pt-3 pb-4">
-                                        <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
-                                                       tournament_name={tournament_name} tournament_players={tournament_players}
-                                                       setSchedule={setSchedule}/>
-                                    </Accordion.Body>
-                                </Accordion.Panel>
-                            </Accordion.Item>
-                        ))}
-                    </Accordion>
+                    {renderMatches(others.filter(match => !match.is_winner_bracket))}
                 </div>
             )}
         </div>
