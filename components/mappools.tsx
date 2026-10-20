@@ -224,18 +224,22 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
     };
 
     const handleDownloadAll = async (stage: Stage, source: DownloadSource) => {
+        if (stage.mod_bracket.some(bracket => bracket.maps.some(map => map.metadata_pending))) {
+            alert("部分谱面信息待同步，请稍后刷新后再下载图池。");
+            return;
+        }
         const mapsToDownload: { map_set_id: string; filename: string }[] = [];
         const queuedMapSetIds = new Set<string>();
 
         stage.mod_bracket.forEach((bracket) => {
             bracket.maps.forEach((map, index) => {
                 const mapSetId = String(map.map_set_id ?? "").trim();
-                if (!mapSetId || mapSetId === "0" || queuedMapSetIds.has(mapSetId)) return;
+                if (!/^\d+$/.test(mapSetId) || Number(mapSetId) <= 0 || queuedMapSetIds.has(mapSetId)) return;
 
                 queuedMapSetIds.add(mapSetId);
                 mapsToDownload.push({
                     map_set_id: mapSetId,
-                    filename: `[${bracket.mod} ${index + 1}] ${sanitizeFilename(map.map_name || `Map_${map.map_id}`)}.osz`,
+                    filename: `[${bracket.mod} ${map.number ?? index + 1}] ${sanitizeFilename(map.map_name || `Map_${map.map_id}`)}.osz`,
                 });
             });
         });
@@ -405,7 +409,7 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
 
 const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string }) => {
     const modStyle = getModColor(mod);
-    const modCode = `${mod}${index + 1}`;
+    const modCode = `${mod}${map.number ?? index + 1}`;
     const [showOverlay, setShowOverlay] = useState(false);
     const [copiedAction, setCopiedAction] = useState<"id" | "mp" | null>(null);
 
@@ -419,7 +423,7 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
         <div
             role="button"
             tabIndex={0}
-            className="group relative h-[210px] w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-md transition-shadow duration-300 hover:shadow-2xl dark:border-white/[0.06] dark:bg-zinc-950 sm:w-[380px]"
+            className="group relative h-[210px] w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-800 shadow-md transition-shadow duration-300 hover:shadow-2xl dark:border-white/[0.06] dark:bg-zinc-950 sm:w-[380px]"
             onClick={() => setShowOverlay((value) => !value)}
             onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") setShowOverlay((value) => !value);
@@ -428,11 +432,11 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
             onMouseLeave={() => setShowOverlay(false)}
         >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            {!map.metadata_pending && <img
                 alt={map.map_name}
                 className={`absolute left-0 top-0 z-0 h-full w-full object-cover transition-all duration-300 ${showOverlay ? "scale-110 blur-md" : "scale-100 blur-0"}`}
                 src={`https://assets.ppy.sh/beatmaps/${map.map_set_id}/covers/cover.jpg`}
-            />
+            />}
             <div className={`absolute inset-0 z-10 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-300 ${showOverlay ? "opacity-0" : "opacity-100"}`}/>
             <div className={`absolute inset-0 z-10 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${showOverlay ? "opacity-100" : "opacity-0"}`}/>
 
@@ -442,17 +446,17 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
                         {modCode}
                     </span>
                     <div className="rounded-lg border border-white/5 bg-black/50 px-2 py-1 text-sm font-bold text-yellow-400 shadow-sm backdrop-blur-md">
-                        ★ {map.star_rating}
+                        {map.metadata_pending ? "待同步" : `★ ${map.star_rating}`}
                     </div>
                 </div>
                 <div className="flex flex-col gap-1">
                     <div className="line-clamp-1 text-xl font-black leading-tight text-white drop-shadow-md" title={map.map_name}>
                         {map.map_name}
                     </div>
-                    <div className="mb-1 flex items-center justify-between text-sm">
+                    {map.metadata_pending ? <p className="mb-1 text-sm text-zinc-300">谱面信息待同步</p> : <div className="mb-1 flex items-center justify-between text-sm">
                         <span className="max-w-[60%] truncate font-bold text-white drop-shadow-sm">[{map.diff_name}]</span>
                         <span className="max-w-[35%] truncate text-right text-xs text-zinc-300">{map.mapper}</span>
-                    </div>
+                    </div>}
                     {map.extra && map.extra.length > 0 && (
                         <div className="mb-1 flex flex-wrap gap-1.5">
                             {map.extra.map((tag) => (
@@ -462,12 +466,12 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
                             ))}
                         </div>
                     )}
-                    <div className="mt-auto grid grid-cols-4 gap-1 rounded-md border border-white/5 bg-black/40 px-1 py-1 font-mono text-[11px] text-zinc-200 backdrop-blur-md">
+                    {!map.metadata_pending && <div className="mt-auto grid grid-cols-4 gap-1 rounded-md border border-white/5 bg-black/40 px-1 py-1 font-mono text-[11px] text-zinc-200 backdrop-blur-md">
                         <span className="text-center">CS {map.cs}</span>
                         <span className="text-center">AR {map.ar}</span>
                         <span className="text-center">OD {map.od}</span>
                         <span className="text-center">HP {map.hp}</span>
-                    </div>
+                    </div>}
                 </div>
             </div>
 
@@ -488,7 +492,7 @@ const MapComponent = ({map, index, mod}: { map: Map; index: number; mod: string 
                     >
                         <span className="text-sm font-bold">{copiedAction === "mp" ? "已复制" : "MP"}</span>
                     </IconButton>
-                    <IconButton label="Download" href={`https://osu.direct/api/d/${map.map_set_id}`}>
+                    <IconButton label={map.metadata_pending ? "查看官网谱面" : "Download"} href={map.metadata_pending ? `https://osu.ppy.sh/b/${map.map_id}` : `https://osu.direct/api/d/${map.map_set_id}`}>
                         <DownloadIcon className="text-xl"/>
                     </IconButton>
                 </div>
@@ -528,7 +532,8 @@ interface Map {
     bpm: string;
     length: string;
     drain_time: string;
-    number: string;
+    number?: number | string;
+    metadata_pending?: boolean;
     diff_name: string;
     extra?: string[];
 }
