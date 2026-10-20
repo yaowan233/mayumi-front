@@ -303,6 +303,17 @@ export const TournamentInfoForm = ({formData, errMsg, setFormData}: {
                     />
                 </div>
 
+                <Switch
+                    isSelected={formData.allow_warmup !== false}
+                    onChange={(isSelected) => setFormData({...formData, allow_warmup: isSelected})}
+                >
+                    <Switch.Content>
+                        <Switch.Control><Switch.Thumb/></Switch.Control>
+                        <Label>允许热手</Label>
+                    </Switch.Content>
+                    <Description>允许选手在赛程页提交热手图，关闭后隐藏热手区。</Description>
+                </Switch>
+
                 <Card variant="secondary">
                     <Card.Content className="flex flex-col gap-4 p-4">
                         <div className="text-sm font-semibold text-default-500">排名限制 (可选)</div>

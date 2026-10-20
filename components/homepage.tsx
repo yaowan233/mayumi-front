@@ -1104,6 +1104,7 @@ export interface TournamentInfo {
     theme_color?: string;
     links: Link[];
     is_group: boolean;
+    allow_warmup?: boolean;
     description?: string;
     staff_registration_info?: string;
     tournament_schedule_info?: string;

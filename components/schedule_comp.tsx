@@ -141,6 +141,7 @@ const TeamComp = ({schedule, tournament_name, tournament_players, setSchedule}: 
                         <Accordion.Body className="pt-3 pb-4">
                             <MatchInfoComp match_info={match_info} stage_name={schedule.stage_name}
                                            tournament_name={tournament_name} tournament_players={tournament_players}
+                                           allowWarmup={schedule.allow_warmup !== false}
                                            setSchedule={setSchedule}/>
                         </Accordion.Body>
                     </Accordion.Panel>
@@ -310,11 +311,12 @@ const VSInfoComp = ({ match_info }: { match_info: MatchInfo }) => {
 };
 
 
-const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_players, setSchedule}: {
+const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_players, setSchedule, allowWarmup = true}: {
     match_info: MatchInfo,
     stage_name: string,
     tournament_name: string,
     tournament_players: TournamentPlayers,
+    allowWarmup?: boolean,
     setSchedule: Dispatch<SetStateAction<ScheduleStage[]>>
 }) => {
     const currentUser = useContext(CurrentUserContext);
@@ -346,30 +348,32 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_play
                 {renderInfoSection({ title: "解说", role: "commentator", list: match_info.commentators, canJoin: info?.commentator })}
             </div>
 
-            <Separator />
+            {allowWarmup && <>
+                <Separator />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                <div className="flex flex-col gap-3 min-w-0">
-                    <Chip color="accent" variant="soft" className="self-center">{match_info.team1?.name || "待定"} 热手图</Chip>
-                    <div className="w-full">
-                        {match_info.team1_warmup ?
-                            <MapComp map={match_info.team1_warmup}/> :
-                            <div className="text-center text-default-400 py-4">暂无热手图</div>
-                        }
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <div className="flex flex-col gap-3 min-w-0">
+                        <Chip color="accent" variant="soft" className="self-center">{match_info.team1?.name || "待定"} 热手图</Chip>
+                        <div className="w-full">
+                            {match_info.team1_warmup ?
+                                <MapComp map={match_info.team1_warmup}/> :
+                                <div className="text-center text-default-400 py-4">暂无热手图</div>
+                            }
+                        </div>
+                        <WarmupSelect uid={match_info.team1?.uid ?? []} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
                     </div>
-                    <WarmupSelect uid={match_info.team1?.uid ?? []} team={1} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
-                </div>
-                <div className="flex flex-col gap-3 min-w-0">
-                    <Chip color="danger" variant="soft" className="self-center">{match_info.team2?.name || "待定"} 热手图</Chip>
-                    <div className="w-full">
-                        {match_info.team2_warmup ?
-                            <MapComp map={match_info.team2_warmup}/> :
-                            <div className="text-center text-default-400 py-4">暂无热手图</div>
-                        }
+                    <div className="flex flex-col gap-3 min-w-0">
+                        <Chip color="danger" variant="soft" className="self-center">{match_info.team2?.name || "待定"} 热手图</Chip>
+                        <div className="w-full">
+                            {match_info.team2_warmup ?
+                                <MapComp map={match_info.team2_warmup}/> :
+                                <div className="text-center text-default-400 py-4">暂无热手图</div>
+                            }
+                        </div>
+                        <WarmupSelect uid={match_info.team2?.uid ?? []} team={2} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
                     </div>
-                    <WarmupSelect uid={match_info.team2?.uid ?? []} team={2} match_id={match_info.match_id} stage_name={stage_name} tournament_name={tournament_name} start_time={match_info.datetime}/>
                 </div>
-            </div>
+            </>}
         </div>
     )
 }
@@ -861,6 +865,7 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
 export interface ScheduleStage {
     stage_name: string;
     is_lobby: boolean;
+    allow_warmup?: boolean;
     lobby_info?: LobbyInfo[]
     match_info?: MatchInfo[]
 }

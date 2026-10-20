@@ -23,6 +23,7 @@ async function renderComponents(uid) {
     const {expandMatchPossibilities} = await import("../lib/schedule_possibilities.ts");
     const chunks = [
         source.slice(source.indexOf("const PersonalScheduleSection ="), source.indexOf("const VSInfoComp =")),
+        source.slice(source.indexOf("const MatchInfoComp ="), source.indexOf("const GroupComp =")),
         source.slice(source.indexOf("const GroupComp ="), source.indexOf("// ---------------------- 人员组件重构")),
     ].join("\n");
     const compiled = ts.transpileModule(chunks, {compilerOptions: {jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022}}).outputText;
@@ -31,13 +32,13 @@ async function renderComponents(uid) {
         Tooltip: Object.assign(component("Tooltip"), {Trigger: component("Tooltip.Trigger"), Content: component("Tooltip.Content")}),
         useContext: () => ({currentUser: uid === undefined ? null : {uid}}), CurrentUserContext: {},
         partitionMyMatches, expandMatchPossibilities,
-        VSInfoComp: component("VSInfoComp"), MatchInfoComp: component("MatchInfoComp"),
+        VSInfoComp: component("VSInfoComp"), MapComp: component("MapComp"), WarmupSelect: component("WarmupSelect"),
         PersonInfo: component("PersonInfo"), WithDeletePersonInfo: component("WithDeletePersonInfo"),
         ParticipantJoinHere: component("ParticipantJoinHere"), LinkIcon: component("LinkIcon"),
         useHasMounted: () => false, formatUtcDateTime: () => "", getLocalDateTimeParts: () => null,
         isPlayerReserved: () => true,
     };
-    return new Function(...Object.keys(stubs), `${compiled}\nreturn {TeamComp, PersonalScheduleSection, GroupComp};`)(...Object.values(stubs));
+    return new Function(...Object.keys(stubs), `${compiled}\nreturn {TeamComp, PersonalScheduleSection, GroupComp, MatchInfoComp};`)(...Object.values(stubs));
 }
 
 const match = (id, player) => ({match_id: id, is_winner_bracket: true, datetime: null, team1: {name: `Player ${player}`, uid: [player]}, team2: null});
@@ -83,4 +84,18 @@ test("qualifier lobbies keep their existing list without a personal section", as
     const tree = GroupComp({schedule: {stage_name: "资格赛", lobby_info: [lobby]}, tournamentPlayers: {players: []}});
     assert.equal(elements(tree, node => node.type === PersonalScheduleSection).length, 0);
     assert.equal(elements(tree, node => node.type === Card).length, 1);
+});
+
+test("disabling warmups hides both teams' maps and inputs while keeping staff information", async () => {
+    const {TeamComp, PersonalScheduleSection, MatchInfoComp} = await renderComponents(1);
+    const props = {match_info: match("mine", 1), tournament_players: {players: []}};
+    const warmupInputs = tree => elements(tree, node => node.type?.displayName === "WarmupSelect");
+    assert.equal(warmupInputs(MatchInfoComp(props)).length, 2);
+    const disabled = MatchInfoComp({...props, allowWarmup: false});
+    assert.equal(warmupInputs(disabled).length, 0);
+    assert.equal(elements(disabled, node => node.type?.displayName === "MapComp").length, 0);
+    assert.deepEqual(elements(disabled, node => node.type === "h4").map(node => node.props.children), ["裁判", "直播", "解说"]);
+    const list = TeamComp({schedule: {stage_name: "QF", allow_warmup: false, match_info: [props.match_info]}, tournament_players: {players: []}});
+    assert.equal(elements(list, node => node.type === PersonalScheduleSection).length, 1);
+    assert.equal(elements(list, node => node.type === MatchInfoComp)[0].props.allowWarmup, false);
 });
