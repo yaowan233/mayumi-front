@@ -121,10 +121,8 @@ const DownloadMenu = ({
     }, [open]);
 
     const options: { key: DownloadSource; title: string; desc: string }[] = [
-        {key: "auto", title: "自动多镜像（推荐）", desc: "下载失败或超时后自动切换镜像"},
-        {key: "osu-direct", title: "优先 osu.direct", desc: "失败后自动尝试其他镜像"},
-        {key: "beatconnect", title: "优先 Beatconnect", desc: "失败后自动尝试其他镜像"},
-        {key: "official-txt", title: "导出官网链接 (.txt)", desc: "生成链接列表，手动下载"},
+        {key: "auto", title: "自动下载图池（推荐）", desc: "自动选择可用下载源并打包"},
+        {key: "official-txt", title: "导出官网下载链接", desc: "下载不成功时，可按链接手动下载"},
     ];
 
     return (
