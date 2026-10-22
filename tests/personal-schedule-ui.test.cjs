@@ -99,3 +99,10 @@ test("disabling warmups hides both teams' maps and inputs while keeping staff in
     assert.equal(elements(list, node => node.type === PersonalScheduleSection).length, 1);
     assert.equal(elements(list, node => node.type === MatchInfoComp)[0].props.allowWarmup, false);
 });
+
+
+test("unscheduled qualifier lobbies show time pending", async () => {
+    const {GroupComp} = await renderComponents(undefined);
+    const tree = GroupComp({schedule: {stage_name: "资格赛", lobby_info: [{lobby_name: "A", match_id: "a", datetime: null}]}, tournamentPlayers: {players: []}});
+    assert.deepEqual(elements(tree, node => node.type?.displayName === "Tooltip.Content").map(node => node.props.children), ["时间待定"]);
+});

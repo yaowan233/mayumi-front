@@ -399,7 +399,7 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                  const localDateTime = hasMounted ? getLocalDateTimeParts(lobby.datetime) : null;
                  const dateStr = localDateTime?.date ?? "--/--";
                  const timeStr = localDateTime?.time ?? "--:--";
-                 const utcTimeStr = formatUtcDateTime(lobby.datetime) ?? "UTC 时间格式无效";
+                 const utcTimeStr = lobby.datetime ? formatUtcDateTime(lobby.datetime) ?? "UTC 时间格式无效" : "时间待定";
                  return (
                     <Card
                         key={lobby.lobby_name}
@@ -875,7 +875,7 @@ export interface ScheduleStage {
 type LobbyInfo = {
     lobby_name: string;
     match_id: string;
-    datetime: string;
+    datetime: string | null;
     match_url?: string[];
     referee?: SimpleInfo[];
     participants?: SimpleInfo[];
