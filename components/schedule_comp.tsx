@@ -34,22 +34,24 @@ const subscribeToHydration = () => () => undefined;
 const useHasMounted = () => useSyncExternalStore(subscribeToHydration, () => true, () => false);
 
 export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
-    tabs: ScheduleStage[],
+    tabs: ScheduleStage[] | null,
     tournament_name: string,
     tournamentPlayers: TournamentPlayers
 }) => {
     const searchParams = useSearchParams();
     const pathname = usePathname();
-    const {data: scheduleStages = tabs, mutate: mutateSchedule} = useSWR(`${siteConfig.backend_url}/api/schedule?tournament_name=${encodeURIComponent(tournament_name)}`,
-        (url: string) => requestDraw<ScheduleStage[]>(url), {fallbackData: tabs, refreshInterval: 15000});
+    const initialStages = tabs ?? [];
+    const {data: refreshedStages, mutate: mutateSchedule} = useSWR(`${siteConfig.backend_url}/api/schedule?tournament_name=${encodeURIComponent(tournament_name)}`,
+        (url: string) => requestDraw<ScheduleStage[] | null>(url), {fallbackData: initialStages, refreshInterval: 15000});
+    const scheduleStages = refreshedStages ?? initialStages;
     const setScheduleStages: Dispatch<SetStateAction<ScheduleStage[]>> = next => {
-        void mutateSchedule(current => typeof next === "function" ? next(current ?? tabs) : next, {revalidate: false});
+        void mutateSchedule(current => typeof next === "function" ? next(current ?? initialStages) : next, {revalidate: false});
     };
     const {data: draw} = useSWR(`${siteConfig.backend_url}/api/tournament-draw/${encodeURIComponent(tournament_name)}/public`,
         (url: string) => requestDraw<{state: TournamentDraw | null}>(url), {refreshInterval: 15000, shouldRetryOnError: false});
     const publishedDraw = draw?.state?.matches.length ? draw.state : null;
     const showBracket = Boolean(publishedDraw && searchParams.get("view") === "bracket");
-    const [selectedStage, setSelectedStage] = useState(searchParams.get('stage') || tabs.at(-1)?.stage_name || tabs[0]?.stage_name || "");
+    const [selectedStage, setSelectedStage] = useState(searchParams.get('stage') || initialStages.at(-1)?.stage_name || initialStages[0]?.stage_name || "");
     const selectedScheduleStage = scheduleStages.find((stage) => stage.stage_name === selectedStage) || scheduleStages.at(-1) || scheduleStages[0];
 
     const handleStageChange = (stageName: string) => {
@@ -839,8 +841,8 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
                             { method: "PATCH", credentials: "include" }
                         )
                         if (!res.ok) {
-                            const errText = await res.text();
-                            alert(`提交失败：${errText}`);
+                            const error = await res.json().catch(() => null);
+                            alert(`提交失败：${typeof error?.detail === "string" ? error.detail : `服务器返回 HTTP ${res.status}，请稍后重试`}`);
                             return;
                         }
                         alert('更新成功 请等待服务器更新后 刷新页面查看');
