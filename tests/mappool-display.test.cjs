@@ -55,3 +55,38 @@ test("batch download reports pending maps instead of silently exporting an incom
     await download({mod_bracket: [{mod: "RC", maps: [{map_id: 101, metadata_pending: true}]}]}, "osu-direct");
     assert.deepEqual(alerts, ["部分谱面信息待同步，请稍后刷新后再下载图池。"]);
 });
+
+test("partial mirror failures save successful maps and clearly report missing maps", async () => {
+    const start = source.indexOf("    const handleDownloadAll =");
+    const body = source.slice(start, source.indexOf("\n    return (", start));
+    const js = ts.transpileModule(body, {compilerOptions: {target: ts.ScriptTarget.ES2022}}).outputText;
+    const alerts = [], calls = [], saved = [], entries = [], states = [];
+    class Zip {
+        file(name, data) { entries.push({name, data}); }
+        async generateAsync() { return new Blob(['pack']); }
+    }
+    const deps = {
+        alert: message => alerts.push(message), JSZip: Zip, tournamentAbbr: 'Cup',
+        sanitizeFilename: value => value, delay: async () => {},
+        saveAs: (data, name) => saved.push(name),
+        setDownloadState: update => { states.push(typeof update === 'function' ? update({}) : update); },
+        downloadBeatmapset: async (id, options) => {
+            calls.push({id, preferred: options.preferred});
+            if (id === '2') throw new Error('所有镜像均下载失败');
+            return new ArrayBuffer(4);
+        },
+    };
+    const download = new Function(...Object.keys(deps), `${js}\nreturn handleDownloadAll;`)(...Object.values(deps));
+    await download({stage_name: 'QF', mod_bracket: [{mod: 'NM', maps: [
+        {map_id: 11, map_set_id: 1, map_name: 'First'},
+        {map_id: 12, map_set_id: 1, map_name: 'Duplicate set'},
+        {map_id: 21, map_set_id: 2, map_name: 'Missing'},
+    ]}]}, 'auto');
+    assert.deepEqual(calls, [{id: '1', preferred: 'auto'}, {id: '2', preferred: 'auto'}]);
+    assert.equal(saved.length, 1);
+    assert.equal(entries.filter(entry => entry.name.endsWith('.osz')).length, 1);
+    assert.equal(entries.filter(entry => entry.name.startsWith('ERROR_')).length, 1);
+    assert.match(entries.find(entry => entry.name.startsWith('ERROR_')).data, /https:\/\/osu.ppy.sh\/beatmapsets\/2\/download/);
+    assert.match(alerts[0], /图池下载不完整：1\/2/);
+    assert.equal(states.some(state => state.text === '下载完成！'), false);
+});

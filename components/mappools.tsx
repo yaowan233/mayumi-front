@@ -1,6 +1,7 @@
 "use client";
 
 import JSZip from "jszip";
+import {downloadBeatmapset, type MirrorPreference} from "@/lib/mappool-download";
 import {saveAs} from "file-saver";
 import {useParams, useRouter, useSearchParams} from "next/navigation";
 import React, {useEffect, useMemo, useRef, useState} from "react";
@@ -120,8 +121,9 @@ const DownloadMenu = ({
     }, [open]);
 
     const options: { key: DownloadSource; title: string; desc: string }[] = [
-        {key: "osu-direct", title: "osu.direct 镜像（推荐）", desc: "默认下载源，覆盖率较高"},
-        {key: "beatconnect", title: "Beatconnect 镜像", desc: "缺图时可尝试"},
+        {key: "auto", title: "自动多镜像（推荐）", desc: "下载失败或超时后自动切换镜像"},
+        {key: "osu-direct", title: "优先 osu.direct", desc: "失败后自动尝试其他镜像"},
+        {key: "beatconnect", title: "优先 Beatconnect", desc: "失败后自动尝试其他镜像"},
         {key: "official-txt", title: "导出官网链接 (.txt)", desc: "生成链接列表，手动下载"},
     ];
 
@@ -159,7 +161,7 @@ const DownloadMenu = ({
     );
 };
 
-type DownloadSource = "beatconnect" | "osu-direct" | "official-txt";
+type DownloadSource = MirrorPreference | "official-txt";
 
 const CopyMappoolButton = ({stage}: {stage: Stage}) => {
     const [copyState, setCopyState] = useState<"idle" | "copying" | "success" | "error">("idle");
@@ -260,7 +262,7 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
             return;
         }
 
-        let sourceName = "osu.direct";
+        let sourceName = source === "auto" ? "自动多镜像" : "osu.direct";
         if (source === "beatconnect") sourceName = "Beatconnect";
 
         setDownloadState({
@@ -272,9 +274,10 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
         });
 
         const zip = new JSZip();
-        const maxConcurrency = 5;
+        const maxConcurrency = 2;
         let currentIndex = 0;
         let completedCount = 0;
+        const failedDownloads: string[] = [];
 
         const worker = async () => {
             while (currentIndex < mapsToDownload.length) {
@@ -282,17 +285,12 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
                 const task = mapsToDownload[taskIndex];
                 if (!task) break;
 
-                let url = "";
-                if (source === "osu-direct") url = `https://osu.direct/api/d/${task.map_set_id}`;
-                if (source === "beatconnect") url = `https://beatconnect.io/b/${task.map_set_id}/${task.map_set_id}/`;
-
                 try {
-                    const res = await fetch(url);
-                    if (!res.ok) throw new Error(`Status ${res.status}`);
-                    zip.file(task.filename, await res.blob());
+                    zip.file(task.filename, await downloadBeatmapset(task.map_set_id, {preferred: source}));
                 } catch (err) {
-                    console.error(`Download failed: ${task.filename}`, err);
-                    zip.file(`ERROR_${task.filename}.txt`, `Failed to download from ${sourceName}.\nTry: https://osu.ppy.sh/beatmapsets/${task.map_set_id}/download`);
+                    failedDownloads.push(task.filename);
+                    const reason = err instanceof Error ? err.message : "下载失败";
+                    zip.file(`ERROR_${task.filename}.txt`, `${reason}\n官网下载链接：https://osu.ppy.sh/beatmapsets/${task.map_set_id}/download`);
                 } finally {
                     completedCount++;
                     const percent = Math.round((completedCount / mapsToDownload.length) * 80);
@@ -309,7 +307,7 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
         try {
             await delay(100);
             await Promise.all(Array(Math.min(maxConcurrency, mapsToDownload.length)).fill(null).map(() => worker()));
-            setDownloadState((prev) => ({...prev, text: "所有文件下载完毕，正在压缩打包...", progress: 85}));
+            setDownloadState((prev) => ({...prev, text: `下载处理完毕（失败 ${failedDownloads.length} 个），正在打包...`, progress: 85}));
             await delay(100);
 
             const content = await zip.generateAsync({type: "blob"}, (metadata) => {
@@ -317,7 +315,10 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
             });
 
             saveAs(content, `[${tournamentAbbr}] ${stage.stage_name} Pack_${source}.zip`);
-            setDownloadState((prev) => ({...prev, text: "下载完成！", progress: 100}));
+            if (failedDownloads.length > 0) {
+                alert(`图池下载不完整：${mapsToDownload.length - failedDownloads.length}/${mapsToDownload.length} 个谱面集成功。\n失败的谱面已附错误说明和官网下载链接：\n${failedDownloads.join("\n")}`);
+            }
+            setDownloadState((prev) => ({...prev, text: failedDownloads.length ? "已保存部分图池，请查看失败列表" : "下载完成！", progress: 100}));
             await delay(1000);
             setDownloadState((prev) => ({...prev, isOpen: false}));
         } catch (e) {
