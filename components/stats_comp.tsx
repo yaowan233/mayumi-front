@@ -396,6 +396,9 @@ const StatsTable = ({ stats, stageName }: { stats: Stats[], stageName: string })
                             if (["acc_max", "acc_min", "acc_avg"].includes(column.key)) {
                                 return <td key={column.key} className="whitespace-nowrap px-4 py-3">{val ? (val * 100).toFixed(2) + "%" : "-"}</td>;
                             }
+                            if (["score_avg", "miss_avg"].includes(column.key)) {
+                                return <td key={column.key} className="whitespace-nowrap px-4 py-3">{typeof val === "number" ? val.toFixed(2) : "-"}</td>;
+                            }
                             if (column.key === "mod_name") {
                                 return (
                                     <td key={column.key} className="whitespace-nowrap px-4 py-3">
