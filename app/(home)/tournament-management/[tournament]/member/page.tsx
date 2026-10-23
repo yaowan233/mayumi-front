@@ -110,9 +110,23 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
             );
             if (res.ok) {
                 const data = await res.json();
-                alert(`刷新成功：已更新 ${data.updated} / ${data.total} 名选手数据`);
+                alert(`刷新成功：已更新 ${data.updated} / ${data.total} 名成员资料（含昵称和游戏数据）`);
                 const updated = await getPlayers(tournamentName);
-                setTournamentPlayers(updated);
+                const profilesByUid = new Map(updated.players.map(member => [member.uid, member]));
+                setTournamentPlayers(current => ({
+                    ...current,
+                    players: current.players.map(member => {
+                        const profile = profilesByUid.get(member.uid);
+                        return profile ? {
+                            ...member,
+                            name: profile.name,
+                            pp: profile.pp,
+                            rank: profile.rank,
+                            country: profile.country,
+                            default_mode: profile.default_mode,
+                        } : member;
+                    }),
+                }));
             } else {
                 alert(await res.text());
             }
@@ -164,7 +178,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                         isPending={isRefreshing}
                         onPress={handleRefreshStats}
                     >
-                        {isRefreshing ? "刷新中..." : "刷新选手数据"}
+                        {isRefreshing ? "刷新中..." : "刷新成员资料"}
                     </Button>
                     <Modal state={modalState}>
                         <Modal.Trigger className="relative inline-flex">
@@ -359,11 +373,18 @@ const RoleManagementSection = ({
 };
 
 // --- 子组件：添加成员 ---
-const AddMember = ({members, teams, setMembers, tournamentName, position}: any) => {
+const AddMember = ({members, setMembers, tournamentName, position}: {
+    members: Player[];
+    teams?: TournamentPlayers["groups"];
+    setMembers: React.Dispatch<React.SetStateAction<TournamentPlayers>>;
+    tournamentName: string;
+    position: typeof ROLES[number]["key"];
+}) => {
     const [fieldState, setFieldState] = useState<{ selectedKey: string | null, inputValue: string }>({
         selectedKey: null,
         inputValue: "",
     });
+    const [isAdding, setIsAdding] = useState(false);
     let {contains} = useFilter({sensitivity: 'base'});
     const filteredMembers = members.filter((item: Player) => contains(`${item.uid} ${item.name}`, fieldState.inputValue));
 
@@ -390,30 +411,47 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
     };
 
     const handleAddMember = async () => {
-        for (const member of members) {
-            if (member.uid.toString() == fieldState.inputValue) {
-                if (member[position]) {
-                    alert(`该用户已经是${position}`);
-                    return;
-                }
-                const updatedMembers = [...members];
-                updatedMembers[members.indexOf(member)][position] = true;
-                setMembers({players: updatedMembers, groups: teams});
-                setFieldState({selectedKey: null, inputValue: ""});
-                return;
-            }
-        }
-        if (!fieldState.inputValue) {
-            alert('请输入 UID');
+        const query = (fieldState.selectedKey ?? fieldState.inputValue).trim();
+        if (!query) {
+            alert('请输入 UID 或用户名');
             return;
         }
-        try {
-            const res = await fetch(`${siteConfig.backend_url}/api/user?uid=${fieldState.inputValue}&tournament_name=${tournamentName}`);
-            if (res.status !== 200) alert("用户不存在");
-            const data = await res.json();
 
-            const newMember = {
-                uid: parseInt(fieldState.inputValue),
+        const assignRole = (uid: number, profile?: Player) => {
+            const existing = members.find(member => member.uid === uid);
+            if (existing?.[position]) {
+                const label = ROLES.find(role => role.key === position)?.label;
+                alert(`该用户（${existing.name}，UID ${uid}）已经是${label}`);
+                return;
+            }
+            setMembers(current => ({
+                ...current,
+                players: current.players.some(member => member.uid === uid)
+                    ? current.players.map(member => member.uid === uid ? {...member, [position]: true} : member)
+                    : profile ? [...current.players, profile] : current.players,
+            }));
+            setFieldState({selectedKey: null, inputValue: ""});
+        };
+
+        const existing = members.find(member => String(member.uid) === query || member.name.toLowerCase() === query.toLowerCase());
+        if (existing) {
+            assignRole(existing.uid);
+            return;
+        }
+        setIsAdding(true);
+        try {
+            const res = await fetch(`${siteConfig.backend_url}/api/user?uid=${encodeURIComponent(query)}&tournament_name=${encodeURIComponent(tournamentName)}`);
+            if (!res.ok) {
+                alert("用户不存在或查询失败，请检查 UID 或用户名");
+                return;
+            }
+            const data = await res.json();
+            if (!Number.isSafeInteger(data.id) || data.id <= 0 || typeof data.username !== "string") {
+                throw new Error("用户资料无效");
+            }
+
+            const newMember: Player = {
+                uid: data.id,
                 name: data.username,
                 tournament_name: tournamentName,
                 host: false,
@@ -428,17 +466,15 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
                 map_tester: false,
                 donator: false,
                 [position]: true,
-                pp: data.statistics.pp,
-                rank: data.statistics.global_rank,
+                pp: data.statistics?.pp ?? 0,
+                rank: data.statistics?.global_rank ?? 0,
                 country: data.country_code,
             };
-            setMembers({players: [...members, newMember], groups: teams});
-            setFieldState({
-                selectedKey: null,
-                inputValue: "",
-            });
+            assignRole(data.id, newMember);
         } catch (e) {
             alert('添加失败：用户不存在或网络错误');
+        } finally {
+            setIsAdding(false);
         }
     };
 
@@ -464,7 +500,7 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
                 </ComboBox.InputGroup>
                 <ComboBox.Popover>
                     <ListBox renderEmptyState={() => (
-                        <EmptyState>没有匹配成员，可直接点击“添加”查询该 UID</EmptyState>
+                        <EmptyState>没有匹配成员，可点击“添加”查询此 UID 或用户名</EmptyState>
                     )}>
                         {filteredMembers.map((member: Player) => (
                             <ListBox.Item key={member.uid} id={member.uid.toString()} textValue={member.uid.toString()}>
@@ -486,6 +522,7 @@ const AddMember = ({members, teams, setMembers, tournamentName, position}: any) 
                 size="sm"
                 variant="primary"
                 onPress={handleAddMember}
+                isPending={isAdding}
                 className="font-bold px-6"
             >
                 添加
@@ -501,6 +538,6 @@ async function getRegistrationInfo(tournament_name: string): Promise<StaffApplic
 }
 
 async function getPlayers(tournament_name: string): Promise<TournamentPlayers> {
-    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + tournament_name, {next: {revalidate: 0}});
+    const res = await fetch(siteConfig.backend_url + '/api/players?tournament_name=' + encodeURIComponent(tournament_name), {cache: "no-store"});
     return await res.json();
 }
