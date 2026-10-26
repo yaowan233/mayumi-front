@@ -882,6 +882,7 @@ type LobbyInfo = {
 }
 
 export type MatchInfo = {
+    has_recorded_result?: boolean;
     draw_match_id?: string;
     team1_placeholder?: string | null;
     team2_placeholder?: string | null;

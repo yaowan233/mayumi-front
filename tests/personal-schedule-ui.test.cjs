@@ -106,3 +106,11 @@ test("unscheduled qualifier lobbies show time pending", async () => {
     const tree = GroupComp({schedule: {stage_name: "资格赛", lobby_info: [{lobby_name: "A", match_id: "a", datetime: null}]}, tournamentPlayers: {players: []}});
     assert.deepEqual(elements(tree, node => node.type?.displayName === "Tooltip.Content").map(node => node.props.children), ["时间待定"]);
 });
+
+test("finished personal matches remain in the ordinary bracket list", async () => {
+    const {TeamComp, PersonalScheduleSection} = await renderComponents(1);
+    const finished = {...match("finished", 1), team1_score: 4, team2_score: 0};
+    const tree = TeamComp({schedule: {stage_name: "QF", match_info: [finished]}, tournament_players: {players: []}});
+    assert.equal(elements(tree, node => node.type === PersonalScheduleSection).length, 0);
+    assert.deepEqual(elements(tree, node => node.type === Accordion.Item).map(node => node.props.id), ["finished:actual"]);
+});

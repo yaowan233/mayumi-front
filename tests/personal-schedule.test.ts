@@ -44,3 +44,25 @@ test("only the player's candidate pairings are promoted and stay marked as possi
     assert.equal(mine[0].is_possible, true);
     assert.equal(others.length, 1);
 });
+
+test("matches with recorded links or scores move out of the personal section", () => {
+    const matches = [
+        {id: "link", team1: a, team2: b, match_url: ["", "https://osu.ppy.sh/community/matches/123"]},
+        {id: "score", team1: a, team2: b, team1_score: 4, team2_score: 0},
+        {id: "opponent-score", team1: a, team2: b, team1_score: 0, team2_score: 1},
+        {id: "forfeit", team1: a, team2: b, team1_score: -1, team2_score: 0},
+        {id: "pending", team1: a, team2: b, match_url: ["", "  "], team1_score: 0, team2_score: 0},
+        {id: "unset", team1: a, team2: b, match_url: null, team1_score: null, team2_score: null},
+    ];
+    const {mine, others} = partitionMyMatches(matches, 1);
+    assert.deepEqual(mine.map(m => m.id), ["pending", "unset"]);
+    assert.deepEqual(others.map(m => m.id), ["link", "score", "opponent-score", "forfeit"]);
+    // Removing a mistakenly entered result should restore the upcoming match.
+    assert.equal(partitionMyMatches([{...matches[1], team1_score: 0}], 1).mine.length, 1);
+});
+
+
+test("recorded matches stay out of my matches even when unpublished results are redacted", () => {
+    const match = {team1: a, team2: b, has_recorded_result: true, match_url: [], team1_score: 0, team2_score: 0};
+    assert.deepEqual(partitionMyMatches([match], 1), {mine: [], others: [match]});
+});
