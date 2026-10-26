@@ -47,7 +47,7 @@ const MobileMenuButton = ({open, onClick}: { open: boolean; onClick: () => void 
         type="button"
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-800 transition-all duration-150 hover:bg-zinc-900/[0.06] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 dark:text-zinc-100 dark:hover:bg-white/[0.06] sm:hidden"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-800 transition-all duration-150 hover:bg-zinc-900/[0.06] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 dark:text-zinc-100 dark:hover:bg-white/[0.06] lg:hidden"
         onClick={onClick}
     >
         <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
@@ -75,7 +75,7 @@ const MobileMenu = ({
     if (!open) return null;
 
     return (
-        <div className="border-t border-zinc-200/80 bg-white/95 px-4 py-4 shadow-2xl dark:border-white/[0.08] dark:bg-black/95 sm:hidden">
+        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-zinc-200/80 bg-white/95 px-4 py-4 shadow-2xl dark:border-white/[0.08] dark:bg-black/95 lg:hidden">
             <div className="mx-auto flex max-w-7xl flex-col gap-1">
                 {children}
                 {items.map((item) => {
@@ -111,8 +111,8 @@ export const Navbar = () => {
                 <div className="flex min-w-0 items-center gap-4">
                     <MobileMenuButton open={isMenuOpen} onClick={() => setIsMenuOpen((value) => !value)}/>
                     <NavBrand onClick={handleNavClick}/>
-                    <div className="hidden h-6 w-px bg-zinc-300 dark:bg-white/20 sm:block"/>
-                    <div className="hidden items-center gap-1 sm:flex">
+                    <div className="hidden h-6 w-px bg-zinc-300 dark:bg-white/20 lg:block"/>
+                    <div className="hidden items-center gap-1 lg:flex">
                         {siteConfig.navItems.map((item) => (
                             <DesktopNavLink
                                 key={item.href}

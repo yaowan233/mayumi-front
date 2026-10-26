@@ -6,6 +6,7 @@ import {saveAs} from "file-saver";
 import {useParams, useRouter, useSearchParams} from "next/navigation";
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Button, TextArea} from "@heroui/react";
+import {StageNavigation} from "@/components/stage-navigation";
 
 const IconWrapper = ({children, className}: { children: React.ReactNode; className?: string }) => (
     <svg className={className} width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -350,13 +351,14 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
             )}
 
             <div className="w-full border-b border-zinc-200 dark:border-white/[0.08]">
-                <div className="mx-auto flex max-w-7xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
+                <StageNavigation activeStage={activeStage?.stage_name} className="mx-auto flex max-w-7xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
                     {tabs.map((stage) => {
                         const active = activeStage?.stage_name === stage.stage_name;
                         return (
                             <button
                                 key={stage.stage_name}
                                 type="button"
+                                aria-current={active ? "true" : undefined}
                                 className={`relative h-12 shrink-0 cursor-pointer rounded-md px-1 text-lg font-bold transition-all duration-150 hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
                                 onClick={() => handleStageChange(stage.stage_name)}
                             >
@@ -365,7 +367,7 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
                             </button>
                         );
                     })}
-                </div>
+                </StageNavigation>
             </div>
 
             {activeStage && (

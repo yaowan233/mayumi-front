@@ -13,6 +13,7 @@ import {expandMatchPossibilities, type PossibleSchedulePairing} from "@/lib/sche
 import {MatchResultEditor} from "@/components/match_result_editor";
 import {canEditMatchResult} from "@/lib/match-result";
 import {partitionMyMatches} from "@/lib/personal-schedule";
+import {StageNavigation} from "@/components/stage-navigation";
 import {TournamentDrawBoard} from "@/components/tournament_draw";
 import {formatMatchScore, requestDraw, type TournamentDraw} from "@/lib/tournament_draw";
 import {
@@ -68,12 +69,13 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
             </nav>}
             {showBracket && publishedDraw ? <div className="w-full pb-8"><TournamentDrawBoard state={publishedDraw}/></div> : <>
             <div className="w-full border-b border-zinc-200 dark:border-white/[0.08]">
-                <div className="mx-auto flex max-w-5xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
+                <StageNavigation activeStage={selectedScheduleStage?.stage_name} className="mx-auto flex max-w-5xl justify-start gap-6 overflow-x-auto px-6 md:justify-center md:px-0">
                     {scheduleStages.map((stage) => {
                         const active = stage.stage_name === selectedScheduleStage?.stage_name;
                         return (
                             <NextLink
                                 key={stage.stage_name}
+                                aria-current={active ? "true" : undefined}
                                 href={`${pathname}?stage=${encodeURIComponent(stage.stage_name)}`}
                                 scroll={false}
                                 className={`relative flex h-12 shrink-0 cursor-pointer items-center rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
@@ -84,7 +86,7 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
                             </NextLink>
                         );
                     })}
-                </div>
+                </StageNavigation>
             </div>
             {selectedScheduleStage && (
                 <div className="w-full max-w-5xl mx-auto py-4">
