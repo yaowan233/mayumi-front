@@ -28,6 +28,7 @@ async function renderComponents(uid) {
     ].join("\n");
     const compiled = ts.transpileModule(chunks, {compilerOptions: {jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022}}).outputText;
     const stubs = {
+        MatchResultEditor: component("MatchResultEditor"), canEditMatchResult: () => false,
         React, Accordion, Card, Chip: component("Chip"), Separator: component("Separator"),
         Tooltip: Object.assign(component("Tooltip"), {Trigger: component("Tooltip.Trigger"), Content: component("Tooltip.Content")}),
         useContext: () => ({currentUser: uid === undefined ? null : {uid}}), CurrentUserContext: {},

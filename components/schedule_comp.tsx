@@ -10,6 +10,8 @@ import {usePathname, useSearchParams} from "next/navigation";
 import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/page";
 import {formatUtcDateTime, getLocalDateTimeParts, parseUtcDateTime} from "@/lib/datetime";
 import {expandMatchPossibilities, type PossibleSchedulePairing} from "@/lib/schedule_possibilities";
+import {MatchResultEditor} from "@/components/match_result_editor";
+import {canEditMatchResult} from "@/lib/match-result";
 import {partitionMyMatches} from "@/lib/personal-schedule";
 import {TournamentDrawBoard} from "@/components/tournament_draw";
 import {formatMatchScore, requestDraw, type TournamentDraw} from "@/lib/tournament_draw";
@@ -350,6 +352,10 @@ const MatchInfoComp = ({match_info, stage_name, tournament_name, tournament_play
                 {renderInfoSection({ title: "解说", role: "commentator", list: match_info.commentators, canJoin: info?.commentator })}
             </div>
 
+            {!match_info.is_possible && canEditMatchResult(playerUID, info, match_info.referee) &&
+                <MatchResultEditor tournament={tournament_name} stage={stage_name} matchId={match_info.match_id}
+                    onSaved={async () => setSchedule(await requestDraw<ScheduleStage[]>(`${siteConfig.backend_url}/api/schedule?tournament_name=${encodeURIComponent(tournament_name)}`) ?? [])}/>}
+
             {allowWarmup && <>
                 <Separator />
 
@@ -461,6 +467,9 @@ const GroupComp = ({schedule, tournament_name, tournamentPlayers, setSchedule}: 
                                     {canJoinPlayer && <ParticipantJoinHere tournament_name={tournament_name} stage_name={schedule.stage_name} lobbyInfo={lobby} role="player" setSchedule={setSchedule}/>}
                                 </div>
                             </div>
+                            {canEditMatchResult(playerUID, info, lobby.referee) &&
+                                <MatchResultEditor tournament={tournament_name} stage={schedule.stage_name} matchId={lobby.match_id}
+                                    onSaved={async () => setSchedule(await requestDraw<ScheduleStage[]>(`${siteConfig.backend_url}/api/schedule?tournament_name=${encodeURIComponent(tournament_name)}`) ?? [])}/>}
                         </Card.Content>
                     </Card>
                  )
