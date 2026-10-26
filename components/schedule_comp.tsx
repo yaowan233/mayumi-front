@@ -828,18 +828,20 @@ const WarmupSelect = ({uid, team, tournament_name, stage_name, match_id, start_t
         return null
     }
     return (
-        <div className="flex flex-col gap-2 w-full mt-2">
-            <div className="flex flex-row gap-2 items-end w-full">
-                <label className="flex flex-grow flex-col gap-1 text-sm">
+        <div className="flex min-w-0 flex-col gap-2 w-full mt-2">
+            <div className="flex min-w-0 flex-col gap-2 w-full sm:flex-row sm:items-end">
+                <label className="flex w-full min-w-0 flex-1 flex-col gap-1 text-sm">
                     <span className="font-bold text-zinc-700 dark:text-zinc-300">更换热手图</span>
                     <Input
+                        className="w-full min-w-0"
+                        inputMode="numeric"
                         placeholder="Beatmap ID（例如 123456）"
                         value={map_id}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMapId(e.target.value)}
                     />
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">注意：请输入单个难度的 Beatmap ID，而非谱面集 Beatmapset ID</span>
                 </label>
-                <Button size="sm" variant="primary" className="mb-5" onPress={async () => {
+                <Button size="sm" variant="primary" className="w-full shrink-0 sm:mb-5 sm:w-auto" onPress={async () => {
                     if (map_id == "" || isNaN(parseInt(map_id))) {
                         alert("请输入正确的 Beatmap ID（纯数字）");
                         return;
