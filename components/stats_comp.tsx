@@ -106,7 +106,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     const rankingsError = isQualifier ? qualifierError : contextError;
 
     return (
-        <div className="w-full flex flex-col gap-6">
+        <div className="flex w-full min-w-0 flex-col gap-6">
 
             {preview && (
                 <div className="mx-auto mt-4 flex w-[calc(100%-2rem)] max-w-5xl items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-700 dark:text-warning-300">
@@ -165,16 +165,16 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                 <div
                     aria-busy={isPending}
                     inert={isPending}
-                    className={`flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
+                    className={`mx-auto flex w-full min-w-0 max-w-[1400px] flex-col gap-8 px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
                 >
-                    <Tabs selectedKey={section} onSelectionChange={key => setSection({stageName: currentStageName, section: String(key)})} className="w-full">
-                        <Tabs.ListContainer className="max-w-full overflow-x-auto"><Tabs.List aria-label="统计内容" className="min-w-max">
-                            <Tabs.Tab id="rankings">{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
-                            <Tabs.Tab id="maps">单图成绩<Tabs.Indicator/></Tabs.Tab>
-                            <Tabs.Tab id="rating">个人 Rating<Tabs.Indicator/></Tabs.Tab>
-                            <Tabs.Tab id="stats">图池统计<Tabs.Indicator/></Tabs.Tab>
+                    <Tabs selectedKey={section} onSelectionChange={key => setSection({stageName: currentStageName, section: String(key)})} className="w-full min-w-0">
+                        <Tabs.ListContainer className="w-fit max-w-full"><Tabs.List aria-label="统计内容" className="!w-max !min-w-0 gap-1">
+                            <Tabs.Tab id="rankings" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="maps" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">单图成绩<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="rating" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">个人 Rating<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="stats" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">图池统计<Tabs.Indicator/></Tabs.Tab>
                         </Tabs.List></Tabs.ListContainer>
-                    <Tabs.Panel id="rankings" className="pt-4">
+                    <Tabs.Panel id="rankings" className="min-w-0 !px-0 pt-4">
                     {section === "rankings" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">{rankingsTitle}</h2>
                         {rankingsLoading ? <Spinner aria-label="正在加载排名"/> : rankingsError
@@ -182,7 +182,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                             : <LeaderboardPanel key={`${currentRound.stage_name}:rankings`} leaderboard={rankings} isTeamLeaderboard={isQualifier && isTeamRound} fullDetails label={rankingsTitle}/>}
                     </div>}
                     </Tabs.Panel>
-                    <Tabs.Panel id="rating" className="pt-4">
+                    <Tabs.Panel id="rating" className="min-w-0 !px-0 pt-4">
                     {section === "rating" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">个人 Rating 排名</h2>
                         <details className="rounded-lg border border-default-200 bg-default-50 text-sm">
@@ -204,8 +204,8 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                                 <ul className="list-disc space-y-1 pl-5">
                                     <li>仅统计当前轮次图池内的有效记录，未打的谱面不作为 0 分计入平均表现。</li>
                                     <li>单图中位数基准为 0 时，该图每局的相对表现按 0 计，出场局数仍计入。</li>
-                                    <li>至少打过 {MIN_RATING_MAPS} 张不同谱面且比赛关联完整后进入正式排名；不足 {MIN_RATING_MAPS} 张标为“暂定”，仍展示 Rating。</li>
-                                    <li>缺少或无法唯一确定比赛关联时标为“待关联”，Rating 显示为“–”。“暂定”和“待关联”记录均不计正式名次。</li>
+                                    <li>至少打过 {MIN_RATING_MAPS} 张不同谱面且比赛关联完整后进入正式排名；不足 {MIN_RATING_MAPS} 张仍展示 Rating，不计正式名次。</li>
+                                    <li>缺少或无法唯一确定比赛关联时，Rating 显示为“–”，不计正式名次。</li>
                                 </ul>
                             </div>
                         </details>
@@ -215,14 +215,14 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                     </div>}
                     </Tabs.Panel>
 
-                    <Tabs.Panel id="stats" className="pt-4">
+                    <Tabs.Panel id="stats" className="min-w-0 !px-0 pt-4">
                     {section === "stats" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-secondary">图池数据统计</h2>
                         <StatsTable stats={stats} stageName={currentRound.stage_name} />
                     </div>}
                     </Tabs.Panel>
 
-                    <Tabs.Panel id="maps" className="pt-4">
+                    <Tabs.Panel id="maps" className="min-w-0 !px-0 pt-4">
                     {section === "maps" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-warning">单图成绩排行</h2>
                         <MapScoresGrid
@@ -332,12 +332,12 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
     const columns = useMemo(() => {
         if (leaderboard.length === 0) return [];
         // 获取所有键，排除原始数据可能存在的 '#'（为了避免冲突或重复），然后手动把 '#' 加到最前面
-        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#' && (isTeamLeaderboard || fullDetails || ["name", "Rating", "状态", "出场局数", "比赛场数", "平均排名", "平均分数"].includes(k)));
+        const rawKeys = Object.keys(leaderboard[0]).filter(k => !['#', '状态', '比赛场数'].includes(k) && (isTeamLeaderboard || fullDetails || ["name", "Rating", "出场局数", "平均排名", "平均分数"].includes(k)));
         return ['#', ...rawKeys];
     }, [leaderboard, fullDetails, isTeamLeaderboard]);
 
     const getCellStyle = (columnKey: string, value: any) => {
-        if (columnKey === 'NAME' || columnKey === '#') return "";
+        if (columnKey === 'name' || columnKey === '#') return "";
         const numericVal = parseFloat(value);
         if (isNaN(numericVal) || !top3Data[columnKey]) return "";
         const rankIndex = top3Data[columnKey].indexOf(numericVal);
@@ -351,13 +351,13 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
     if (leaderboard.length === 0) return <div className="text-default-400 p-4">暂无排行数据</div>;
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex min-w-0 max-w-full flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-default-500">{leaderboard.length} {isTeamLeaderboard ? "支队伍" : "名选手"}</span>
         </div>
-        <div role="region" aria-label={label ?? (isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名")} tabIndex={0} className="max-h-[60vh] min-h-[200px] overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
-            <table className="w-full border-collapse text-sm">
-                <thead className="sticky top-0 z-10">
+        <div role="region" aria-label={label ?? (isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名")} tabIndex={0} className="max-h-[60vh] min-h-[200px] min-w-0 max-w-full overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
+            <table className="w-max min-w-full border-separate border-spacing-0 text-sm tabular-nums">
+                <thead className="sticky top-0 z-20">
                 <tr>
                     {columns.map((column) => {
                         const sortable = column !== "#";
@@ -366,7 +366,7 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
                             <th
                                 key={column}
                                 scope="col"
-                                className={`whitespace-nowrap bg-default-100 px-4 py-3 text-left text-xs font-bold uppercase text-default-600 ${sortable ? "cursor-pointer hover:text-default-900" : ""}`}
+                                className={`whitespace-nowrap bg-default-100 px-3 py-3 text-xs font-semibold text-default-600 ${column === '#' ? "sticky left-0 z-30 w-10 min-w-10 text-center sm:w-14 sm:min-w-14" : column === 'name' ? "sticky left-10 z-30 w-36 min-w-36 max-w-36 text-left sm:left-14 sm:w-48 sm:min-w-48 sm:max-w-48" : "text-right"} ${sortable ? "cursor-pointer hover:text-default-900" : ""}`}
                                 onClick={() => {
                                     if (!sortable) return;
                                     handleSortChange({
@@ -396,8 +396,8 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
                                 const displayVal = isNumericRating ? rawVal.toFixed(4) : rawVal ?? "-";
                                 const style = getCellStyle(keyStr, rawVal);
                                 return (
-                                    <td key={keyStr} className="whitespace-nowrap px-4 py-3">
-                                        <span className={style} title={isNumericRating ? String(rawVal) : undefined}>{keyStr === "#" ? row.virtual_rank : displayVal}</span>
+                                    <td key={keyStr} className={`whitespace-nowrap px-3 py-3 ${keyStr === '#' ? "sticky left-0 z-10 w-10 min-w-10 bg-white text-center dark:bg-zinc-900 sm:w-14 sm:min-w-14" : keyStr === 'name' ? "sticky left-10 z-10 w-36 min-w-36 max-w-36 bg-white text-left dark:bg-zinc-900 sm:left-14 sm:w-48 sm:min-w-48 sm:max-w-48" : "text-right"}`}>
+                                        <span className={`${style} ${keyStr === 'name' ? 'block truncate' : ''}`} title={isNumericRating || keyStr === 'name' ? String(rawVal) : undefined}>{keyStr === "#" ? row.virtual_rank : displayVal}</span>
                                     </td>
                                 );
                             })}

@@ -247,13 +247,15 @@ test('all maps remain visible in both team and individual score views', async ()
 
 test('personal Rating summary and the separate details view have distinct columns without an inline toggle', async () => {
     const h = await harness();
-    const props = {leaderboard: [{name: 'Alice', Rating: 1, '出场局数': 2, '平均排名': 1, '平均分数': 100, 'NM 1': 1, 'NM 1 平均成绩': 100}]};
+    const props = {leaderboard: [{name: 'Alice', Rating: 1, '状态': '正式', '出场局数': 2, '比赛场数': 1, '平均排名': 1, '平均分数': 100, 'NM 1': 1, 'NM 1 平均成绩': 100}]};
     let tree = h.render(h.LeaderboardPanel, props);
     assert.equal(elements(tree, node => node.type === 'th').length, 6);
+    assert.doesNotMatch(elements(tree, node => node.type === 'th').map(content).join('|'), /状态|比赛场数/);
     assert.match(content(tree), /出场局数/);
     assert.equal(elements(tree, node => node.type === Button).length, 0);
     tree = h.render(h.LeaderboardPanel, {...props, fullDetails: true});
     assert.equal(elements(tree, node => node.type === 'th').length, 8);
+    assert.doesNotMatch(elements(tree, node => node.type === 'th').map(content).join('|'), /状态|比赛场数/);
     assert.equal(elements(tree, node => node.type === Button).length, 0);
 });
 
