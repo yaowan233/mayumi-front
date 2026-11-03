@@ -37,6 +37,7 @@ async function harness({qualifierLeaderboard = []} = {}) {
     const {getStatisticsRoundSelection} = await import('../lib/statistics-rounds.ts');
     const values = []; let index = 0;
     const requests = [];
+    const searchParams = new URLSearchParams();
     const mocks = {
         react: {useMemo: fn => fn(), useTransition: () => [false, fn => fn()], useState(initial) {
             const position = index++;
@@ -45,7 +46,10 @@ async function harness({qualifierLeaderboard = []} = {}) {
         }},
         'react/jsx-runtime': require('react/jsx-runtime'),
         '@heroui/react': {Card, Tabs, Avatar, Button, Chip: component(), Spinner: component()},
-        'next/navigation': {useSearchParams: () => new URLSearchParams(), useRouter: () => ({replace() {}})},
+        'next/navigation': {useSearchParams: () => searchParams, useRouter: () => ({replace(query) {
+            for (const key of [...searchParams.keys()]) searchParams.delete(key);
+            for (const [key, value] of new URLSearchParams(query.slice(1))) searchParams.set(key, value);
+        }})},
         '@/lib/statistics-rounds': {getStatisticsRoundSelection},
         '@/lib/statistics-scores': statistics,
         '@/lib/leaderboard-response': await import('../lib/leaderboard-response.ts'),
@@ -61,7 +65,7 @@ async function harness({qualifierLeaderboard = []} = {}) {
     const exports = {};
     new Function('require', 'exports', `${compiled}\nObject.assign(exports, {MapScoresGrid, SingleMapCard, TeamMapScores, LeaderboardPanel});`)(
         name => {if (!(name in mocks)) throw new Error(`Unexpected import: ${name}`); return mocks[name];}, exports);
-    return {...exports, requests, render: (fn, props) => {index = 0; return fn(props);}};
+    return {...exports, requests, searchParams, render: (fn, props) => {index = 0; return fn(props);}};
 }
 
 test('statistics shows only the selected section and has a separate personal Rating tab', async () => {
@@ -134,6 +138,34 @@ test('switching from qualifier rankings to an elimination round shows individual
     const board = elements(tree, node => node.type === h.LeaderboardPanel)[0];
     assert.equal(board.props.isTeamLeaderboard, false);
     assert.equal(board.props.fullDetails, true);
+});
+
+test('entering or returning to a qualifier prioritizes its standalone standings over another rounds selected tab', async () => {
+    const h = await harness();
+    const qualifier = {...round, stage_name: 'Qualifiers', is_lobby: true};
+    const props = {roundInfo: [qualifier, round], stats: [], stage, scores: [...scores, ...scores.map(score => ({...score, stage_name: 'Qualifiers'}))],
+        players, teams, ratingContext, isTeamTournament: true};
+    h.searchParams.set('stage', 'RO16');
+    let tree = h.render(h.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'maps')[0].props.onSelectionChange('rating');
+    tree = h.render(h.StatsComp, props);
+    assert.match(content(tree), /个人 Rating 排名/);
+    // External stage navigation also must not carry the previous round's view.
+    h.searchParams.set('stage', 'Qualifiers');
+    tree = h.render(h.StatsComp, props);
+    assert.equal(elements(tree, node => node.type === h.MapScoresGrid).length, 0);
+    let sections = elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rankings')[0];
+    assert.ok(sections);
+    assert.equal(elements(sections, node => node.type === Tabs.Tab)[0].props.id, 'rankings');
+    assert.equal(elements(tree, node => node.type === h.LeaderboardPanel)[0].props.isTeamLeaderboard, true);
+    sections.props.onSelectionChange('maps');
+    tree = h.render(h.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'Qualifiers')[0].props.onSelectionChange('RO16');
+    tree = h.render(h.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'RO16')[0].props.onSelectionChange('Qualifiers');
+    tree = h.render(h.StatsComp, props);
+    sections = elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rankings')[0];
+    assert.ok(sections, 'returning to the qualifier must reset its selected view to standings');
 });
 
 test('qualifier standings always show every map rank and score and support per-map sorting', async () => {

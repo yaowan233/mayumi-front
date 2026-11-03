@@ -74,7 +74,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     const searchParams = useSearchParams();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    const [selectedSection, setSection] = useState<string | null>(null);
+    const [selectedSection, setSection] = useState<{stageName: string | undefined; section: string} | null>(null);
     const requestedStage = searchParams.get('stage');
     const {visibleRounds, currentRound} = useMemo(() =>
         getStatisticsRoundSelection(roundInfo, stats, scores, requestedStage),
@@ -82,7 +82,8 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     const currentStageName = currentRound?.stage_name;
     const isTeamRound = isTeamTournament && !currentRound?.is_solo_qualifier;
     const isQualifier = Boolean(currentRound?.is_lobby || currentRound?.is_solo_qualifier);
-    const section = selectedSection ?? (isQualifier ? "rankings" : "maps");
+    const section = selectedSection && selectedSection.stageName === currentStageName
+        ? selectedSection.section : isQualifier ? "rankings" : "maps";
     const rankingsTitle = isQualifier ? (isTeamRound ? "资格赛队伍排名" : "资格赛排名") : "个人排名明细";
     const contextQuery = new URLSearchParams({tournament_name: currentRound?.tournament_name ?? "", stage_name: currentStageName ?? ""});
     if (preview) contextQuery.set("preview", "true");
@@ -124,6 +125,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                     selectedKey={currentStageName}
                     onSelectionChange={(key) => {
                         if (String(key) === currentStageName) return;
+                        setSection(null);
                         const query = new URLSearchParams(searchParams.toString());
                         query.set("stage", String(key));
                         startTransition(() => {
@@ -165,7 +167,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                     inert={isPending}
                     className={`flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
                 >
-                    <Tabs selectedKey={section} onSelectionChange={key => setSection(String(key))} className="w-full">
+                    <Tabs selectedKey={section} onSelectionChange={key => setSection({stageName: currentStageName, section: String(key)})} className="w-full">
                         <Tabs.ListContainer className="max-w-full overflow-x-auto"><Tabs.List aria-label="统计内容" className="min-w-max">
                             <Tabs.Tab id="rankings">{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="maps">单图成绩<Tabs.Indicator/></Tabs.Tab>
