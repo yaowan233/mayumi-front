@@ -318,6 +318,31 @@ test('personal Rating table sorts by Rating descending with full precision', asy
     assert.equal(elements(rows[1], node => node.type === 'span' && node.props.title === '0.999999').length, 1);
 });
 
+test('player standings show avatars and link names to the matching osu account', async () => {
+    const h = await harness();
+    const props = {leaderboard: [{name: 'Alice', Rating: 1}], players};
+    const tree = h.render(h.LeaderboardPanel, props);
+    const link = elements(tree, node => node.type === 'a')[0];
+    assert.equal(link.props.href, 'https://osu.ppy.sh/users/1');
+    assert.equal(link.props.target, '_blank');
+    assert.match(content(link), /Alice/);
+    assert.equal(elements(link, node => node.type === Avatar.Image)[0].props.src, 'https://a.ppy.sh/1');
+    const teamHarness = await harness();
+    const teamTree = teamHarness.render(teamHarness.LeaderboardPanel, {...props, isTeamLeaderboard: true});
+    assert.equal(elements(teamTree, node => node.type === 'a').length, 0, 'team names must not be linked as players');
+});
+
+test('individual map scores and team member details link avatars and names to player profiles', async () => {
+    const h = await harness();
+    const tree = h.render(h.SingleMapCard, {map, roundName: 'RO16', scores, players, teams, showTeams: false});
+    const links = elements(tree, node => node.type === 'a' && node.props.href?.includes('/users/'));
+    assert.deepEqual(links.map(link => link.props.href), ['https://osu.ppy.sh/users/1', 'https://osu.ppy.sh/users/2']);
+    assert.ok(links.every(link => elements(link, node => node.type === Avatar.Image).length === 1));
+    const {buildTeamMapScores} = await import('../lib/statistics-scores.ts');
+    const teamTree = h.TeamMapScores({scores: buildTeamMapScores(scores, teams, 'RO16', 1), players});
+    assert.equal(elements(teamTree, node => node.type === 'a' && node.props.href?.includes('/users/')).length, 2);
+});
+
 test('provisional and unassociated results stay outside the official numbered ranking', async () => {
     const h = await harness();
     const tree = h.render(h.LeaderboardPanel, {leaderboard: [

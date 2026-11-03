@@ -175,7 +175,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                             {rankingsLoading && <Spinner size="sm" aria-label="正在更新排名"/>}</div>
                         {rankingsError && <p role="alert" className="text-sm text-danger">{rankingsError.message}</p>}
                         {isQualifier && rankingsLoading && rankings.length === 0 ? <Spinner aria-label="正在加载资格赛排名"/>
-                            : <LeaderboardPanel key={`${currentRound.stage_name}:rankings`} leaderboard={rankings} isTeamLeaderboard={isQualifier && isTeamRound} fullDetails label={rankingsTitle}/>}
+                            : <LeaderboardPanel key={`${currentRound.stage_name}:rankings`} leaderboard={rankings} players={players} isTeamLeaderboard={isQualifier && isTeamRound} fullDetails label={rankingsTitle}/>}
                     </div>}
                     </Tabs.Panel>
                     <Tabs.Panel id="rating" className="min-w-0 !p-0 !mt-5">
@@ -207,7 +207,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                             </div>
                         </details>
                         {contextError && <p role="alert" className="text-sm text-danger">{contextError.message}</p>}
-                        <LeaderboardPanel key={currentRound.stage_name} leaderboard={personalRating} />
+                        <LeaderboardPanel key={currentRound.stage_name} leaderboard={personalRating} players={players}/>
                     </div>}
                     </Tabs.Panel>
 
@@ -239,9 +239,10 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     )
 }
 
-const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails = false, label}: {
-    leaderboard: LeaderboardRow[], isTeamLeaderboard?: boolean, fullDetails?: boolean, label?: string,
+const LeaderboardPanel = ({leaderboard, players = [], isTeamLeaderboard = false, fullDetails = false, label}: {
+    leaderboard: LeaderboardRow[], players?: Player[], isTeamLeaderboard?: boolean, fullDetails?: boolean, label?: string,
 }) => {
+    const playerByName = useMemo(() => new Map(players.map(player => [player.name, player])), [players]);
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
         column: "Rating",
         direction: "descending",
@@ -383,8 +384,10 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
                 <tbody>
                 {sortedItems.map((item, idx) => {
                     const row = {...item, virtual_rank: item["状态"] && item["状态"] !== "正式" ? "-" : idx + 1};
+                    const rowBackground = idx % 2 === 0 ? "bg-zinc-50 dark:bg-[#202023]" : "bg-white dark:bg-zinc-900";
+                    const player = isTeamLeaderboard ? undefined : playerByName.get(String(item.name));
                     return (
-                        <tr key={idx} className="odd:bg-zinc-50/60 dark:odd:bg-white/[0.025]">
+                        <tr key={idx} className={`${rowBackground} text-zinc-900 dark:text-zinc-100`}>
                             {columns.map((columnKey) => {
                                 const keyStr = columnKey.toString();
                                 const rawVal = getKeyValue(row, columnKey);
@@ -392,8 +395,15 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
                                 const displayVal = isNumericRating ? rawVal.toFixed(4) : rawVal ?? "-";
                                 const style = getCellStyle(keyStr, rawVal);
                                 return (
-                                    <td key={keyStr} className={`whitespace-nowrap px-3 py-3 ${keyStr === '#' ? "sticky left-0 z-10 w-10 min-w-10 bg-white text-center dark:bg-zinc-900 sm:w-14 sm:min-w-14" : keyStr === 'name' ? "sticky left-10 z-10 w-36 min-w-36 max-w-36 bg-white text-left dark:bg-zinc-900 sm:left-14 sm:w-48 sm:min-w-48 sm:max-w-48" : "text-right"}`}>
-                                        <span className={`${style} ${keyStr === 'name' ? 'block truncate' : ''}`} title={isNumericRating || keyStr === 'name' ? String(rawVal) : undefined}>{keyStr === "#" ? row.virtual_rank : displayVal}</span>
+                                    <td key={keyStr} className={`${rowBackground} whitespace-nowrap px-3 py-3 ${keyStr === '#' ? "sticky left-0 z-10 w-10 min-w-10 text-center sm:w-14 sm:min-w-14" : keyStr === 'name' ? "sticky left-10 z-10 w-36 min-w-36 max-w-36 text-left sm:left-14 sm:w-48 sm:min-w-48 sm:max-w-48" : "text-right"}`}>
+                                        {keyStr === 'name' && player ? <a href={`https://osu.ppy.sh/users/${player.uid}`} target="_blank" rel="noopener noreferrer"
+                                            title={player.name} className="flex min-w-0 items-center gap-2 rounded-md text-zinc-900 transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-primary dark:text-zinc-100 dark:hover:text-primary">
+                                            <Avatar size="sm" className="!size-7 shrink-0">
+                                                <Avatar.Image src={`https://a.ppy.sh/${player.uid}`} alt=""/>
+                                                <Avatar.Fallback>{player.name[0] ?? "?"}</Avatar.Fallback>
+                                            </Avatar>
+                                            <span className="min-w-0 truncate">{player.name}</span>
+                                        </a> : <span className={`${style} ${keyStr === 'name' ? 'block truncate' : ''}`} title={isNumericRating || keyStr === 'name' ? String(rawVal) : undefined}>{keyStr === "#" ? row.virtual_rank : displayVal}</span>}
                                     </td>
                                 );
                             })}
@@ -584,15 +594,16 @@ const SingleMapCard = ({ map, roundName, scores, players, teams, showTeams }: {
                                         {idx + 1}
                                     </div>
                                     <div className="min-w-0">
-                                        <div className="flex min-w-0 items-center gap-2">
+                                        <a href={`https://osu.ppy.sh/users/${encodeURIComponent(String(player?.uid ?? score.player))}`} target="_blank" rel="noopener noreferrer"
+                                            className="flex min-w-0 items-center gap-2 rounded-md text-zinc-900 transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-primary dark:text-zinc-100 dark:hover:text-primary">
                                             <Avatar size="sm" className="hidden shrink-0 @min-[360px]:flex">
-                                                <Avatar.Image src={`https://a.ppy.sh/${player?.uid ?? ""}`} alt={player?.name || score.player}/>
+                                                <Avatar.Image src={`https://a.ppy.sh/${player?.uid ?? score.player}`} alt=""/>
                                                 <Avatar.Fallback>{(player?.name || score.player)?.[0] ?? "?"}</Avatar.Fallback>
                                             </Avatar>
-                                            <span title={player?.name || score.player} className="min-w-0 break-all text-small font-medium text-zinc-900 dark:text-zinc-100 @min-[360px]:truncate">
+                                            <span title={player?.name || score.player} className="min-w-0 break-all text-small font-medium @min-[360px]:truncate">
                                                 {player?.name || score.player}
                                             </span>
-                                        </div>
+                                        </a>
                                         {mods && <div className="mt-1 break-all text-xs text-warning @min-[360px]:hidden"><span className="sr-only">Mods: </span>{mods}</div>}
                                     </div>
 
@@ -663,7 +674,14 @@ const TeamMapScores = ({scores, players}: {scores: TeamMapScore[], players?: Pla
                     {entry.members.map(score => {
                         const player = players?.find(player => String(player.uid) === String(score.player));
                         return <div key={score.player} className="flex items-center justify-between gap-3 py-1.5">
-                            <span className="min-w-0 break-all text-xs">{player?.name ?? score.player}</span>
+                            <a href={`https://osu.ppy.sh/users/${encodeURIComponent(String(player?.uid ?? score.player))}`} target="_blank" rel="noopener noreferrer"
+                                className="flex min-w-0 items-center gap-2 rounded-md text-xs transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-primary dark:hover:text-primary">
+                                <Avatar size="sm" className="!size-6 shrink-0">
+                                    <Avatar.Image src={`https://a.ppy.sh/${player?.uid ?? score.player}`} alt=""/>
+                                    <Avatar.Fallback>{(player?.name ?? score.player)[0] ?? "?"}</Avatar.Fallback>
+                                </Avatar>
+                                <span className="min-w-0 break-all">{player?.name ?? score.player}</span>
+                            </a>
                             <span className="shrink-0 text-right"><span className="block font-mono text-xs font-bold">{score.score.toLocaleString()}</span>
                                 <span className="block text-xs text-default-500">{(score.acc * 100).toFixed(2)}%</span></span>
                         </div>;
