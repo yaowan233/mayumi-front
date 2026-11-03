@@ -7,7 +7,7 @@ import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournamen
 import {Stage} from "@/components/mappools";
 import {useRouter, useSearchParams} from "next/navigation";
 import {Player, Team} from "@/app/tournaments/[tournament]/participants/page";
-import type {LeaderboardRow} from "@/lib/leaderboard-response";
+import {parseLeaderboardResponse, type LeaderboardRow} from "@/lib/leaderboard-response";
 import {getStatisticsRoundSelection} from "@/lib/statistics-rounds";
 import {buildPersonalRating, buildTeamMapScores, MIN_RATING_MAPS, ratingStatusOrder, type RatingMatchContext, type StatisticsScore as Score, type TeamMapScore} from "@/lib/statistics-scores";
 import {formatLocalDateTime} from "@/lib/datetime";
@@ -74,13 +74,15 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     const searchParams = useSearchParams();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    const [section, setSection] = useState("maps");
+    const [selectedSection, setSection] = useState<string | null>(null);
     const requestedStage = searchParams.get('stage');
     const {visibleRounds, currentRound} = useMemo(() =>
         getStatisticsRoundSelection(roundInfo, stats, scores, requestedStage),
     [roundInfo, stats, scores, requestedStage]);
     const currentStageName = currentRound?.stage_name;
     const isTeamRound = isTeamTournament && !currentRound?.is_solo_qualifier;
+    const isTeamQualifier = Boolean(isTeamRound && currentRound?.is_lobby);
+    const section = selectedSection === "teams" && !isTeamQualifier ? "maps" : selectedSection ?? (isTeamQualifier ? "teams" : "maps");
     const contextQuery = new URLSearchParams({tournament_name: currentRound?.tournament_name ?? "", stage_name: currentStageName ?? ""});
     if (preview) contextQuery.set("preview", "true");
     const {data: fetchedContext, error: contextError, isLoading: contextLoading} = useSWR<RatingMatchContext>(
@@ -88,6 +90,10 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
         url => requestDraw<RatingMatchContext>(url), {revalidateOnFocus: false},
     );
     const activeContext = ratingContext ?? fetchedContext;
+    const {data: qualifierLeaderboard, error: qualifierError, isLoading: qualifierLoading} = useSWR<LeaderboardRow[]>(
+        isTeamQualifier && section === "teams" ? `${siteConfig.backend_url}/api/cal_rank?${contextQuery}` : null,
+        async url => parseLeaderboardResponse(await requestDraw<unknown>(url)), {revalidateOnFocus: false},
+    );
     const personalRating = useMemo(() => {
         const maps = stage.find(item => item.stage_name === currentStageName)?.mod_bracket.flatMap(bracket =>
             bracket.maps.map((map, index) => ({map_id: map.map_id, mod: bracket.mod, number: map.number ?? index + 1}))) ?? [];
@@ -157,10 +163,19 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                 >
                     <Tabs selectedKey={section} onSelectionChange={key => setSection(String(key))} className="w-full">
                         <Tabs.ListContainer><Tabs.List aria-label="统计内容">
+                            {isTeamQualifier && <Tabs.Tab id="teams">队伍排名<Tabs.Indicator/></Tabs.Tab>}
                             <Tabs.Tab id="maps">单图成绩<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="rating">个人 Rating<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="stats">图池统计<Tabs.Indicator/></Tabs.Tab>
                         </Tabs.List></Tabs.ListContainer>
+                    {isTeamQualifier && <Tabs.Panel id="teams" className="pt-4">
+                    {section === "teams" && <div className="flex flex-col gap-4">
+                        <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">资格赛队伍排名</h2>
+                        {qualifierLoading ? <Spinner aria-label="正在加载队伍排名"/> : qualifierError
+                            ? <p role="alert" className="text-sm text-danger">{qualifierError.message}</p>
+                            : <LeaderboardPanel key={`${currentRound.stage_name}:teams`} leaderboard={qualifierLeaderboard ?? []} isTeamLeaderboard/>}
+                    </div>}
+                    </Tabs.Panel>}
                     <Tabs.Panel id="rating" className="pt-4">
                     {section === "rating" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">个人 Rating 排名</h2>
@@ -222,7 +237,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     )
 }
 
-const LeaderboardPanel = ({leaderboard}: {leaderboard: LeaderboardRow[]}) => {
+const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false}: {leaderboard: LeaderboardRow[], isTeamLeaderboard?: boolean}) => {
     const [showMapDetails, setShowMapDetails] = useState(false);
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
         column: "Rating",
@@ -331,13 +346,13 @@ const LeaderboardPanel = ({leaderboard}: {leaderboard: LeaderboardRow[]}) => {
     return (
         <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-default-500">{leaderboard.length} 名选手</span>
+            <span className="text-sm text-default-500">{leaderboard.length} {isTeamLeaderboard ? "支队伍" : "名选手"}</span>
             <Button size="sm" variant="secondary" onPress={() => {
                 setShowMapDetails(!showMapDetails);
                 setSortDescriptor({column: "Rating", direction: "descending"});
             }}>{showMapDetails ? "收起单图明细" : "显示单图明细"}</Button>
         </div>
-        <div role="region" aria-label="个人 Rating 排名" tabIndex={0} className="max-h-[60vh] min-h-[200px] overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
+        <div role="region" aria-label={isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名"} tabIndex={0} className="max-h-[60vh] min-h-[200px] overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
             <table className="w-full border-collapse text-sm">
                 <thead className="sticky top-0 z-10">
                 <tr>
@@ -358,7 +373,7 @@ const LeaderboardPanel = ({leaderboard}: {leaderboard: LeaderboardRow[]}) => {
                                 }}
                             >
                                 <span className="inline-flex items-center gap-1">
-                                    {column === "name" ? "选手" : column}
+                                    {column === "name" ? (isTeamLeaderboard ? "队伍" : "选手") : column}
                                     {isSorted && <span>{sortDescriptor.direction === "ascending" ? "↑" : "↓"}</span>}
                                 </span>
                             </th>

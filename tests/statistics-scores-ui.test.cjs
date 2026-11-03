@@ -32,10 +32,11 @@ function content(node) {
     if (!React.isValidElement(node)) return typeof node === 'string' || typeof node === 'number' ? String(node) : '';
     return React.Children.toArray(node.props.children).map(content).join('');
 }
-async function harness() {
+async function harness({qualifierLeaderboard = []} = {}) {
     const statistics = await import('../lib/statistics-scores.ts');
     const {getStatisticsRoundSelection} = await import('../lib/statistics-rounds.ts');
     const values = []; let index = 0;
+    const requests = [];
     const mocks = {
         react: {useMemo: fn => fn(), useTransition: () => [false, fn => fn()], useState(initial) {
             const position = index++;
@@ -47,16 +48,20 @@ async function harness() {
         'next/navigation': {useSearchParams: () => new URLSearchParams(), useRouter: () => ({replace() {}})},
         '@/lib/statistics-rounds': {getStatisticsRoundSelection},
         '@/lib/statistics-scores': statistics,
+        '@/lib/leaderboard-response': await import('../lib/leaderboard-response.ts'),
         '@/lib/datetime': {formatLocalDateTime: value => value},
         '@/config/site': {siteConfig: {backend_url: ''}},
         '@/lib/tournament_draw': {requestDraw: () => {throw new Error('Unexpected request');}},
         '@/components/rating_formula': {RatingFormula},
-        swr: () => ({}),
+        swr: key => {
+            if (key) requests.push(key);
+            return key?.includes('/cal_rank?') ? {data: qualifierLeaderboard} : {};
+        },
     };
     const exports = {};
     new Function('require', 'exports', `${compiled}\nObject.assign(exports, {MapScoresGrid, SingleMapCard, TeamMapScores, LeaderboardPanel});`)(
         name => {if (!(name in mocks)) throw new Error(`Unexpected import: ${name}`); return mocks[name];}, exports);
-    return {...exports, render: (fn, props) => {index = 0; return fn(props);}};
+    return {...exports, requests, render: (fn, props) => {index = 0; return fn(props);}};
 }
 
 test('statistics shows only the selected section and has a separate personal Rating tab', async () => {
@@ -81,6 +86,44 @@ test('statistics shows only the selected section and has a separate personal Rat
     const leaderboard = elements(tree, node => node.type === h.LeaderboardPanel)[0];
     assert.deepEqual(leaderboard.props.leaderboard.map(row => [row.name, row.Rating]), [['Alice', 100 / 90], ['Bob', 80 / 90]]);
     assert.deepEqual(leaderboard.props.leaderboard.map(row => row['出场局数']), [1, 1]);
+    assert.equal(h.requests.some(url => url.includes('/cal_rank?')), false);
+});
+
+test('team qualifiers retain the original team leaderboard as the default view', async () => {
+    const qualifierLeaderboard = [{name: 'Team A', Rating: 2.5, '平均排名': 1, '平均分数': 180, 'NM 1': 1, 'NM 1 成绩': 180}];
+    const h = await harness({qualifierLeaderboard});
+    const props = {roundInfo: [{...round, is_lobby: true}], stats: [], stage, scores, players, teams, ratingContext, preview: true, isTeamTournament: true};
+    let tree = h.render(h.StatsComp, props);
+    assert.match(content(tree), /资格赛队伍排名/);
+    assert.ok(elements(tree, node => node.type === Tabs.Tab && node.props.id === 'teams').length);
+    assert.equal(elements(tree, node => node.type === h.MapScoresGrid).length, 0);
+    const board = elements(tree, node => node.type === h.LeaderboardPanel)[0];
+    assert.deepEqual(board.props.leaderboard, qualifierLeaderboard);
+    assert.equal(board.props.isTeamLeaderboard, true);
+    const query = new URL(h.requests[0], 'https://example.com').searchParams;
+    assert.equal(query.get('tournament_name'), 'Cup');
+    assert.equal(query.get('stage_name'), 'RO16');
+    assert.equal(query.get('preview'), 'true');
+    const table = h.render(h.LeaderboardPanel, board.props);
+    assert.match(content(table), /1 支队伍/);
+    assert.ok(elements(table, node => node.type === 'th' && content(node).includes('队伍')).length);
+    // Use a fresh harness so child-component hook state does not overlap the page.
+    const page = await harness({qualifierLeaderboard});
+    tree = page.render(page.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'teams')[0].props.onSelectionChange('rating');
+    tree = page.render(page.StatsComp, props);
+    assert.match(content(tree), /个人 Rating 排名/);
+    assert.notEqual(elements(tree, node => node.type === page.LeaderboardPanel)[0].props.isTeamLeaderboard, true);
+});
+
+test('switching from qualifier rankings to an elimination round falls back to map scores', async () => {
+    const h = await harness();
+    const props = {roundInfo: [{...round, is_lobby: true}], stats: [], stage, scores, players, teams, ratingContext, isTeamTournament: true};
+    let tree = h.render(h.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'teams')[0].props.onSelectionChange('teams');
+    tree = h.render(h.StatsComp, {...props, roundInfo: [round]});
+    assert.equal(elements(tree, node => node.type === Tabs.Tab && node.props.id === 'teams').length, 0);
+    assert.equal(elements(tree, node => node.type === h.MapScoresGrid).length, 1);
 });
 
 test('map ranking defaults to team totals and switches to individual scores', async () => {
