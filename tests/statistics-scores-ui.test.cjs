@@ -87,6 +87,10 @@ test('statistics shows only the selected section and has a separate personal Rat
     assert.deepEqual(leaderboard.props.leaderboard.map(row => [row.name, row.Rating]), [['Alice', 100 / 90], ['Bob', 80 / 90]]);
     assert.deepEqual(leaderboard.props.leaderboard.map(row => row['出场局数']), [1, 1]);
     assert.equal(h.requests.some(url => url.includes('/cal_rank?')), false);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rating')[0].props.onSelectionChange('rankings');
+    tree = h.render(h.StatsComp, props);
+    assert.match(content(tree), /个人排名明细/);
+    assert.equal(elements(tree, node => node.type === h.LeaderboardPanel)[0].props.fullDetails, true);
 });
 
 test('team qualifiers retain the original team leaderboard as the default view', async () => {
@@ -95,35 +99,41 @@ test('team qualifiers retain the original team leaderboard as the default view',
     const props = {roundInfo: [{...round, is_lobby: true}], stats: [], stage, scores, players, teams, ratingContext, preview: true, isTeamTournament: true};
     let tree = h.render(h.StatsComp, props);
     assert.match(content(tree), /资格赛队伍排名/);
-    assert.ok(elements(tree, node => node.type === Tabs.Tab && node.props.id === 'teams').length);
+    assert.ok(elements(tree, node => node.type === Tabs.Tab && node.props.id === 'rankings').length);
     assert.equal(elements(tree, node => node.type === h.MapScoresGrid).length, 0);
     const board = elements(tree, node => node.type === h.LeaderboardPanel)[0];
     assert.deepEqual(board.props.leaderboard, qualifierLeaderboard);
     assert.equal(board.props.isTeamLeaderboard, true);
+    assert.equal(board.props.fullDetails, true);
     const query = new URL(h.requests[0], 'https://example.com').searchParams;
     assert.equal(query.get('tournament_name'), 'Cup');
     assert.equal(query.get('stage_name'), 'RO16');
     assert.equal(query.get('preview'), 'true');
-    const table = h.render(h.LeaderboardPanel, board.props);
+    const tableHarness = await harness();
+    const table = tableHarness.render(tableHarness.LeaderboardPanel, board.props);
     assert.match(content(table), /1 支队伍/);
     assert.ok(elements(table, node => node.type === 'th' && content(node).includes('队伍')).length);
     // Use a fresh harness so child-component hook state does not overlap the page.
     const page = await harness({qualifierLeaderboard});
     tree = page.render(page.StatsComp, props);
-    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'teams')[0].props.onSelectionChange('rating');
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rankings')[0].props.onSelectionChange('rating');
     tree = page.render(page.StatsComp, props);
     assert.match(content(tree), /个人 Rating 排名/);
     assert.notEqual(elements(tree, node => node.type === page.LeaderboardPanel)[0].props.isTeamLeaderboard, true);
 });
 
-test('switching from qualifier rankings to an elimination round falls back to map scores', async () => {
+test('switching from qualifier rankings to an elimination round shows individual details without the qualifier API', async () => {
     const h = await harness();
     const props = {roundInfo: [{...round, is_lobby: true}], stats: [], stage, scores, players, teams, ratingContext, isTeamTournament: true};
     let tree = h.render(h.StatsComp, props);
-    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'teams')[0].props.onSelectionChange('teams');
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rankings')[0].props.onSelectionChange('rankings');
+    const requestsBefore = h.requests.length;
     tree = h.render(h.StatsComp, {...props, roundInfo: [round]});
-    assert.equal(elements(tree, node => node.type === Tabs.Tab && node.props.id === 'teams').length, 0);
-    assert.equal(elements(tree, node => node.type === h.MapScoresGrid).length, 1);
+    assert.match(content(tree), /个人排名明细/);
+    assert.equal(h.requests.length, requestsBefore);
+    const board = elements(tree, node => node.type === h.LeaderboardPanel)[0];
+    assert.equal(board.props.isTeamLeaderboard, false);
+    assert.equal(board.props.fullDetails, true);
 });
 
 test('qualifier standings always show every map rank and score and support per-map sorting', async () => {
@@ -156,9 +166,18 @@ test('map ranking defaults to team totals and switches to individual scores', as
     assert.equal(elements(tree, node => node.type === h.SingleMapCard)[0].props.showTeams, false);
 });
 
-test('solo qualifiers in a team event retain individual map scores', async () => {
-    const h = await harness();
-    const tree = h.render(h.StatsComp, {roundInfo: [{...round, is_solo_qualifier: true}], stats: [], stage, scores, players, teams, isTeamTournament: true});
+test('solo qualifiers retain their original standings independently from personal Rating and team scores', async () => {
+    const qualifierLeaderboard = [{name: 'Alice', Rating: 2, 'NM 1': 1, 'NM 1 成绩': 100}];
+    const h = await harness({qualifierLeaderboard});
+    const props = {roundInfo: [{...round, is_lobby: true, is_solo_qualifier: true}], stats: [], stage, scores, players, teams, isTeamTournament: true};
+    let tree = h.render(h.StatsComp, props);
+    assert.match(content(tree), /资格赛排名/);
+    const board = elements(tree, node => node.type === h.LeaderboardPanel)[0];
+    assert.deepEqual(board.props.leaderboard, qualifierLeaderboard);
+    assert.equal(board.props.isTeamLeaderboard, false);
+    assert.equal(board.props.fullDetails, true);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rankings')[0].props.onSelectionChange('maps');
+    tree = h.render(h.StatsComp, props);
     const grid = elements(tree, node => node.type === h.MapScoresGrid)[0];
     assert.equal(grid.props.isTeamRound, false);
     const gridTree = h.render(h.MapScoresGrid, grid.props);
@@ -194,16 +213,16 @@ test('all maps remain visible in both team and individual score views', async ()
     assert.ok(cards(tree).every(card => !card.props.showTeams));
 });
 
-test('personal Rating hides per-map columns until requested', async () => {
+test('personal Rating summary and the separate details view have distinct columns without an inline toggle', async () => {
     const h = await harness();
     const props = {leaderboard: [{name: 'Alice', Rating: 1, '出场局数': 2, '平均排名': 1, '平均分数': 100, 'NM 1': 1, 'NM 1 平均成绩': 100}]};
     let tree = h.render(h.LeaderboardPanel, props);
     assert.equal(elements(tree, node => node.type === 'th').length, 6);
     assert.match(content(tree), /出场局数/);
-    elements(tree, node => node.type === Button)[0].props.onPress();
-    tree = h.render(h.LeaderboardPanel, props);
+    assert.equal(elements(tree, node => node.type === Button).length, 0);
+    tree = h.render(h.LeaderboardPanel, {...props, fullDetails: true});
     assert.equal(elements(tree, node => node.type === 'th').length, 8);
-    assert.match(content(tree), /收起单图明细/);
+    assert.equal(elements(tree, node => node.type === Button).length, 0);
 });
 
 test('personal Rating table sorts by Rating descending with full precision', async () => {

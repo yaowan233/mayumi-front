@@ -1,6 +1,6 @@
 "use client"
 
-import {Avatar, Button, Card, Chip, Spinner, Tabs} from "@heroui/react";
+import {Avatar, Card, Chip, Spinner, Tabs} from "@heroui/react";
 import React, {useMemo, useState, useTransition} from "react";
 import useSWR from "swr";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
@@ -81,17 +81,18 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     [roundInfo, stats, scores, requestedStage]);
     const currentStageName = currentRound?.stage_name;
     const isTeamRound = isTeamTournament && !currentRound?.is_solo_qualifier;
-    const isTeamQualifier = Boolean(isTeamRound && currentRound?.is_lobby);
-    const section = selectedSection === "teams" && !isTeamQualifier ? "maps" : selectedSection ?? (isTeamQualifier ? "teams" : "maps");
+    const isQualifier = Boolean(currentRound?.is_lobby || currentRound?.is_solo_qualifier);
+    const section = selectedSection ?? (isQualifier ? "rankings" : "maps");
+    const rankingsTitle = isQualifier ? (isTeamRound ? "资格赛队伍排名" : "资格赛排名") : "个人排名明细";
     const contextQuery = new URLSearchParams({tournament_name: currentRound?.tournament_name ?? "", stage_name: currentStageName ?? ""});
     if (preview) contextQuery.set("preview", "true");
     const {data: fetchedContext, error: contextError, isLoading: contextLoading} = useSWR<RatingMatchContext>(
-        !ratingContext && section === "rating" && currentStageName ? `${siteConfig.backend_url}/api/statistics-rating-context?${contextQuery}` : null,
+        !ratingContext && (section === "rating" || (section === "rankings" && !isQualifier)) && currentStageName ? `${siteConfig.backend_url}/api/statistics-rating-context?${contextQuery}` : null,
         url => requestDraw<RatingMatchContext>(url), {revalidateOnFocus: false},
     );
     const activeContext = ratingContext ?? fetchedContext;
     const {data: qualifierLeaderboard, error: qualifierError, isLoading: qualifierLoading} = useSWR<LeaderboardRow[]>(
-        isTeamQualifier && section === "teams" ? `${siteConfig.backend_url}/api/cal_rank?${contextQuery}` : null,
+        isQualifier && section === "rankings" ? `${siteConfig.backend_url}/api/cal_rank?${contextQuery}` : null,
         async url => parseLeaderboardResponse(await requestDraw<unknown>(url)), {revalidateOnFocus: false},
     );
     const personalRating = useMemo(() => {
@@ -99,6 +100,9 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
             bracket.maps.map((map, index) => ({map_id: map.map_id, mod: bracket.mod, number: map.number ?? index + 1}))) ?? [];
         return buildPersonalRating(scores, players ?? [], currentStageName ?? "", maps, activeContext);
     }, [scores, players, stage, currentStageName, activeContext]);
+    const rankings = isQualifier ? qualifierLeaderboard ?? [] : personalRating;
+    const rankingsLoading = isQualifier ? qualifierLoading : contextLoading;
+    const rankingsError = isQualifier ? qualifierError : contextError;
 
     return (
         <div className="w-full flex flex-col gap-6">
@@ -162,20 +166,20 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                     className={`flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
                 >
                     <Tabs selectedKey={section} onSelectionChange={key => setSection(String(key))} className="w-full">
-                        <Tabs.ListContainer><Tabs.List aria-label="统计内容">
-                            {isTeamQualifier && <Tabs.Tab id="teams">队伍排名<Tabs.Indicator/></Tabs.Tab>}
+                        <Tabs.ListContainer className="max-w-full overflow-x-auto"><Tabs.List aria-label="统计内容" className="min-w-max">
+                            <Tabs.Tab id="rankings">{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="maps">单图成绩<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="rating">个人 Rating<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="stats">图池统计<Tabs.Indicator/></Tabs.Tab>
                         </Tabs.List></Tabs.ListContainer>
-                    {isTeamQualifier && <Tabs.Panel id="teams" className="pt-4">
-                    {section === "teams" && <div className="flex flex-col gap-4">
-                        <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">资格赛队伍排名</h2>
-                        {qualifierLoading ? <Spinner aria-label="正在加载队伍排名"/> : qualifierError
-                            ? <p role="alert" className="text-sm text-danger">{qualifierError.message}</p>
-                            : <LeaderboardPanel key={`${currentRound.stage_name}:teams`} leaderboard={qualifierLeaderboard ?? []} isTeamLeaderboard/>}
+                    <Tabs.Panel id="rankings" className="pt-4">
+                    {section === "rankings" && <div className="flex flex-col gap-4">
+                        <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">{rankingsTitle}</h2>
+                        {rankingsLoading ? <Spinner aria-label="正在加载排名"/> : rankingsError
+                            ? <p role="alert" className="text-sm text-danger">{rankingsError.message}</p>
+                            : <LeaderboardPanel key={`${currentRound.stage_name}:rankings`} leaderboard={rankings} isTeamLeaderboard={isQualifier && isTeamRound} fullDetails label={rankingsTitle}/>}
                     </div>}
-                    </Tabs.Panel>}
+                    </Tabs.Panel>
                     <Tabs.Panel id="rating" className="pt-4">
                     {section === "rating" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">个人 Rating 排名</h2>
@@ -237,8 +241,9 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     )
 }
 
-const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false}: {leaderboard: LeaderboardRow[], isTeamLeaderboard?: boolean}) => {
-    const [showMapDetails, setShowMapDetails] = useState(false);
+const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails = false, label}: {
+    leaderboard: LeaderboardRow[], isTeamLeaderboard?: boolean, fullDetails?: boolean, label?: string,
+}) => {
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
         column: "Rating",
         direction: "descending",
@@ -325,9 +330,9 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false}: {leaderboard
     const columns = useMemo(() => {
         if (leaderboard.length === 0) return [];
         // 获取所有键，排除原始数据可能存在的 '#'（为了避免冲突或重复），然后手动把 '#' 加到最前面
-        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#' && (isTeamLeaderboard || showMapDetails || ["name", "Rating", "状态", "出场局数", "比赛场数", "平均排名", "平均分数"].includes(k)));
+        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#' && (isTeamLeaderboard || fullDetails || ["name", "Rating", "状态", "出场局数", "比赛场数", "平均排名", "平均分数"].includes(k)));
         return ['#', ...rawKeys];
-    }, [leaderboard, showMapDetails, isTeamLeaderboard]);
+    }, [leaderboard, fullDetails, isTeamLeaderboard]);
 
     const getCellStyle = (columnKey: string, value: any) => {
         if (columnKey === 'NAME' || columnKey === '#') return "";
@@ -347,12 +352,8 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false}: {leaderboard
         <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-default-500">{leaderboard.length} {isTeamLeaderboard ? "支队伍" : "名选手"}</span>
-            {!isTeamLeaderboard && <Button size="sm" variant="secondary" onPress={() => {
-                setShowMapDetails(!showMapDetails);
-                setSortDescriptor({column: "Rating", direction: "descending"});
-            }}>{showMapDetails ? "收起单图明细" : "显示单图明细"}</Button>}
         </div>
-        <div role="region" aria-label={isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名"} tabIndex={0} className="max-h-[60vh] min-h-[200px] overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
+        <div role="region" aria-label={label ?? (isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名")} tabIndex={0} className="max-h-[60vh] min-h-[200px] overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
             <table className="w-full border-collapse text-sm">
                 <thead className="sticky top-0 z-10">
                 <tr>
