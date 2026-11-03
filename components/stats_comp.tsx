@@ -325,9 +325,9 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false}: {leaderboard
     const columns = useMemo(() => {
         if (leaderboard.length === 0) return [];
         // 获取所有键，排除原始数据可能存在的 '#'（为了避免冲突或重复），然后手动把 '#' 加到最前面
-        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#' && (showMapDetails || ["name", "Rating", "状态", "出场局数", "比赛场数", "平均排名", "平均分数"].includes(k)));
+        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#' && (isTeamLeaderboard || showMapDetails || ["name", "Rating", "状态", "出场局数", "比赛场数", "平均排名", "平均分数"].includes(k)));
         return ['#', ...rawKeys];
-    }, [leaderboard, showMapDetails]);
+    }, [leaderboard, showMapDetails, isTeamLeaderboard]);
 
     const getCellStyle = (columnKey: string, value: any) => {
         if (columnKey === 'NAME' || columnKey === '#') return "";
@@ -347,10 +347,10 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false}: {leaderboard
         <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-default-500">{leaderboard.length} {isTeamLeaderboard ? "支队伍" : "名选手"}</span>
-            <Button size="sm" variant="secondary" onPress={() => {
+            {!isTeamLeaderboard && <Button size="sm" variant="secondary" onPress={() => {
                 setShowMapDetails(!showMapDetails);
                 setSortDescriptor({column: "Rating", direction: "descending"});
-            }}>{showMapDetails ? "收起单图明细" : "显示单图明细"}</Button>
+            }}>{showMapDetails ? "收起单图明细" : "显示单图明细"}</Button>}
         </div>
         <div role="region" aria-label={isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名"} tabIndex={0} className="max-h-[60vh] min-h-[200px] overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
             <table className="w-full border-collapse text-sm">

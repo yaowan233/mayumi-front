@@ -126,6 +126,24 @@ test('switching from qualifier rankings to an elimination round falls back to ma
     assert.equal(elements(tree, node => node.type === h.MapScoresGrid).length, 1);
 });
 
+test('qualifier standings always show every map rank and score and support per-map sorting', async () => {
+    const h = await harness();
+    const props = {isTeamLeaderboard: true, leaderboard: [
+        {name: 'Team A', Rating: 2.5, '平均排名': 1.5, '平均分数': 190, 'NM 1': 2, 'NM 1 成绩': 180, 'HD 1': 1, 'HD 1 成绩': 200},
+        {name: 'Team B', Rating: 2, '平均排名': 1.5, '平均分数': 190, 'NM 1': 1, 'NM 1 成绩': 200, 'HD 1': 2, 'HD 1 成绩': 180},
+    ]};
+    let tree = h.render(h.LeaderboardPanel, props);
+    const headings = elements(tree, node => node.type === 'th').map(content);
+    for (const name of ['NM 1', 'NM 1 成绩', 'HD 1', 'HD 1 成绩']) assert.ok(headings.includes(name), `missing qualifier column: ${name}`);
+    assert.equal(elements(tree, node => node.type === Button).length, 0);
+    elements(tree, node => node.type === 'th' && content(node) === 'NM 1')[0].props.onClick();
+    tree = h.render(h.LeaderboardPanel, props);
+    assert.match(content(elements(tree, node => node.type === 'tbody')[0].props.children[0]), /Team B/);
+    elements(tree, node => node.type === 'th' && content(node) === 'HD 1 成绩')[0].props.onClick();
+    tree = h.render(h.LeaderboardPanel, props);
+    assert.match(content(elements(tree, node => node.type === 'tbody')[0].props.children[0]), /Team A/);
+});
+
 test('map ranking defaults to team totals and switches to individual scores', async () => {
     const h = await harness();
     const props = {stage, round, scores, players, teams, isTeamRound: true};
