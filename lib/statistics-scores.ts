@@ -15,6 +15,7 @@ type RatingMap = {map_id: string | number; mod: string; number: string | number}
 export type RatingMatchContext = {
     links: {player: string; map_id: string | number; start_time: string; match_id: string; game_id: string}[];
     matches: {match_id: string; mean_maps_played: number}[];
+    leaderboard?: Record<string, string | number>[];
 };
 
 export const MIN_RATING_MAPS = 3;

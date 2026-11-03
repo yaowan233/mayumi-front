@@ -32,12 +32,19 @@ function content(node) {
     if (!React.isValidElement(node)) return typeof node === 'string' || typeof node === 'number' ? String(node) : '';
     return React.Children.toArray(node.props.children).map(content).join('');
 }
-async function harness({qualifierLeaderboard = []} = {}) {
+async function harness({qualifierLeaderboard = [], deferNavigation = false, contextResult = {}, qualifierLoading = false} = {}) {
     const statistics = await import('../lib/statistics-scores.ts');
     const {getStatisticsRoundSelection} = await import('../lib/statistics-rounds.ts');
     const values = []; let index = 0;
     const requests = [];
+    const requestKeys = [];
     const searchParams = new URLSearchParams();
+    const navigations = [];
+    const updateQuery = query => {
+        for (const key of [...searchParams.keys()]) searchParams.delete(key);
+        for (const [key, value] of new URLSearchParams(query.slice(1))) searchParams.set(key, value);
+    };
+    const browser = {history: {replaceState(_state, _unused, query) {navigations.push({type: 'history', query}); updateQuery(query);}}};
     const mocks = {
         react: {useMemo: fn => fn(), useTransition: () => [false, fn => fn()], useState(initial) {
             const position = index++;
@@ -47,8 +54,8 @@ async function harness({qualifierLeaderboard = []} = {}) {
         'react/jsx-runtime': require('react/jsx-runtime'),
         '@heroui/react': {Card, Tabs, Avatar, Button, Chip: component(), Spinner: component()},
         'next/navigation': {useSearchParams: () => searchParams, useRouter: () => ({replace(query) {
-            for (const key of [...searchParams.keys()]) searchParams.delete(key);
-            for (const [key, value] of new URLSearchParams(query.slice(1))) searchParams.set(key, value);
+            navigations.push({type: 'server', query});
+            if (!deferNavigation) updateQuery(query);
         }})},
         '@/lib/statistics-rounds': {getStatisticsRoundSelection},
         '@/lib/statistics-scores': statistics,
@@ -57,16 +64,57 @@ async function harness({qualifierLeaderboard = []} = {}) {
         '@/config/site': {siteConfig: {backend_url: ''}},
         '@/lib/tournament_draw': {requestDraw: () => {throw new Error('Unexpected request');}},
         '@/components/rating_formula': {RatingFormula},
-        swr: key => {
-            if (key) requests.push(key);
-            return key?.includes('/cal_rank?') ? {data: qualifierLeaderboard} : {};
+        swr: (key, _fetcher, options) => {
+            const url = Array.isArray(key) ? key[0] : key;
+            if (url) {requests.push(url); requestKeys.push({key, options});}
+            return url?.includes('/cal_rank?') ? {data: qualifierLeaderboard, isLoading: qualifierLoading} : key ? contextResult : {};
         },
     };
     const exports = {};
-    new Function('require', 'exports', `${compiled}\nObject.assign(exports, {MapScoresGrid, SingleMapCard, TeamMapScores, LeaderboardPanel});`)(
-        name => {if (!(name in mocks)) throw new Error(`Unexpected import: ${name}`); return mocks[name];}, exports);
-    return {...exports, requests, searchParams, render: (fn, props) => {index = 0; return fn(props);}};
+    new Function('require', 'exports', 'window', `${compiled}\nObject.assign(exports, {MapScoresGrid, SingleMapCard, TeamMapScores, LeaderboardPanel});`)(
+        name => {if (!(name in mocks)) throw new Error(`Unexpected import: ${name}`); return mocks[name];}, exports, browser);
+    return {...exports, requests, requestKeys, searchParams, navigations, render: (fn, props) => {index = 0; return fn(props);}};
 }
+
+test('round tab switches immediately from already loaded data without waiting for server navigation', async () => {
+    const h = await harness({deferNavigation: true});
+    const next = {...round, stage_name: 'QF'};
+    const props = {roundInfo: [round, next], stats: [], stage, scores: [...scores, ...scores.map(score => ({...score, stage_name: 'QF'}))], players, teams, ratingContext};
+    h.searchParams.set('stage', 'RO16');
+    let tree = h.render(h.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'RO16')[0].props.onSelectionChange('QF');
+    tree = h.render(h.StatsComp, props);
+    assert.ok(elements(tree, node => node.type === Tabs && node.props.selectedKey === 'QF').length, 'selected round must update without a server response');
+    assert.equal(h.navigations.some(navigation => navigation.type === 'server'), false);
+});
+
+test('available map ranking rows remain visible while MP association data is loading', async () => {
+    const h = await harness({contextResult: {isLoading: true}});
+    const props = {roundInfo: [round], stats: [], stage, scores, players, teams};
+    let tree = h.render(h.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'maps')[0].props.onSelectionChange('rankings');
+    tree = h.render(h.StatsComp, props);
+    const board = elements(tree, node => node.type === h.LeaderboardPanel)[0];
+    assert.ok(board, 'already loaded score rows must not be replaced by a loading spinner');
+    assert.equal(board.props.leaderboard.length, 2);
+});
+
+test('tabs reuse server-calculated Rating rows and invalidate request keys when score data changes', async () => {
+    const leaderboard = [{name: 'Server result', Rating: 1.2345, '出场局数': 8}];
+    const h = await harness({contextResult: {data: {...ratingContext, leaderboard}}});
+    const props = {roundInfo: [round], stats: [], stage, scores, players, teams};
+    let tree = h.render(h.StatsComp, props);
+    elements(tree, node => node.type === Tabs && node.props.selectedKey === 'maps')[0].props.onSelectionChange('rating');
+    tree = h.render(h.StatsComp, props);
+    assert.equal(elements(tree, node => node.type === h.LeaderboardPanel)[0].props.leaderboard, leaderboard);
+    const before = h.requestKeys.at(-1);
+    assert.equal(before.options.revalidateIfStale, false);
+    assert.equal(before.options.revalidateOnFocus, false);
+    const updatedScores = scores.map((score, i) => i ? score : {...score, score: 101});
+    h.render(h.StatsComp, {...props, scores: updatedScores});
+    assert.equal(h.requestKeys.at(-1).key[1], updatedScores);
+    assert.notDeepEqual(h.requestKeys.at(-1).key, before.key);
+});
 
 test('statistics shows only the selected section and has a separate personal Rating tab', async () => {
     const h = await harness();

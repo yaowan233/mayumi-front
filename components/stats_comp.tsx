@@ -1,11 +1,11 @@
 "use client"
 
 import {Avatar, Card, Chip, Spinner, Tabs} from "@heroui/react";
-import React, {useMemo, useState, useTransition} from "react";
+import React, {useMemo, useState} from "react";
 import useSWR from "swr";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
-import {useRouter, useSearchParams} from "next/navigation";
+import {useSearchParams} from "next/navigation";
 import {Player, Team} from "@/app/tournaments/[tournament]/participants/page";
 import {parseLeaderboardResponse, type LeaderboardRow} from "@/lib/leaderboard-response";
 import {getStatisticsRoundSelection} from "@/lib/statistics-rounds";
@@ -21,6 +21,10 @@ type SortDescriptor = {
 };
 
 const getKeyValue = (item: any, key: React.Key) => item?.[key as keyof typeof item];
+const STATS_TAB_CLASS = "!h-11 !w-auto shrink-0 whitespace-nowrap !px-3 text-sm font-medium text-default-500 data-[selected=true]:text-primary";
+const STATS_HEADING_CLASS = "text-xl font-semibold tracking-tight text-foreground";
+const STATS_CACHE_OPTIONS = {revalidateOnFocus: false, revalidateOnReconnect: false, revalidateIfStale: false};
+const STATS_TABLE_HEADER_CLASS = "whitespace-nowrap bg-default-100 px-3 py-3 text-xs font-semibold text-default-600";
 
 // --- 常量与辅助函数 ---
 
@@ -72,8 +76,6 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     isTeamTournament?: boolean,
 }) => {
     const searchParams = useSearchParams();
-    const router = useRouter();
-    const [isPending, startTransition] = useTransition();
     const [selectedSection, setSection] = useState<{stageName: string | undefined; section: string} | null>(null);
     const requestedStage = searchParams.get('stage');
     const {visibleRounds, currentRound} = useMemo(() =>
@@ -88,15 +90,17 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     const contextQuery = new URLSearchParams({tournament_name: currentRound?.tournament_name ?? "", stage_name: currentStageName ?? ""});
     if (preview) contextQuery.set("preview", "true");
     const {data: fetchedContext, error: contextError, isLoading: contextLoading} = useSWR<RatingMatchContext>(
-        !ratingContext && (section === "rating" || (section === "rankings" && !isQualifier)) && currentStageName ? `${siteConfig.backend_url}/api/statistics-rating-context?${contextQuery}` : null,
-        url => requestDraw<RatingMatchContext>(url), {revalidateOnFocus: false},
+        !ratingContext && (section === "rating" || (section === "rankings" && !isQualifier)) && currentStageName
+            ? [`${siteConfig.backend_url}/api/statistics-rating-context?${contextQuery}`, scores, stage, players, teams] as const : null,
+        ([url]) => requestDraw<RatingMatchContext>(url), STATS_CACHE_OPTIONS,
     );
     const activeContext = ratingContext ?? fetchedContext;
     const {data: qualifierLeaderboard, error: qualifierError, isLoading: qualifierLoading} = useSWR<LeaderboardRow[]>(
-        isQualifier && section === "rankings" ? `${siteConfig.backend_url}/api/cal_rank?${contextQuery}` : null,
-        async url => parseLeaderboardResponse(await requestDraw<unknown>(url)), {revalidateOnFocus: false},
+        isQualifier && section === "rankings" ? [`${siteConfig.backend_url}/api/cal_rank?${contextQuery}`, scores, stage, players, teams] as const : null,
+        async ([url]) => parseLeaderboardResponse(await requestDraw<unknown>(url)), STATS_CACHE_OPTIONS,
     );
     const personalRating = useMemo(() => {
+        if (activeContext?.leaderboard) return activeContext.leaderboard;
         const maps = stage.find(item => item.stage_name === currentStageName)?.mod_bracket.flatMap(bracket =>
             bracket.maps.map((map, index) => ({map_id: map.map_id, mod: bracket.mod, number: map.number ?? index + 1}))) ?? [];
         return buildPersonalRating(scores, players ?? [], currentStageName ?? "", maps, activeContext);
@@ -106,7 +110,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     const rankingsError = isQualifier ? qualifierError : contextError;
 
     return (
-        <div className="flex w-full min-w-0 flex-col gap-6">
+        <div className="flex w-full min-w-0 flex-col gap-4">
 
             {preview && (
                 <div className="mx-auto mt-4 flex w-[calc(100%-2rem)] max-w-5xl items-start gap-3 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-700 dark:text-warning-300">
@@ -119,29 +123,28 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
             )}
 
             {/* 1. Tabs 区域 */}
-            {visibleRounds.length > 0 && <div className="w-full">
+            {visibleRounds.length > 0 && <div className="mx-auto w-full min-w-0 max-w-[1400px] px-4">
                 <Tabs
-                    className="w-full"
+                    variant="secondary"
+                    className="w-full min-w-0"
                     selectedKey={currentStageName}
                     onSelectionChange={(key) => {
                         if (String(key) === currentStageName) return;
                         setSection(null);
                         const query = new URLSearchParams(searchParams.toString());
                         query.set("stage", String(key));
-                        startTransition(() => {
-                            router.replace(`?${query.toString()}`, {scroll: false});
-                        });
+                        window.history.replaceState(null, "", `?${query.toString()}`);
                     }}
                 >
-                    <Tabs.ListContainer className="w-full !rounded-none border-b border-zinc-200 !bg-transparent dark:border-white/[0.08]">
+                    <Tabs.ListContainer className="mx-auto w-fit max-w-full">
                         <Tabs.List
                             aria-label="Round Selection"
-                            className="mx-auto !w-max !min-w-full max-w-5xl justify-start gap-6 !rounded-none !bg-transparent !px-6 !py-0 md:justify-center md:!px-0"
+                            className="!w-max !min-w-0 gap-2"
                         >
                             {visibleRounds.map((round) => (
-                                <Tabs.Tab key={round.stage_name} id={round.stage_name} className="!h-12 !w-auto max-w-none shrink-0 !rounded-md !bg-transparent !px-1 text-lg font-bold text-zinc-500 transition-all duration-150 hover:text-zinc-900 active:scale-95 data-[selected=true]:text-primary data-[selected=true]:hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/60 dark:hover:text-zinc-100 dark:data-[selected=true]:hover:text-primary">
+                                <Tabs.Tab key={round.stage_name} id={round.stage_name} className={STATS_TAB_CLASS}>
                                     {round.stage_name}
-                                    <Tabs.Indicator className="!inset-x-0 !top-auto !bottom-0 !h-0.5 !rounded-full !bg-primary" />
+                                    <Tabs.Indicator/>
                                 </Tabs.Tab>
                             ))}
                         </Tabs.List>
@@ -150,12 +153,6 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
             </div>}
 
             {/* 2. 内容区域 */}
-            {isPending && (
-                <div role="status" className="flex items-center justify-center gap-2 text-sm text-default-500">
-                    <Spinner size="sm" aria-hidden="true" />
-                    <span>正在加载轮次数据…</span>
-                </div>
-            )}
             {!currentRound && (
                 <div role="status" className="flex min-h-[40vh] items-center justify-center px-4 text-default-400">
                     暂无统计数据
@@ -163,28 +160,28 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
             )}
             {currentRound && (
                 <div
-                    aria-busy={isPending}
-                    inert={isPending}
-                    className={`mx-auto flex w-full min-w-0 max-w-[1400px] flex-col gap-8 px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
+                    className="mx-auto flex w-full min-w-0 max-w-[1400px] flex-col gap-6 px-4"
                 >
-                    <Tabs selectedKey={section} onSelectionChange={key => setSection({stageName: currentStageName, section: String(key)})} className="w-full min-w-0">
-                        <Tabs.ListContainer className="mx-auto w-fit max-w-full"><Tabs.List aria-label="统计内容" className="!w-max !min-w-0 gap-1">
-                            <Tabs.Tab id="rankings" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
-                            <Tabs.Tab id="maps" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">单图成绩<Tabs.Indicator/></Tabs.Tab>
-                            <Tabs.Tab id="rating" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">个人 Rating<Tabs.Indicator/></Tabs.Tab>
-                            <Tabs.Tab id="stats" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">图池统计<Tabs.Indicator/></Tabs.Tab>
+                    <Tabs variant="secondary" selectedKey={section} onSelectionChange={key => setSection({stageName: currentStageName, section: String(key)})} className="w-full min-w-0">
+                        <Tabs.ListContainer className="mx-auto w-fit max-w-full"><Tabs.List aria-label="统计内容" className="!w-max !min-w-0 gap-2">
+                            <Tabs.Tab id="rankings" className={STATS_TAB_CLASS}>{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="maps" className={STATS_TAB_CLASS}>单图成绩<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="rating" className={STATS_TAB_CLASS}>个人 Rating<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="stats" className={STATS_TAB_CLASS}>图池统计<Tabs.Indicator/></Tabs.Tab>
                         </Tabs.List></Tabs.ListContainer>
-                    <Tabs.Panel id="rankings" className="min-w-0 !px-0 pt-4">
+                    <Tabs.Panel id="rankings" className="min-w-0 !p-0 !mt-5">
                     {section === "rankings" && <div className="flex flex-col gap-4">
-                        <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">{rankingsTitle}</h2>
-                        {rankingsLoading ? <Spinner aria-label="正在加载排名"/> : rankingsError
-                            ? <p role="alert" className="text-sm text-danger">{rankingsError.message}</p>
+                        <div className="flex items-center gap-3"><h2 className={STATS_HEADING_CLASS}>{rankingsTitle}</h2>
+                            {rankingsLoading && <Spinner size="sm" aria-label="正在更新排名"/>}</div>
+                        {rankingsError && <p role="alert" className="text-sm text-danger">{rankingsError.message}</p>}
+                        {isQualifier && rankingsLoading && rankings.length === 0 ? <Spinner aria-label="正在加载资格赛排名"/>
                             : <LeaderboardPanel key={`${currentRound.stage_name}:rankings`} leaderboard={rankings} isTeamLeaderboard={isQualifier && isTeamRound} fullDetails label={rankingsTitle}/>}
                     </div>}
                     </Tabs.Panel>
-                    <Tabs.Panel id="rating" className="min-w-0 !px-0 pt-4">
+                    <Tabs.Panel id="rating" className="min-w-0 !p-0 !mt-5">
                     {section === "rating" && <div className="flex flex-col gap-4">
-                        <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">个人 Rating 排名</h2>
+                        <div className="flex items-center gap-3"><h2 className={STATS_HEADING_CLASS}>个人 Rating 排名</h2>
+                            {contextLoading && <Spinner size="sm" aria-label="正在更新 Rating"/>}</div>
                         <details className="rounded-lg border border-default-200 bg-default-50 text-sm">
                             <summary className="cursor-pointer px-4 py-3 font-medium text-default-700">Rating 计算公式</summary>
                             <div className="flex flex-col gap-4 border-t border-default-200 p-4 leading-relaxed text-default-600">
@@ -209,22 +206,21 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                                 </ul>
                             </div>
                         </details>
-                        {contextLoading ? <Spinner aria-label="正在关联比赛数据"/> : contextError
-                            ? <p role="alert" className="text-sm text-danger">{contextError.message}</p>
-                            : <LeaderboardPanel key={currentRound.stage_name} leaderboard={personalRating} />}
+                        {contextError && <p role="alert" className="text-sm text-danger">{contextError.message}</p>}
+                        <LeaderboardPanel key={currentRound.stage_name} leaderboard={personalRating} />
                     </div>}
                     </Tabs.Panel>
 
-                    <Tabs.Panel id="stats" className="min-w-0 !px-0 pt-4">
+                    <Tabs.Panel id="stats" className="min-w-0 !p-0 !mt-5">
                     {section === "stats" && <div className="flex flex-col gap-4">
-                        <h2 className="text-2xl font-bold px-2 border-l-4 border-secondary">图池数据统计</h2>
+                        <h2 className={STATS_HEADING_CLASS}>图池数据统计</h2>
                         <StatsTable stats={stats} stageName={currentRound.stage_name} />
                     </div>}
                     </Tabs.Panel>
 
-                    <Tabs.Panel id="maps" className="min-w-0 !px-0 pt-4">
+                    <Tabs.Panel id="maps" className="min-w-0 !p-0 !mt-5">
                     {section === "maps" && <div className="flex flex-col gap-4">
-                        <h2 className="text-2xl font-bold px-2 border-l-4 border-warning">单图成绩排行</h2>
+                        <h2 className={STATS_HEADING_CLASS}>单图成绩排行</h2>
                         <MapScoresGrid
                             key={`${currentRound.stage_name}:${isTeamRound}`}
                             stage={stage}
@@ -342,9 +338,9 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
         if (isNaN(numericVal) || !top3Data[columnKey]) return "";
         const rankIndex = top3Data[columnKey].indexOf(numericVal);
 
-        if (rankIndex === 0) return "text-yellow-600 dark:text-yellow-400 font-black dark:drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]";
-        if (rankIndex === 1) return "text-zinc-500 dark:text-white font-extrabold dark:drop-shadow-[0_0_3px_rgba(255,255,255,0.3)]";
-        if (rankIndex === 2) return "text-orange-600 dark:text-orange-400 font-bold";
+        if (rankIndex === 0) return "font-semibold text-yellow-600 dark:text-yellow-400";
+        if (rankIndex === 1) return "font-semibold text-zinc-500 dark:text-zinc-300";
+        if (rankIndex === 2) return "font-semibold text-orange-600 dark:text-orange-400";
         return "";
     };
 
@@ -366,7 +362,7 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
                             <th
                                 key={column}
                                 scope="col"
-                                className={`whitespace-nowrap bg-default-100 px-3 py-3 text-xs font-semibold text-default-600 ${column === '#' ? "sticky left-0 z-30 w-10 min-w-10 text-center sm:w-14 sm:min-w-14" : column === 'name' ? "sticky left-10 z-30 w-36 min-w-36 max-w-36 text-left sm:left-14 sm:w-48 sm:min-w-48 sm:max-w-48" : "text-right"} ${sortable ? "cursor-pointer hover:text-default-900" : ""}`}
+                                className={`${STATS_TABLE_HEADER_CLASS} ${column === '#' ? "sticky left-0 z-30 w-10 min-w-10 text-center sm:w-14 sm:min-w-14" : column === 'name' ? "sticky left-10 z-30 w-36 min-w-36 max-w-36 text-left sm:left-14 sm:w-48 sm:min-w-48 sm:max-w-48" : "text-right"} ${sortable ? "cursor-pointer hover:text-default-900" : ""}`}
                                 onClick={() => {
                                     if (!sortable) return;
                                     handleSortChange({
@@ -415,12 +411,12 @@ const StatsTable = ({ stats, stageName }: { stats: Stats[], stageName: string })
     const currentStats = useMemo(() => stats.filter(s => s.stage_name === stageName), [stats, stageName]);
 
     return (
-        <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
-            <table className="w-full border-collapse text-sm" aria-label="Map Stats">
+        <div className="min-w-0 max-w-full overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
+            <table className="w-full border-collapse text-sm tabular-nums" aria-label="Map Stats">
                 <thead>
                 <tr>
                     {STATS_COLUMNS.map((column) => (
-                        <th key={column.key} scope="col" className="whitespace-nowrap bg-default-100 px-4 py-3 text-left text-xs font-bold uppercase text-default-600">
+                        <th key={column.key} scope="col" className={`${STATS_TABLE_HEADER_CLASS} ${column.key === 'mod_name' ? 'text-left' : 'text-right'}`}>
                             {column.name}
                         </th>
                     ))}
@@ -436,19 +432,19 @@ const StatsTable = ({ stats, stageName }: { stats: Stats[], stageName: string })
                         {STATS_COLUMNS.map((column) => {
                             const val = getKeyValue(item, column.key);
                             if (["acc_max", "acc_min", "acc_avg"].includes(column.key)) {
-                                return <td key={column.key} className="whitespace-nowrap px-4 py-3">{val ? (val * 100).toFixed(2) + "%" : "-"}</td>;
+                                return <td key={column.key} className="whitespace-nowrap px-3 py-3 text-right">{val ? (val * 100).toFixed(2) + "%" : "-"}</td>;
                             }
                             if (["score_avg", "miss_avg"].includes(column.key)) {
-                                return <td key={column.key} className="whitespace-nowrap px-4 py-3">{typeof val === "number" ? val.toFixed(2) : "-"}</td>;
+                                return <td key={column.key} className="whitespace-nowrap px-3 py-3 text-right">{typeof val === "number" ? val.toFixed(2) : "-"}</td>;
                             }
                             if (column.key === "mod_name") {
                                 return (
-                                    <td key={column.key} className="whitespace-nowrap px-4 py-3">
+                                    <td key={column.key} className="whitespace-nowrap px-3 py-3">
                                         <Chip size="sm" color={getModColor(val).color} variant="soft">{val}</Chip>
                                     </td>
                                 );
                             }
-                            return <td key={column.key} className="whitespace-nowrap px-4 py-3">{val ?? "-"}</td>;
+                            return <td key={column.key} className="whitespace-nowrap px-3 py-3 text-right">{val ?? "-"}</td>;
                         })}
                     </tr>
                 ))}
