@@ -168,7 +168,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                     className={`mx-auto flex w-full min-w-0 max-w-[1400px] flex-col gap-8 px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
                 >
                     <Tabs selectedKey={section} onSelectionChange={key => setSection({stageName: currentStageName, section: String(key)})} className="w-full min-w-0">
-                        <Tabs.ListContainer className="w-fit max-w-full"><Tabs.List aria-label="统计内容" className="!w-max !min-w-0 gap-1">
+                        <Tabs.ListContainer className="mx-auto w-fit max-w-full"><Tabs.List aria-label="统计内容" className="!w-max !min-w-0 gap-1">
                             <Tabs.Tab id="rankings" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="maps" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">单图成绩<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="rating" className="!h-10 !w-auto shrink-0 whitespace-nowrap !px-4">个人 Rating<Tabs.Indicator/></Tabs.Tab>
