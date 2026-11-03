@@ -24,7 +24,7 @@ const getKeyValue = (item: any, key: React.Key) => item?.[key as keyof typeof it
 const STATS_TAB_CLASS = "!h-11 !w-auto shrink-0 whitespace-nowrap !px-3 text-sm font-medium text-default-500 data-[selected=true]:text-primary";
 const STATS_HEADING_CLASS = "text-xl font-semibold tracking-tight text-foreground";
 const STATS_CACHE_OPTIONS = {revalidateOnFocus: false, revalidateOnReconnect: false, revalidateIfStale: false};
-const STATS_TABLE_HEADER_CLASS = "whitespace-nowrap bg-default-100 px-3 py-3 text-xs font-semibold text-default-600";
+const STATS_TABLE_HEADER_CLASS = "whitespace-nowrap border-b border-zinc-200 bg-zinc-100 px-3 py-3 text-xs font-semibold text-default-600 dark:border-zinc-700 dark:bg-zinc-800";
 
 // --- 常量与辅助函数 ---
 
@@ -353,7 +353,7 @@ const LeaderboardPanel = ({leaderboard, isTeamLeaderboard = false, fullDetails =
         </div>
         <div role="region" aria-label={label ?? (isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名")} tabIndex={0} className="max-h-[60vh] min-h-[200px] min-w-0 max-w-full overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
             <table className="w-max min-w-full border-separate border-spacing-0 text-sm tabular-nums">
-                <thead className="sticky top-0 z-20">
+                <thead className="sticky top-0 z-20 bg-zinc-100 dark:bg-zinc-800">
                 <tr>
                     {columns.map((column) => {
                         const sortable = column !== "#";
