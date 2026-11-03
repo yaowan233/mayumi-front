@@ -5,6 +5,7 @@ import {TournamentPlayers} from "@/app/tournaments/[tournament]/participants/pag
 import {cookies} from "next/headers";
 import {TournamentLoadError} from "@/components/tournament_load_error";
 import {readStatisticsResponse, StatisticsRequestError} from "@/lib/statistics-response";
+import type {StatisticsScore as Score} from "@/lib/statistics-scores";
 
 
 export default async function StatsPage(props: {
@@ -43,6 +44,7 @@ export default async function StatsPage(props: {
             stage={stage ?? []}
             scores={scores ?? []}
             players={players?.players ?? []}
+            teams={players?.groups ?? []}
             isTeamTournament={Array.isArray(players?.groups)}
             preview={preview}
         />
@@ -104,16 +106,6 @@ interface Stats {
     miss_max?: number;
     miss_min?: number;
     miss_avg?: number;
-}
-
-interface Score {
-    tournament_name: string;
-    stage_name: string;
-    map_id: string;
-    player: string;
-    score: number;
-    acc: number;
-    mod: string[];
 }
 
 async function getRoundInfo(tournament_name: string): Promise<TournamentRoundInfo[]> {

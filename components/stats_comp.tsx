@@ -1,15 +1,19 @@
 "use client"
 
-import {LeaderboardSkeleton} from "@/components/page_skeleton";
-import {Avatar, Card, Chip, Spinner, Tabs} from "@heroui/react";
-import React, {useEffect, useMemo, useState, useTransition} from "react";
+import {Avatar, Button, Card, Chip, Spinner, Tabs} from "@heroui/react";
+import React, {useMemo, useState, useTransition} from "react";
+import useSWR from "swr";
 import {TournamentRoundInfo} from "@/app/(home)/tournament-management/[tournament]/round/page";
 import {Stage} from "@/components/mappools";
 import {useRouter, useSearchParams} from "next/navigation";
-import {Player} from "@/app/tournaments/[tournament]/participants/page";
-import {siteConfig} from "@/config/site";
-import {parseLeaderboardResponse, type LeaderboardRow} from "@/lib/leaderboard-response";
+import {Player, Team} from "@/app/tournaments/[tournament]/participants/page";
+import type {LeaderboardRow} from "@/lib/leaderboard-response";
 import {getStatisticsRoundSelection} from "@/lib/statistics-rounds";
+import {buildPersonalRating, buildTeamMapScores, MIN_RATING_MAPS, ratingStatusOrder, type RatingMatchContext, type StatisticsScore as Score, type TeamMapScore} from "@/lib/statistics-scores";
+import {formatLocalDateTime} from "@/lib/datetime";
+import {siteConfig} from "@/config/site";
+import {requestDraw} from "@/lib/tournament_draw";
+import {RatingFormula} from "@/components/rating_formula";
 
 type SortDescriptor = {
     column: React.Key;
@@ -56,24 +60,39 @@ const getModColor = (mod: string) => {
 
 // --- 主组件 ---
 
-export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = false, isTeamTournament = false}: {
+export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [], ratingContext, preview = false, isTeamTournament = false}: {
     roundInfo: TournamentRoundInfo[],
     stats: Stats[],
     stage: Stage[],
     scores: Score[],
     players?: Player[],
+    teams?: Team[],
+    ratingContext?: RatingMatchContext,
     preview?: boolean,
     isTeamTournament?: boolean,
 }) => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
+    const [section, setSection] = useState("maps");
     const requestedStage = searchParams.get('stage');
     const {visibleRounds, currentRound} = useMemo(() =>
         getStatisticsRoundSelection(roundInfo, stats, scores, requestedStage),
     [roundInfo, stats, scores, requestedStage]);
     const currentStageName = currentRound?.stage_name;
-    const isTeamLeaderboard = isTeamTournament && !currentRound?.is_solo_qualifier;
+    const isTeamRound = isTeamTournament && !currentRound?.is_solo_qualifier;
+    const contextQuery = new URLSearchParams({tournament_name: currentRound?.tournament_name ?? "", stage_name: currentStageName ?? ""});
+    if (preview) contextQuery.set("preview", "true");
+    const {data: fetchedContext, error: contextError, isLoading: contextLoading} = useSWR<RatingMatchContext>(
+        !ratingContext && section === "rating" && currentStageName ? `${siteConfig.backend_url}/api/statistics-rating-context?${contextQuery}` : null,
+        url => requestDraw<RatingMatchContext>(url), {revalidateOnFocus: false},
+    );
+    const activeContext = ratingContext ?? fetchedContext;
+    const personalRating = useMemo(() => {
+        const maps = stage.find(item => item.stage_name === currentStageName)?.mod_bracket.flatMap(bracket =>
+            bracket.maps.map((map, index) => ({map_id: map.map_id, mod: bracket.mod, number: map.number ?? index + 1}))) ?? [];
+        return buildPersonalRating(scores, players ?? [], currentStageName ?? "", maps, activeContext);
+    }, [scores, players, stage, currentStageName, activeContext]);
 
     return (
         <div className="w-full flex flex-col gap-6">
@@ -136,85 +155,79 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, preview = f
                     inert={isPending}
                     className={`flex flex-col gap-8 w-full max-w-[1400px] mx-auto px-4 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}
                 >
-                    {(isTeamLeaderboard || currentRound.is_lobby || currentRound.is_solo_qualifier) && (
-                        <div className="flex flex-col gap-4">
-                            <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">{isTeamLeaderboard ? "队伍排行榜" : "总排行榜"}</h2>
-                            {isTeamLeaderboard && (
-                                <p className="px-2 text-sm text-default-500">同队同局成绩相加，每图取最高局分。Rating 为各图成绩与该图最高队伍成绩之比的总和；未打谱面贡献为 0。此榜为成绩表现排名，不代表赛事晋级名次。</p>
-                            )}
-                            <LeaderboardPanel key={`${currentRound.stage_name}:${isTeamLeaderboard}`} round={currentRound} preview={preview} isTeamLeaderboard={isTeamLeaderboard} />
-                        </div>
-                    )}
+                    <Tabs selectedKey={section} onSelectionChange={key => setSection(String(key))} className="w-full">
+                        <Tabs.ListContainer><Tabs.List aria-label="统计内容">
+                            <Tabs.Tab id="maps">单图成绩<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="rating">个人 Rating<Tabs.Indicator/></Tabs.Tab>
+                            <Tabs.Tab id="stats">图池统计<Tabs.Indicator/></Tabs.Tab>
+                        </Tabs.List></Tabs.ListContainer>
+                    <Tabs.Panel id="rating" className="pt-4">
+                    {section === "rating" && <div className="flex flex-col gap-4">
+                        <h2 className="text-2xl font-bold px-2 border-l-4 border-primary">个人 Rating 排名</h2>
+                        <details className="rounded-lg border border-default-200 bg-default-50 text-sm">
+                            <summary className="cursor-pointer px-4 py-3 font-medium text-default-700">Rating 计算公式</summary>
+                            <div className="flex flex-col gap-4 border-t border-default-200 p-4 leading-relaxed text-default-600">
+                                <RatingFormula/>
+                                <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2">
+                                    <dt className="font-mono font-bold">Sᵢ</dt><dd>选手第 i 次出场的单图得分。同一谱面多次出场逐局计入，不只取最高分；重复导入的同一条成绩只计一次。</dd>
+                                    <dt className="font-mono font-bold">Mᵢ</dt><dd>本轮该谱面的中位数基准：先计算每位选手在这张图上的平均分，再取这些平均分的中位数。每位选手只贡献一个均分，多打一场不会增加其在基准中的权重；人数为偶数时，取中间两个均分的平均值。</dd>
+                                    <dt className="font-mono font-bold">n</dt><dd>选手在当前轮次实际出场的单图局数，不同于比赛场数。</dd>
+                                    <dt className="font-mono font-bold">m</dt><dd>选手实际参加的赛程比赛数量。同一场比赛使用多个 MP 房间仍只算一场。</dd>
+                                    <dt className="font-mono font-bold">Nⱼ</dt><dd>选手参加的第 j 场比赛里，所有实际出场的已报名选手的平均出场局数。未出场的替补不计入人数；ΣNⱼ 是这些比赛的平均出场局数之和。</dd>
+                                </dl>
+                                <div className="flex flex-col gap-2">
+                                    <p><strong className="text-default-800">平均表现：</strong>每局得分先除以该图的中位数基准，再对所有出场取平均。P = 1 表示平均相对表现处于中位数基准，P &gt; 1 表示高于基准。</p>
+                                    <p><strong className="text-default-800">出场修正：</strong>实际出场少于所参加比赛的平均出场量时，系数小于 1；达到或超过平均出场量时，系数固定为 1，不额外奖励高出场量。</p>
+                                    <p><strong className="text-default-800">示例：</strong>平均表现 P = 1，实际出场 4 局，ΣNⱼ = 8，则 Rating = ∛(4/8) ≈ 0.7937。在基准、平均表现和出场比例相同的情况下，多打一场不会直接提高 Rating。</p>
+                                </div>
+                                <ul className="list-disc space-y-1 pl-5">
+                                    <li>仅统计当前轮次图池内的有效记录，未打的谱面不作为 0 分计入平均表现。</li>
+                                    <li>单图中位数基准为 0 时，该图每局的相对表现按 0 计，出场局数仍计入。</li>
+                                    <li>至少打过 {MIN_RATING_MAPS} 张不同谱面且比赛关联完整后进入正式排名；不足 {MIN_RATING_MAPS} 张标为“暂定”，仍展示 Rating。</li>
+                                    <li>缺少或无法唯一确定比赛关联时标为“待关联”，Rating 显示为“–”。“暂定”和“待关联”记录均不计正式名次。</li>
+                                </ul>
+                            </div>
+                        </details>
+                        {contextLoading ? <Spinner aria-label="正在关联比赛数据"/> : contextError
+                            ? <p role="alert" className="text-sm text-danger">{contextError.message}</p>
+                            : <LeaderboardPanel key={currentRound.stage_name} leaderboard={personalRating} />}
+                    </div>}
+                    </Tabs.Panel>
 
-                    <div className="flex flex-col gap-4">
+                    <Tabs.Panel id="stats" className="pt-4">
+                    {section === "stats" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-secondary">图池数据统计</h2>
                         <StatsTable stats={stats} stageName={currentRound.stage_name} />
-                    </div>
+                    </div>}
+                    </Tabs.Panel>
 
-                    <div className="flex flex-col gap-4">
+                    <Tabs.Panel id="maps" className="pt-4">
+                    {section === "maps" && <div className="flex flex-col gap-4">
                         <h2 className="text-2xl font-bold px-2 border-l-4 border-warning">单图成绩排行</h2>
                         <MapScoresGrid
+                            key={`${currentRound.stage_name}:${isTeamRound}`}
                             stage={stage}
                             round={currentRound}
                             scores={scores}
                             players={players}
+                            teams={teams}
+                            isTeamRound={isTeamRound}
                         />
-                    </div>
+                    </div>}
+                    </Tabs.Panel>
+                    </Tabs>
                 </div>
             )}
         </div>
     )
 }
 
-const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: TournamentRoundInfo, preview: boolean, isTeamLeaderboard: boolean }) => {
-    const [leaderboard, setLeaderboard] = useState<LeaderboardRow[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState<string | null>(null);
-
+const LeaderboardPanel = ({leaderboard}: {leaderboard: LeaderboardRow[]}) => {
+    const [showMapDetails, setShowMapDetails] = useState(false);
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-        column: isTeamLeaderboard ? "Rating" : "平均排名",
-        direction: isTeamLeaderboard ? "descending" : "ascending",
+        column: "Rating",
+        direction: "descending",
     });
-
-    useEffect(() => {
-        const controller = new AbortController();
-
-        const fetchData = async () => {
-            setLoading(true);
-            setLoadError(null);
-            setLeaderboard([]);
-
-            try {
-                const params = new URLSearchParams({
-                    tournament_name: round.tournament_name,
-                    stage_name: round.stage_name,
-                });
-                if (preview) params.set("preview", "true");
-                const res = await fetch(`${siteConfig.backend_url}/api/cal_rank?${params}`, {
-                    signal: controller.signal,
-                    credentials: "include",
-                    cache: "no-store",
-                });
-
-                if (!res.ok) {
-                    throw new Error(`排行榜接口请求失败 (${res.status})`);
-                }
-
-                const data: unknown = await res.json();
-                setLeaderboard(parseLeaderboardResponse(data));
-            } catch (e) {
-                if (controller.signal.aborted) return;
-                console.error("Failed to load leaderboard", e);
-                setLoadError(e instanceof Error ? e.message : "排行榜加载失败");
-            } finally {
-                if (!controller.signal.aborted) setLoading(false);
-            }
-        };
-
-        fetchData();
-
-        return () => controller.abort();
-    }, [preview, round.stage_name, round.tournament_name]);
 
     const handleSortChange = (descriptor: SortDescriptor) => {
         const newDescriptor = { ...descriptor };
@@ -228,6 +241,8 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
             }
             else if (
                 column === "Rating" ||
+                column === "出场局数" ||
+                column === "比赛场数" ||
                 column.includes("%") ||
                 column.includes("Max") ||
                 column.includes("分") ||
@@ -242,6 +257,8 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
 
     const sortedItems = useMemo(() => {
         return [...leaderboard].sort((a, b) => {
+            const statusOrder = ratingStatusOrder(a["状态"]) - ratingStatusOrder(b["状态"]);
+            if (statusOrder) return statusOrder;
             const first = a[sortDescriptor.column as keyof typeof a];
             const second = b[sortDescriptor.column as keyof typeof b];
 
@@ -269,7 +286,7 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
         const result: Record<string, number[]> = {};
 
         columns.forEach(col => {
-            if (col === 'name' || col === '#') return;
+            if (col === 'name' || col === '#' || col === '出场局数' || col === '比赛场数') return;
             const values = leaderboard
                 .map(row => Number.parseFloat(String(row[col] ?? "")))
                 .filter(v => !Number.isNaN(v));
@@ -293,9 +310,9 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
     const columns = useMemo(() => {
         if (leaderboard.length === 0) return [];
         // 获取所有键，排除原始数据可能存在的 '#'（为了避免冲突或重复），然后手动把 '#' 加到最前面
-        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#');
+        const rawKeys = Object.keys(leaderboard[0]).filter(k => k !== '#' && (showMapDetails || ["name", "Rating", "状态", "出场局数", "比赛场数", "平均排名", "平均分数"].includes(k)));
         return ['#', ...rawKeys];
-    }, [leaderboard]);
+    }, [leaderboard, showMapDetails]);
 
     const getCellStyle = (columnKey: string, value: any) => {
         if (columnKey === 'NAME' || columnKey === '#') return "";
@@ -309,14 +326,20 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
         return "";
     };
 
-    if (loading) return <LeaderboardSkeleton/>;
-    if (loadError) return <div className="p-4 text-danger">{loadError}</div>;
     if (leaderboard.length === 0) return <div className="text-default-400 p-4">暂无排行数据</div>;
 
     return (
-        <div className="min-h-[200px] overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
+        <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+            <span className="text-sm text-default-500">{leaderboard.length} 名选手</span>
+            <Button size="sm" variant="secondary" onPress={() => {
+                setShowMapDetails(!showMapDetails);
+                setSortDescriptor({column: "Rating", direction: "descending"});
+            }}>{showMapDetails ? "收起单图明细" : "显示单图明细"}</Button>
+        </div>
+        <div role="region" aria-label="个人 Rating 排名" tabIndex={0} className="max-h-[60vh] min-h-[200px] overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
             <table className="w-full border-collapse text-sm">
-                <thead>
+                <thead className="sticky top-0 z-10">
                 <tr>
                     {columns.map((column) => {
                         const sortable = column !== "#";
@@ -335,7 +358,7 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
                                 }}
                             >
                                 <span className="inline-flex items-center gap-1">
-                                    {column === "name" ? (isTeamLeaderboard ? "队伍" : "选手") : column}
+                                    {column === "name" ? "选手" : column}
                                     {isSorted && <span>{sortDescriptor.direction === "ascending" ? "↑" : "↓"}</span>}
                                 </span>
                             </th>
@@ -345,7 +368,7 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
                 </thead>
                 <tbody>
                 {sortedItems.map((item, idx) => {
-                    const row = {...item, virtual_rank: idx + 1};
+                    const row = {...item, virtual_rank: item["状态"] && item["状态"] !== "正式" ? "-" : idx + 1};
                     return (
                         <tr key={idx} className="odd:bg-zinc-50/60 dark:odd:bg-white/[0.025]">
                             {columns.map((columnKey) => {
@@ -365,6 +388,7 @@ const LeaderboardPanel = ({round, preview, isTeamLeaderboard}: { round: Tourname
                 })}
                 </tbody>
             </table>
+        </div>
         </div>
     );
 };
@@ -417,7 +441,10 @@ const StatsTable = ({ stats, stageName }: { stats: Stats[], stageName: string })
 };
 
 // --- 子组件 3: 地图成绩网格 ---
-const MapScoresGrid = ({ stage, round, scores, players }: { stage: Stage[], round: TournamentRoundInfo, scores: Score[], players?: Player[] }) => {
+const MapScoresGrid = ({ stage, round, scores, players, teams, isTeamRound }: {
+    stage: Stage[], round: TournamentRoundInfo, scores: Score[], players?: Player[], teams: Team[], isTeamRound: boolean,
+}) => {
+    const [view, setView] = useState(isTeamRound ? "team" : "player");
     // 获取当前轮次的图池
     const currentMapBracket = useMemo(() =>
         stage.find(s => s.stage_name === round.stage_name)?.mod_bracket || [],
@@ -433,31 +460,46 @@ const MapScoresGrid = ({ stage, round, scores, players }: { stage: Stage[], roun
     if (allMaps.length === 0) return <div className="text-default-400 p-4">暂无图池信息</div>;
 
     return (
-        // 使用 CSS Grid 替代原来的 flex-reverse hack
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {allMaps.map((map) => (
+        <>
+        {isTeamRound &&
+            <Tabs selectedKey={view} onSelectionChange={key => setView(String(key))}>
+                <Tabs.ListContainer><Tabs.List aria-label="单图成绩类型">
+                    <Tabs.Tab id="team">队伍成绩<Tabs.Indicator/></Tabs.Tab>
+                    <Tabs.Tab id="player">个人成绩<Tabs.Indicator/></Tabs.Tab>
+                </Tabs.List></Tabs.ListContainer>
+            </Tabs>
+        }
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {allMaps.map(map => (
                 <SingleMapCard
-                    key={map.map_id}
+                    key={`${map.map_id}:${view}`}
                     map={map}
                     roundName={round.stage_name}
                     scores={scores}
                     players={players}
+                    teams={teams}
+                    showTeams={isTeamRound && view === "team"}
                 />
             ))}
         </div>
+        </>
     );
 };
 
 // --- 子组件 4: 单个地图成绩卡片 ---
-const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundName: string, scores: Score[], players?: Player[] }) => {
+const SingleMapCard = ({ map, roundName, scores, players, teams, showTeams }: {
+    map: any, roundName: string, scores: Score[], players?: Player[], teams: Team[], showTeams: boolean,
+}) => {
     const modColor = getModColor(map.mod);
 
     // 过滤并排序成绩
     const mapScores = useMemo(() => {
         return scores
-            .filter(s => s.stage_name === roundName && s.map_id === map.map_id)
+            .filter(s => s.stage_name === roundName && String(s.map_id) === String(map.map_id))
             .sort((a, b) => b.score - a.score);
     }, [scores, roundName, map.map_id]);
+    const teamScores = useMemo(() => showTeams ? buildTeamMapScores(scores, teams, roundName, map.map_id) : [],
+        [showTeams, scores, teams, roundName, map.map_id]);
 
     // 检查是否有特定 Mod 要求 (Logic from original code)
     const isContainMods = useMemo(() => {
@@ -484,7 +526,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
                 <div className="absolute inset-0 z-20 p-4 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
                         <Chip color={modColor.color} variant="primary" size="sm" className="font-bold shadow-md text-white">
-                            {map.mod} {map.index + 1}
+                            {map.mod} {map.number ?? map.index + 1}
                         </Chip>
                         <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-xs text-yellow-400 font-bold border border-white/20">
                             ★ {map.star_rating}
@@ -508,7 +550,7 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
 
             {/* 2. 成绩列表区域 */}
             <Card.Content className="map-score-scroll min-h-0 flex-1 overflow-y-auto !p-0 bg-zinc-50/70 dark:bg-transparent">
-                {mapScores.length > 0 ? (
+                {showTeams ? <TeamMapScores scores={teamScores} players={players}/> : mapScores.length > 0 ? (
                     <div className="flex flex-col">
                         {/* 表头 */}
                         <div className={`grid ${scoreGridClass} sticky top-0 z-30 gap-2 border-b border-zinc-200 bg-zinc-100 p-3 text-xs font-bold text-zinc-500 dark:border-white/[0.08] dark:bg-zinc-800`}>
@@ -579,6 +621,45 @@ const SingleMapCard = ({ map, roundName, scores, players }: { map: any, roundNam
     )
 }
 
+const TeamMapScores = ({scores, players}: {scores: TeamMapScore[], players?: Player[]}) => {
+    if (scores.length === 0) return <div className="flex min-h-[200px] items-center justify-center p-4 text-default-400">暂无队伍成绩数据</div>;
+    const gridClass = "grid grid-cols-[24px_minmax(0,1fr)_100px] gap-2 @min-[360px]:grid-cols-[32px_minmax(0,1fr)_110px]";
+    return <div className="flex flex-col">
+        <div className={`${gridClass} sticky top-0 z-30 border-b border-zinc-200 bg-zinc-100 p-3 text-xs font-bold text-zinc-500 dark:border-white/[0.08] dark:bg-zinc-800`}>
+            <span className="text-center">#</span><span>队伍</span><span className="text-right">合计分数</span>
+        </div>
+        {scores.map(entry => {
+            const rank = scores.findIndex(other => other.score === entry.score) + 1;
+            return <details key={entry.team.name} className="group border-b border-zinc-200/70 text-sm last:border-b-0 dark:border-white/[0.06]">
+                <summary aria-label={`查看 ${entry.team.name} 的成员成绩`} className={`${gridClass} cursor-pointer list-none items-center p-3 transition-colors hover:bg-zinc-100 dark:hover:bg-white/5 [&::-webkit-details-marker]:hidden`}>
+                    <span className={`text-center font-bold ${rank <= 3 ? "text-primary" : "text-zinc-500 dark:text-zinc-400"}`}>{rank}</span>
+                    <span className="flex min-w-0 items-center gap-2">
+                        <Avatar size="sm" className="hidden shrink-0 @min-[360px]:flex">
+                            <Avatar.Image src={entry.team.icon_url} alt={entry.team.name}/>
+                            <Avatar.Fallback>{entry.team.name[0] ?? "?"}</Avatar.Fallback>
+                        </Avatar>
+                        <span className="min-w-0"><span className="block break-all font-medium text-zinc-900 dark:text-zinc-100">{entry.team.name}</span>
+                            <span className="block text-xs text-default-500">{entry.members.length} 名成员 <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-180">⌄</span></span>
+                        </span>
+                    </span>
+                    <span className="text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">{entry.score.toLocaleString()}</span>
+                </summary>
+                <div className="border-t border-default-200 bg-default-100/50 px-3 py-2">
+                    <p className="mb-2 text-xs text-default-500">{formatLocalDateTime(entry.start_time) || entry.start_time}</p>
+                    {entry.members.map(score => {
+                        const player = players?.find(player => String(player.uid) === String(score.player));
+                        return <div key={score.player} className="flex items-center justify-between gap-3 py-1.5">
+                            <span className="min-w-0 break-all text-xs">{player?.name ?? score.player}</span>
+                            <span className="shrink-0 text-right"><span className="block font-mono text-xs font-bold">{score.score.toLocaleString()}</span>
+                                <span className="block text-xs text-default-500">{(score.acc * 100).toFixed(2)}%</span></span>
+                        </div>;
+                    })}
+                </div>
+            </details>;
+        })}
+    </div>;
+};
+
 interface Stats {
     stage_name: string;
     mod_name: string;
@@ -591,14 +672,4 @@ interface Stats {
     miss_max?: number;
     miss_min?: number;
     miss_avg?: number;
-}
-
-interface Score {
-    tournament_name: string;
-    stage_name: string;
-    map_id: string;
-    player: string;
-    score: number;
-    acc: number;
-    mod: string[];
 }

@@ -13,7 +13,7 @@ function content(node) {
     if (!React.isValidElement(node)) return typeof node === 'string' || typeof node === 'number' ? String(node) : '';
     return React.Children.toArray(node.props.children).map(content).join('');
 }
-async function harness(failSave = false) {
+async function harness(failSave = false, {failSync = false, matchesProcessed = 1, failRefresh = false} = {}) {
     const {selectedResultScores} = await import('../lib/match-result.ts');
     const {normalizeMatchUrls} = await import('../lib/match-links.ts');
     const Button = () => null, TextArea = () => null;
@@ -28,6 +28,10 @@ async function harness(failSave = false) {
         '@/lib/tournament_draw': {requestDraw: async (url, body) => {
             requests.push({url, body});
             if (!body) return details;
+            if (url.includes('/get-stage-plays?')) {
+                if (failSync) throw new Error('同步服务暂不可用');
+                return {ok: true, matches_processed: matchesProcessed};
+            }
             if (url.includes('/preview?')) return {...details, version: 'preview-v2', preview_version: 'mp-v1', games: [0, 1].map((winner, i) => ({id: String(i), room_id: '123', beatmap_id: 10 + i,
                 scores: [100, 200], players: [1, 1], winner, selected: true, eligible: true, ended_at: null}))};
             if (failSave) throw new Error('赛程已被修改，请重新加载');
@@ -36,7 +40,7 @@ async function harness(failSave = false) {
     };
     const exports = {};
     new Function('require', 'exports', compiled)(name => {if (!(name in mocks)) throw new Error(name); return mocks[name];}, exports);
-    const render = () => {index = 0; return exports.MatchResultEditor({tournament: 'Cup', stage: 'SF', matchId: 'match', onSaved: async () => {refreshes++;}});};
+    const render = () => {index = 0; return exports.MatchResultEditor({tournament: 'Cup', stage: 'SF', matchId: 'match', onSaved: async () => {refreshes++; if (failRefresh) throw new Error('刷新失败');}});};
     const button = (tree, label) => elements(tree, node => node.type === Button && content(node).includes(label))[0];
     return {render, button, requests, TextArea, refreshes: () => refreshes};
 }
@@ -49,9 +53,11 @@ test('referee can load, preview, exclude a replay, and confirm recomputed score'
     const checkboxes = elements(h.render(), node => node.type === 'input');
     checkboxes[0].props.onChange({target: {checked: false}});
     await h.button(h.render(), '确认保存比分').props.onPress();
-    assert.deepEqual(h.requests.at(-1).body, {version: 'preview-v2', match_urls: ['https://osu.ppy.sh/mp/123'], selected_game_ids: ['1'], expected_scores: [0, 1], preview_version: 'mp-v1'});
+    assert.deepEqual(h.requests.at(-2).body, {version: 'preview-v2', match_urls: ['https://osu.ppy.sh/mp/123'], selected_game_ids: ['1'], expected_scores: [0, 1], preview_version: 'mp-v1'});
+    assert.deepEqual(h.requests.at(-1), {url: '/api/get-stage-plays?tournament_name=Cup&stage_name=SF', body: {match_urls: ['https://osu.ppy.sh/mp/123']}});
     assert.equal(h.refreshes(), 1);
     assert.match(content(h.render()), /MP 链接和比分已保存/);
+    assert.match(content(h.render()), /已自动同步 1 个 MP 房间的比赛数据/);
 });
 
 test('editing a link invalidates the old preview and save failures stay visible', async () => {
@@ -65,5 +71,49 @@ test('editing a link invalidates the old preview and save failures stay visible'
     await h.button(h.render(), '仅保存链接').props.onPress();
     assert.deepEqual(h.requests.at(-1).body, {version: 'preview-v2', match_urls: ['https://osu.ppy.sh/mp/456']});
     assert.equal(h.refreshes(), 0);
+    assert.equal(h.requests.some(request => request.url.includes('/get-stage-plays?')), false);
     assert.match(content(elements(h.render(), node => node.props.role === 'alert')[0]), /赛程已被修改/);
+});
+
+test('saving links syncs only this match’s normalized rooms without changing scores', async () => {
+    const h = await harness(false, {matchesProcessed: 2});
+    await h.button(h.render(), '录入 MP').props.onPress();
+    elements(h.render(), node => node.type === h.TextArea)[0].props.onChange({target: {value: ' https://osu.ppy.sh/mp/123 \n\nhttps://osu.ppy.sh/mp/456\nhttps://osu.ppy.sh/mp/123'}});
+    await h.button(h.render(), '仅保存链接').props.onPress();
+    const match_urls = ['https://osu.ppy.sh/mp/123', 'https://osu.ppy.sh/mp/456'];
+    assert.deepEqual(h.requests.at(-2).body, {version: 'v1', match_urls});
+    assert.deepEqual(h.requests.at(-1), {url: '/api/get-stage-plays?tournament_name=Cup&stage_name=SF', body: {match_urls}});
+    assert.equal(h.refreshes(), 1);
+    assert.match(content(h.render()), /已自动同步 2 个 MP 房间/);
+});
+
+test('clearing all links saves without requesting a stage-wide sync', async () => {
+    const h = await harness();
+    await h.button(h.render(), '录入 MP').props.onPress();
+    await h.button(h.render(), '仅保存链接').props.onPress();
+    assert.deepEqual(h.requests.at(-1).body, {version: 'v1', match_urls: []});
+    assert.equal(h.requests.some(request => request.url.includes('/get-stage-plays?')), false);
+    assert.equal(h.refreshes(), 1);
+});
+
+for (const options of [{failSync: true}, {matchesProcessed: 0}]) {
+    test(`sync failure preserves the saved result and still refreshes the schedule: ${JSON.stringify(options)}`, async () => {
+        const h = await harness(false, options);
+        await h.button(h.render(), '录入 MP').props.onPress();
+        elements(h.render(), node => node.type === h.TextArea)[0].props.onChange({target: {value: 'https://osu.ppy.sh/mp/123'}});
+        await h.button(h.render(), '仅保存链接').props.onPress();
+        assert.equal(h.refreshes(), 1);
+        assert.match(content(h.render()), /MP 链接已保存/);
+        assert.match(content(elements(h.render(), node => node.props.role === 'alert')[0]), /结果已保存，但比赛数据自动同步失败/);
+        assert.ok(h.button(h.render(), '录入 MP'));
+    });
+}
+
+test('refresh failure retains the sync outcome', async () => {
+    const h = await harness(false, {failRefresh: true});
+    await h.button(h.render(), '录入 MP').props.onPress();
+    elements(h.render(), node => node.type === h.TextArea)[0].props.onChange({target: {value: 'https://osu.ppy.sh/mp/123'}});
+    await h.button(h.render(), '仅保存链接').props.onPress();
+    assert.match(content(h.render()), /已自动同步 1 个 MP 房间/);
+    assert.match(content(h.render()), /赛程刷新失败/);
 });

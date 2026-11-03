@@ -47,7 +47,18 @@ export function MatchResultEditor({tournament, stage, matchId, onSaved}: {
                 ...(includeScores ? {selected_game_ids: selected, expected_scores: scores, preview_version: preview?.preview_version} : {})});
             setOpen(false); setPreview(null); setRecord(null);
             setMessage(includeScores ? "MP 链接和比分已保存" : "MP 链接已保存");
-            try { await onSaved(); } catch { setMessage("已保存，赛程刷新失败，请刷新页面查看"); }
+            if (match_urls.length > 0) {
+                try {
+                    const syncQuery = new URLSearchParams({tournament_name: tournament, stage_name: stage});
+                    const result = await requestDraw<{matches_processed: number}>(
+                        `${siteConfig.backend_url}/api/get-stage-plays?${syncQuery}`, {match_urls});
+                    if (result.matches_processed === 0) throw new Error("未识别到有效的 osu! MP 房间地址");
+                    setMessage(current => `${current}，已自动同步 ${result.matches_processed} 个 MP 房间的比赛数据`);
+                } catch (e) {
+                    setError(`结果已保存，但比赛数据自动同步失败：${e instanceof Error ? e.message : "网络错误"}。可重新保存链接重试。`);
+                }
+            }
+            try { await onSaved(); } catch { setMessage(current => `${current}；赛程刷新失败，请刷新页面查看`); }
         } catch (e) { setError(e instanceof Error ? e.message : "保存失败"); }
         finally { setBusy(false); }
     };
@@ -59,7 +70,7 @@ export function MatchResultEditor({tournament, stage, matchId, onSaved}: {
             {record && <>
                 <TextArea aria-label="MP 链接，每行一个" placeholder="https://osu.ppy.sh/community/matches/123" rows={3} value={links} disabled={busy}
                     onChange={event => {setLinks(event.target.value); setPreview(null); setSelected([]); setError("");}}/>
-                <p className="text-xs text-default-500">每行一个 MP 链接，可填写多个房间。仅保存链接不会修改比分。</p>
+                <p className="text-xs text-default-500">每行一个 MP 链接，可填写多个房间。保存后会自动同步比赛数据；仅保存链接不会修改比分。</p>
                 <div className="flex flex-wrap gap-2"><Button size="sm" isDisabled={busy} onPress={() => save(false)}>仅保存链接</Button>
                     {record.can_calculate && <Button size="sm" variant="primary" isPending={busy} onPress={previewScores}>预览计算比分</Button>}</div>
                 {!record.can_calculate && <p className="text-xs text-default-500">大厅或双方尚未确定的比赛仅支持保存链接。</p>}
