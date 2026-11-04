@@ -1,5 +1,9 @@
+"use client";
+
 import {Avatar, Card, Chip, Separator} from "@heroui/react";
-import {backendServerUrl} from "@/lib/backend_server";
+import {useTournamentResource} from "@/lib/use_browser_resource";
+import {StaffSkeleton} from "@/components/page_skeleton";
+import {TournamentLoadError} from "@/components/tournament_load_error";
 
 type ColorType = "default" | "primary" | "secondary" | "success" | "warning" | "danger";
 
@@ -72,9 +76,11 @@ const getRoleStyle = (role: string) => {
     return "default" as ColorType;
 };
 
-export default async function StaffPage(props: { params: Promise<{ tournament: string }> }) {
-    const params = await props.params;
-    const staff = await GetStaff(params.tournament);
+export default function StaffPage() {
+    const {data, error, isLoading} = useTournamentResource<Staff>("/api/staff");
+    if (error) return <TournamentLoadError error={error.message}/>;
+    if (isLoading) return <StaffSkeleton/>;
+    const staff = data ?? {};
     const validRoles = Object.keys(staff).filter((role) => staff[role].length > 0);
 
     return (
@@ -149,19 +155,6 @@ const StaffCard = ({member, color}: { member: { name: string; uid: string }; col
         </a>
     );
 };
-
-async function GetStaff(tournament: string): Promise<Staff> {
-    const res = await fetch(
-        `${backendServerUrl()}/api/staff?tournament_name=${encodeURIComponent(tournament)}`,
-        {next: {revalidate: 0}},
-    );
-
-    if (!res.ok) {
-        throw new Error("Failed to fetch data");
-    }
-
-    return await res.json();
-}
 
 interface Staff {
     [role: string]: {

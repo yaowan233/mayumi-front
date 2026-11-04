@@ -1,29 +1,8 @@
-"use server"
-import {cookies} from "next/headers";
-import {backendServerUrl} from "@/lib/backend_server";
-
-export async function getMe(): Promise<Me | null> {
-    const cookieStore = await cookies()
-    const uuid = cookieStore.get('uuid')?.value
-    if (!uuid) {
-        return null
-    }
-    try {
-        const res = await fetch(backendServerUrl() + '/api/me', {
-            headers: {
-                Cookie: `uuid=${uuid}`,
-            },
-        })
-        return await res.json()
-    } catch (e) {
-        return null
-    }
-}
-
 export interface Me {
     uid: number;
     name: string;
     country_code: string;
+    playmode?: "osu" | "taiko" | "fruits" | "mania";
     statistics_rulesets: {
         "osu": UserStatistics;
         "taiko": UserStatistics;

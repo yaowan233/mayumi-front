@@ -37,7 +37,8 @@ function initialSettings(data: BracketExportInput, saved: SharedBracketSettings)
 }
 
 export function BracketExport({tournamentName}: {tournamentName: string}) {
-    const user = useContext(CurrentUserContext)?.currentUser;
+    const session = useContext(CurrentUserContext);
+    const user = session?.currentUser;
     const [loaded, setLoaded] = useState<{data: BracketExportInput; settings: ExportSettings; revision: number} | null>(null);
     const [error, setError] = useState("");
     const [reload, setReload] = useState(0);
@@ -62,6 +63,7 @@ export function BracketExport({tournamentName}: {tournamentName: string}) {
         return () => {cancelled = true;};
     }, [user?.uid, tournamentName, reload]);
 
+    if (session?.isLoading) return <BracketExportSkeleton/>;
     if (user === null) return <p className="text-default-500">请先登录后查看比赛端配置。</p>;
     if (error) return <div className="flex flex-col items-start gap-3"><p role="alert" className="text-danger">{error}</p><Button variant="secondary" onPress={() => setReload((value) => value + 1)}>重新加载</Button></div>;
     if (!loaded) return <BracketExportSkeleton/>;

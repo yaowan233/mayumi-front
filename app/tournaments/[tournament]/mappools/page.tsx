@@ -1,18 +1,16 @@
+"use client";
+
 import {MappoolsComponents, Stage} from "@/components/mappools";
-import {backendServerUrl} from "@/lib/backend_server";
+import {useTournamentResource} from "@/lib/use_browser_resource";
+import {MappoolSkeleton} from "@/components/page_skeleton";
+import {TournamentLoadError} from "@/components/tournament_load_error";
 
 
-export default async function MapPollsPage(props: { params: Promise<{ tournament: string }> }) {
-    const params = await props.params
-    let tabs: Stage[] = await getStages(params.tournament)
+export default function MapPollsPage() {
+    const {data, error, isLoading} = useTournamentResource<Stage[]>("/api/map_pools");
+    if (error) return <TournamentLoadError error={error.message}/>;
+    if (isLoading) return <MappoolSkeleton/>;
     return (
-        <MappoolsComponents tabs={tabs}/>
+        <MappoolsComponents tabs={data ?? []}/>
     )
-}
-
-
-async function getStages(tournament_name: string): Promise<Stage[]> {
-    const res = await fetch(backendServerUrl() + '/api/map_pools?tournament_name=' + tournament_name,
-        {next: {revalidate: 0}})
-    return await res.json()
 }

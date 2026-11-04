@@ -79,6 +79,7 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 setIsLoading(true);
                 try {
@@ -222,9 +223,9 @@ export default function EditMemberPage(props: { params: Promise<{ tournament: st
                 </div>
             </div>
 
-            {isLoading && <MemberEditorSkeleton/>}
+            {(isLoading || currentUser?.isLoading) && <MemberEditorSkeleton/>}
 
-            {!isLoading && <>
+            {!isLoading && !currentUser?.isLoading && <>
             {/* Main Content: Role Management Tabs */}
             <div className="flex flex-col gap-4">
                 <Tabs>

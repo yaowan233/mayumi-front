@@ -26,6 +26,10 @@ export const UserStatus = () => {
         return () => document.removeEventListener("pointerdown", onPointerDown);
     }, [open]);
 
+    if (currentUser?.isLoading) {
+        return <div role="status" aria-label="正在加载用户信息" className="h-9 w-9 animate-pulse rounded-full bg-default-200 motion-reduce:animate-none"/>;
+    }
+
     if (!currentUser?.currentUser) {
         return (
             <a

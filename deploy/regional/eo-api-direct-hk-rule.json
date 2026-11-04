@@ -1,0 +1,46 @@
+{
+  "FormatVersion": "1.0",
+  "Rules": [
+    {
+      "RuleName": "业务API直接回源香港",
+      "Branches": [
+        {
+          "Condition": "${http.request.host} in ['mayumi.xyz'] and ${http.request.uri.path} in ['/api','/api/*','/v1','/v1/*']",
+          "Actions": [
+            {
+              "Name": "ModifyOrigin",
+              "ModifyOriginParameters": {
+                "OriginType": "IPDomain",
+                "Origin": "43.128.13.242",
+                "OriginProtocol": "https",
+                "HTTPSOriginPort": 443
+              }
+            },
+            {
+              "Name": "HostHeader",
+              "HostHeaderParameters": {
+                "Action": "custom",
+                "ServerName": "mayumi.xyz"
+              }
+            },
+            {
+              "Name": "UpstreamHTTP2",
+              "UpstreamHTTP2Parameters": {
+                "Switch": "off"
+              }
+            },
+            {
+              "Name": "Cache",
+              "CacheParameters": {
+                "NoCache": {
+                  "Switch": "on"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "Description": []
+    }
+  ]
+}

@@ -6,7 +6,6 @@ import { fontSans } from "@/config/fonts";
 import { Providers } from "./providers";
 import clsx from "clsx";
 import { UserProvider } from "@/app/user_context";
-import { getMe } from "@/app/actions";
 import React from "react";
 
 // 1. 配置 Metadata (SEO & 社交分享)
@@ -69,12 +68,11 @@ export const viewport: Viewport = {
     userScalable: false, // 禁止缩放，体验更像 Native App
 };
 
-export default async function RootLayout({
+export default function RootLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const initialUser = await getMe();
     return (
         <html lang="zh" suppressHydrationWarning>
             <body
@@ -84,7 +82,7 @@ export default async function RootLayout({
                 )}
             >
                 <Providers themeProps={{ attribute: "class", defaultTheme: "system", enableSystem: true }}>
-                    <UserProvider initialUser={initialUser}>
+                    <UserProvider>
                         <div className="w-full relative flex flex-col min-h-dvh">
                             <main className="flex-grow w-full">
                                 {children}

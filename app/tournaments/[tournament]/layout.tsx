@@ -1,17 +1,19 @@
+"use client";
+
+import {useParams} from "next/navigation";
 import {TournamentNavbar} from "@/components/navbar";
 import {PageContent} from "@/components/page-content";
-import {getTournamentInfo} from "@/lib/tournament_info";
+import {useTournamentInfo} from "@/lib/tournament_info";
 import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
 
-export default async function HomeLayout({
+export default function HomeLayout({
                                              children,
-                                             params,
                                          }: {
     children: React.ReactNode
-    params: Promise<{ tournament: string }>
 }) {
-    const {tournament} = await params
-    const themeColor = await getTournamentThemeColor(tournament);
+    const {tournament} = useParams<{tournament: string}>();
+    const {data} = useTournamentInfo();
+    const themeColor = data ? normalizeTournamentThemeColor(data.theme_color) : undefined;
     const themeStyle = themeColor
         ? {
             "--accent": themeColor,
@@ -37,9 +39,4 @@ export default async function HomeLayout({
             </PageContent>
         </div>
     )
-}
-
-async function getTournamentThemeColor(tournament: string) {
-    const {data} = await getTournamentInfo(tournament);
-    return data ? normalizeTournamentThemeColor(data.theme_color) : undefined;
 }

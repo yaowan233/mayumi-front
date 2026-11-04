@@ -118,6 +118,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 try {
                     const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
@@ -331,7 +332,7 @@ export default function EditStatisticsPage(props: { params: Promise<{ tournament
         );
     };
 
-    if (isLoading) return <ManagementSkeleton page="statistics"/>;
+    if (isLoading || currentUser?.isLoading) return <ManagementSkeleton page="statistics"/>;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8">

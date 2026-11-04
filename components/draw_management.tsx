@@ -20,9 +20,11 @@ type SchedulePreview = {
 };
 
 export function DrawManagement({tournamentName}: {tournamentName: string}) {
-    const user = useContext(CurrentUserContext)?.currentUser;
+    const session = useContext(CurrentUserContext);
+    const user = session?.currentUser;
     const url = `${siteConfig.backend_url}/api/tournament-draw/${encodeURIComponent(tournamentName)}`;
     const {data, error, mutate} = useSWR(user?.uid ? [url, user.uid] : null, ([endpoint]: [string, number]) => requestDraw<DrawManagementResponse>(endpoint), {refreshInterval: 15000});
+    if (session?.isLoading) return <DrawManagementSkeleton/>;
     if (user === null) return <p>请先登录。</p>;
     if (error) return <div className="flex items-center gap-3"><p role="alert">{error.message}</p><Button variant="secondary" onPress={() => void mutate()}>重试</Button></div>;
     if (!data) return <DrawManagementSkeleton/>;

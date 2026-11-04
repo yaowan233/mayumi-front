@@ -59,7 +59,7 @@ export default function AdminPage() {
     };
 
     useEffect(() => {
-        if (currentUser === undefined || currentUser?.currentUser === null) {
+        if (!currentUser || currentUser.isLoading) {
             return;
         }
 

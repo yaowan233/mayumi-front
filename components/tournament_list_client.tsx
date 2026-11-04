@@ -1,19 +1,20 @@
 "use client"
 import {TournamentTime} from "@/components/tournament_time";
 
-import { useContext, useState } from "react";
+import { useState } from "react";
 import NextImage from "next/image";
 import NextLink from "next/link";
-import useSWR from "swr";
 import { TournamentComponent, Tournament, modeLabel, TournamentFallback } from "@/components/tournament_pic";
 import { SectionTitle } from "@/components/section_title";
-import CurrentUserContext from "@/app/user_context";
 import { siteConfig } from "@/config/site";
 import {splitTournamentsByTime} from "@/lib/tournament_timing";
 import {fetchTournamentSummaries} from "@/lib/tournament_summary";
 import {useCurrentTime} from "@/lib/use_current_time";
+import {useBrowserResource} from "@/lib/use_browser_resource";
+import {TournamentListSkeleton} from "@/components/page_skeleton";
+import {TournamentLoadError} from "@/components/tournament_load_error";
 
-const fetcher = () => fetchTournamentSummaries(siteConfig.backend_url, {credentials: "include"});
+const fetcher = () => fetchTournamentSummaries(siteConfig.backend_url, {credentials: "include", cache: "no-store"});
 
 const formatDate = (date: string) => new Date(date).toLocaleDateString("zh-CN", {
     month: "2-digit",
@@ -90,19 +91,14 @@ const FeaturedTournament = ({ tournament }: { tournament: Tournament }) => {
     );
 };
 
-export default function TournamentListClient({ initialTournaments }: { initialTournaments: Tournament[] }) {
+export default function TournamentListClient() {
     const now = useCurrentTime();
-    const ctx = useContext(CurrentUserContext);
-    const isLoggedIn = !!ctx?.currentUser;
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMode, setSelectedMode] = useState("__all__");
 
-    const { data: authedTournaments } = useSWR<Tournament[]>(
-        isLoggedIn ? `${siteConfig.backend_url}/api/tournament-summaries` : null,
-        fetcher
-    );
+    const {data, error, isLoading} = useBrowserResource<Tournament[]>("/api/tournament-summaries", fetcher);
 
-    const tournaments = authedTournaments ?? initialTournaments;
+    const tournaments = data ?? [];
     const { upcoming, ongoing, finished } = splitTournamentsByTime(tournaments, now);
     const [featuredOngoing, ...otherOngoing] = ongoing;
     const modes = Array.from(new Set(finished.map((tournament) => tournament.mode).filter(Boolean)))
@@ -119,6 +115,9 @@ export default function TournamentListClient({ initialTournaments }: { initialTo
 
         return matchesMode && (!normalizedQuery || searchableText.includes(normalizedQuery));
     });
+
+    if (error) return <TournamentLoadError error={error.message}/>;
+    if (isLoading) return <TournamentListSkeleton/>;
 
     return (
         <>

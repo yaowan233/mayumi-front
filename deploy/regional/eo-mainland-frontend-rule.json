@@ -1,0 +1,38 @@
+{
+  "FormatVersion": "1.0",
+  "Rules": [
+    {
+      "RuleName": "中国大陆回源阿里云",
+      "Branches": [
+        {
+          "Condition": "${http.request.host} in ['mayumi.xyz'] and ${http.request.ip.country} in ['CN']",
+          "Actions": [
+            {
+              "Name": "ModifyOrigin",
+              "ModifyOriginParameters": {
+                "OriginType": "IPDomain",
+                "Origin": "106.14.112.207",
+                "OriginProtocol": "https",
+                "HTTPSOriginPort": 443
+              }
+            },
+            {
+              "Name": "HostHeader",
+              "HostHeaderParameters": {
+                "Action": "custom",
+                "ServerName": "mayumi.xyz"
+              }
+            },
+            {
+              "Name": "UpstreamHTTP2",
+              "UpstreamHTTP2Parameters": {
+                "Switch": "off"
+              }
+            }
+          ]
+        }
+      ],
+      "Description": []
+    }
+  ]
+}

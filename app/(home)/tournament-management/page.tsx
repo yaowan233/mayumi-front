@@ -89,6 +89,7 @@ export default function TournamentManagementPage() {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 try {
                     const data = isAdminUser(currentUser.currentUser.uid)
@@ -133,7 +134,7 @@ export default function TournamentManagementPage() {
             </div>
 
             {/* 内容区 */}
-            {isLoading ? (
+            {isLoading || currentUser?.isLoading ? (
                 <ManagementListSkeleton/>
             ) : !isLoggedIn ? (
                 // 未登录 (保持不变)

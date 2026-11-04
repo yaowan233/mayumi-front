@@ -1,5 +1,9 @@
+"use client";
+
 import {Card} from "@heroui/react";
-import {backendServerUrl} from "@/lib/backend_server";
+import {useTournamentResource} from "@/lib/use_browser_resource";
+import {RulesSkeleton} from "@/components/page_skeleton";
+import {TournamentLoadError} from "@/components/tournament_load_error";
 import {TournamentMarkdown} from "@/components/tournament_markdown";
 
 // --- 图标组件 ---
@@ -7,9 +11,10 @@ const RuleBookIcon = () => (
     <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
 );
 
-export default async function TournamentRulesPage(props: { params: Promise<{ tournament: string }> }) {
-    const params = await props.params;
-    const info = await getTournamentRule(params.tournament);
+export default function TournamentRulesPage() {
+    const {data: info, error, isLoading} = useTournamentResource<{data: string}>("/api/tournament_rule");
+    if (error) return <TournamentLoadError error={error.message}/>;
+    if (isLoading) return <RulesSkeleton/>;
 
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-8">
@@ -31,9 +36,9 @@ export default async function TournamentRulesPage(props: { params: Promise<{ tou
 
             <Card variant="transparent" className="border-none bg-transparent shadow-none">
                 <Card.Content className="p-0">
-                    {info.data ? (
+                    {info?.data ? (
                         <div className="px-2 sm:px-4 py-4">
-                            <TournamentMarkdown>{info.data}</TournamentMarkdown>
+                            <TournamentMarkdown>{info?.data}</TournamentMarkdown>
                         </div>
                     ) : (
                         // 空状态
@@ -48,15 +53,4 @@ export default async function TournamentRulesPage(props: { params: Promise<{ tou
             </Card>
         </div>
     )
-}
-
-async function getTournamentRule(tournament_name: string): Promise<{ data: string }> {
-    const res = await fetch(backendServerUrl() + '/api/tournament_rule?tournament_name=' + tournament_name,
-        {next: {revalidate: 0}})
-
-    if (!res.ok) {
-        return { data: "" }
-    }
-
-    return await res.json()
 }

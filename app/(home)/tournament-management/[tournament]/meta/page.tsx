@@ -66,6 +66,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 try {
                     const managedTournament = await resolveManagedTournament(currentUser.currentUser.uid, tournament_abbr);
@@ -123,7 +124,7 @@ export default function EditTournamentMetaPage(props: { params: Promise<{ tourna
         }
     }
 
-    if (isLoadingData) return <ManagementSkeleton page="meta"/>;
+    if (isLoadingData || currentUser?.isLoading) return <ManagementSkeleton page="meta"/>;
 
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-10 flex flex-col gap-8">

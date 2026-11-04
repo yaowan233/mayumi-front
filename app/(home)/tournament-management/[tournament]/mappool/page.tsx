@@ -61,6 +61,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 try {
                     const managedTournament = await resolveManagedTournament(currentUser.currentUser.uid, tournament_abbr);
@@ -191,7 +192,7 @@ export default function EditTournamentMapPoolPage(props: { params: Promise<{ tou
         ]);
     };
 
-    if (isLoading) return <MappoolEditorSkeleton/>;
+    if (isLoading || currentUser?.isLoading) return <MappoolEditorSkeleton/>;
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pb-32 py-8">

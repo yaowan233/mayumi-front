@@ -1,20 +1,20 @@
-import {ParticipantsComp} from "@/components/participants_comp";
-import {backendServerUrl} from "@/lib/backend_server";
+"use client";
 
-export default async function ParticipantsPage(props: { params: Promise<{ tournament: string }> }) {
-    const params = await props.params
-    const tournament_players = await getPlayers(params.tournament, 0)
-    tournament_players.groups = tournament_players.groups?.filter(group => group.is_verified)
+import {ParticipantsComp} from "@/components/participants_comp";
+import {useTournamentResource} from "@/lib/use_browser_resource";
+import {ParticipantsSkeleton} from "@/components/page_skeleton";
+import {TournamentLoadError} from "@/components/tournament_load_error";
+
+export default function ParticipantsPage() {
+    const {data, error, isLoading} = useTournamentResource<TournamentPlayers>("/api/players");
+    if (error) return <TournamentLoadError error={error.message}/>;
+    if (isLoading) return <ParticipantsSkeleton/>;
+    const tournament_players = {...(data ?? {players: []}), groups: data?.groups?.filter(group => group.is_verified)};
     return (
         <ParticipantsComp tournament_players={tournament_players}/>
     )
 }
 
-async function getPlayers(tournament_name: string, revalidate_time: number = 0): Promise<TournamentPlayers> {
-    const res = await fetch(backendServerUrl() + '/api/players?tournament_name=' + tournament_name,
-        {next: {revalidate: revalidate_time}})
-    return await res.json()
-}
 
 
 export interface TournamentPlayers {

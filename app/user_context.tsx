@@ -1,28 +1,34 @@
-"use client"
-import React, { createContext, useState } from 'react';
-import { Me } from "@/app/actions";
+"use client";
+import React, {createContext, useCallback, useMemo} from "react";
+import useSWR, {SWRConfig} from "swr";
+import type {Me} from "@/app/actions";
+import {siteConfig} from "@/config/site";
+import {fetchCurrentUser} from "@/lib/client-api";
 
 const CurrentUserContext = createContext<CurrentUserContextType | null>(null);
+const sessionCacheConfig = {provider: () => new Map()};
 
 interface CurrentUserContextType {
     currentUser: Me | null;
+    isLoading: boolean;
+    error?: Error;
     setCurrentUser: React.Dispatch<React.SetStateAction<Me | null>>;
 }
 
-export const UserProvider = ({
-    children,
-    initialUser,
-}: {
-    children: React.ReactNode;
-    initialUser: Me | null;
-}) => {
-    const [currentUser, setCurrentUser] = useState<Me | null>(initialUser);
-
-    return (
-        <CurrentUserContext.Provider value={{ currentUser, setCurrentUser }}>
-            {children}
-        </CurrentUserContext.Provider>
+export function UserProvider({children}: {children: React.ReactNode}) {
+    const {data, isLoading, error, mutate} = useSWR<Me | null, Error>(
+        `${siteConfig.backend_url.replace(/\/$/, "")}/api/me`, fetchCurrentUser,
+        {revalidateOnFocus: false, shouldRetryOnError: false},
     );
-};
+    const setCurrentUser = useCallback<CurrentUserContextType["setCurrentUser"]>(update => {
+        void mutate(previous => typeof update === "function" ? update(previous ?? null) : update, {revalidate: false});
+    }, [mutate]);
+    const value = useMemo(() => ({currentUser: data ?? null, isLoading, error, setCurrentUser}), [data, isLoading, error, setCurrentUser]);
+    // Reset cached data and page state when switching identities, including logout.
+    const uid = data?.uid ?? "anonymous";
+    return <CurrentUserContext.Provider value={value}>
+        <SWRConfig key={uid} value={sessionCacheConfig}>{children}</SWRConfig>
+    </CurrentUserContext.Provider>;
+}
 
 export default CurrentUserContext;

@@ -88,6 +88,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 try {
                     const managedTournament = await resolveManagedTournament(currentUser.currentUser.uid, tournament_abbr);
@@ -228,7 +229,7 @@ export default function SchedulerPage(props: { params: Promise<{ tournament: str
         setScheduleInfo([...scheduleInfo, newSchedule]);
     };
 
-    if (isLoading) return <ManagementSkeleton page="scheduler"/>;
+    if (isLoading || currentUser?.isLoading) return <ManagementSkeleton page="scheduler"/>;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">

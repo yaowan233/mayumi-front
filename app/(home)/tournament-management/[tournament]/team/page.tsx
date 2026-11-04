@@ -73,6 +73,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 try {
                     const managedTournamentName = await resolveManagedTournamentName(currentUser.currentUser.uid, tournament_abbr);
@@ -136,7 +137,7 @@ export default function EditTeamPage(props: { params: Promise<{ tournament: stri
         setTournamentPlayers(prev => ({...prev, groups: newTeams}));
     };
 
-    if (isLoading) return <ManagementSkeleton page="team"/>;
+    if (isLoading || currentUser?.isLoading) return <ManagementSkeleton page="team"/>;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 flex flex-col gap-8 pb-32">

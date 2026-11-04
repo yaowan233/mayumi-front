@@ -103,6 +103,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
 
     useEffect(() => {
         const fetchData = async () => {
+            if (currentUser?.isLoading) return;
             if (currentUser?.currentUser?.uid) {
                 try {
                     // 1. 先获取所有管理权限信息 (包含简称和全称的对应关系)
@@ -240,7 +241,7 @@ export default function ManagementHomePage(props: { params: Promise<{ tournament
         },
     ];
 
-    if (isLoading) {
+    if (isLoading || currentUser?.isLoading) {
         return <DashboardSkeleton/>;
     }
 
