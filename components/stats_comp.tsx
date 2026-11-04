@@ -76,7 +76,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     isTeamTournament?: boolean,
 }) => {
     const searchParams = useSearchParams();
-    const [selectedSection, setSection] = useState<{stageName: string | undefined; section: string} | null>(null);
+    const [selectedSection, setSection] = useState<string | null>(null);
     const requestedStage = searchParams.get('stage');
     const {visibleRounds, currentRound} = useMemo(() =>
         getStatisticsRoundSelection(roundInfo, stats, scores, requestedStage),
@@ -84,8 +84,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
     const currentStageName = currentRound?.stage_name;
     const isTeamRound = isTeamTournament && !currentRound?.is_solo_qualifier;
     const isQualifier = Boolean(currentRound?.is_lobby || currentRound?.is_solo_qualifier);
-    const section = selectedSection && selectedSection.stageName === currentStageName
-        ? selectedSection.section : isQualifier ? "rankings" : "maps";
+    const section = selectedSection ?? (isQualifier ? "rankings" : "maps");
     const rankingsTitle = isQualifier ? (isTeamRound ? "资格赛队伍排名" : "资格赛排名") : "个人排名明细";
     const contextQuery = new URLSearchParams({tournament_name: currentRound?.tournament_name ?? "", stage_name: currentStageName ?? ""});
     if (preview) contextQuery.set("preview", "true");
@@ -130,7 +129,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                     selectedKey={currentStageName}
                     onSelectionChange={(key) => {
                         if (String(key) === currentStageName) return;
-                        setSection(null);
+                        setSection(section);
                         const query = new URLSearchParams(searchParams.toString());
                         query.set("stage", String(key));
                         window.history.replaceState(null, "", `?${query.toString()}`);
@@ -162,7 +161,7 @@ export const StatsComp = ({roundInfo, stats, stage, scores, players, teams = [],
                 <div
                     className="mx-auto flex w-full min-w-0 max-w-[1400px] flex-col gap-6 px-4"
                 >
-                    <Tabs variant="secondary" selectedKey={section} onSelectionChange={key => setSection({stageName: currentStageName, section: String(key)})} className="w-full min-w-0">
+                    <Tabs variant="secondary" selectedKey={section} onSelectionChange={key => setSection(String(key))} className="w-full min-w-0">
                         <Tabs.ListContainer className="mx-auto w-fit max-w-full"><Tabs.List aria-label="统计内容" className="!w-max !min-w-0 gap-2">
                             <Tabs.Tab id="rankings" className={STATS_TAB_CLASS}>{rankingsTitle}<Tabs.Indicator/></Tabs.Tab>
                             <Tabs.Tab id="maps" className={STATS_TAB_CLASS}>单图成绩<Tabs.Indicator/></Tabs.Tab>

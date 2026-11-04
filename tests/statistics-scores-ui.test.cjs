@@ -188,7 +188,7 @@ test('switching from qualifier rankings to an elimination round shows individual
     assert.equal(board.props.fullDetails, true);
 });
 
-test('entering or returning to a qualifier prioritizes its standalone standings over another rounds selected tab', async () => {
+test('round changes retain the selected statistics section, including when entering or leaving qualifiers', async () => {
     const h = await harness();
     const qualifier = {...round, stage_name: 'Qualifiers', is_lobby: true};
     const props = {roundInfo: [qualifier, round], stats: [], stage, scores: [...scores, ...scores.map(score => ({...score, stage_name: 'Qualifiers'}))],
@@ -198,22 +198,42 @@ test('entering or returning to a qualifier prioritizes its standalone standings 
     elements(tree, node => node.type === Tabs && node.props.selectedKey === 'maps')[0].props.onSelectionChange('rating');
     tree = h.render(h.StatsComp, props);
     assert.match(content(tree), /个人 Rating 排名/);
-    // External stage navigation also must not carry the previous round's view.
+    // External stage navigation retains the selected view as well.
     h.searchParams.set('stage', 'Qualifiers');
     tree = h.render(h.StatsComp, props);
     assert.equal(elements(tree, node => node.type === h.MapScoresGrid).length, 0);
-    let sections = elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rankings')[0];
+    let sections = elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rating')[0];
     assert.ok(sections);
     assert.equal(elements(sections, node => node.type === Tabs.Tab)[0].props.id, 'rankings');
-    assert.equal(elements(tree, node => node.type === h.LeaderboardPanel)[0].props.isTeamLeaderboard, true);
+    assert.notEqual(elements(tree, node => node.type === h.LeaderboardPanel)[0].props.isTeamLeaderboard, true);
     sections.props.onSelectionChange('maps');
     tree = h.render(h.StatsComp, props);
     elements(tree, node => node.type === Tabs && node.props.selectedKey === 'Qualifiers')[0].props.onSelectionChange('RO16');
     tree = h.render(h.StatsComp, props);
     elements(tree, node => node.type === Tabs && node.props.selectedKey === 'RO16')[0].props.onSelectionChange('Qualifiers');
     tree = h.render(h.StatsComp, props);
-    sections = elements(tree, node => node.type === Tabs && node.props.selectedKey === 'rankings')[0];
-    assert.ok(sections, 'returning to the qualifier must reset its selected view to standings');
+    sections = elements(tree, node => node.type === Tabs && node.props.selectedKey === 'maps')[0];
+    assert.ok(sections, 'returning to the qualifier must retain the selected maps view');
+});
+
+test('round tab callbacks preserve every selected statistics section across elimination rounds', async () => {
+    for (const section of ['rating', 'rankings', 'maps', 'stats']) {
+        const h = await harness();
+        const next = {...round, stage_name: 'QF'};
+        const props = {roundInfo: [round, next], stats: [], stage,
+            scores: [...scores, ...scores.map(score => ({...score, stage_name: 'QF'}))], players, teams, ratingContext};
+        h.searchParams.set('stage', 'RO16');
+        let tree = h.render(h.StatsComp, props);
+        elements(tree, node => node.type === Tabs && node.props.selectedKey === 'maps')[0].props.onSelectionChange(section);
+        tree = h.render(h.StatsComp, props);
+        for (const stageName of ['QF', 'RO16']) {
+            const rounds = elements(tree, node => node.type === Tabs && node.props.selectedKey === h.searchParams.get('stage'))[0];
+            rounds.props.onSelectionChange(stageName);
+            tree = h.render(h.StatsComp, props);
+            assert.ok(elements(tree, node => node.type === Tabs && node.props.selectedKey === section).length,
+                `${section} must remain selected after switching to ${stageName}`);
+        }
+    }
 });
 
 test('qualifier standings always show every map rank and score and support per-map sorting', async () => {
