@@ -33,6 +33,7 @@ const configPageCsp = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    deploymentId: process.env.DEPLOYMENT_VERSION || undefined,
     async headers() {
         return [
             {

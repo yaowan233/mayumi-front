@@ -7,6 +7,10 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -20,8 +24,12 @@ jobs:
         node-version: '24'
 
     - name: Create .env file
+      env:
+        ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
-        echo "${{ secrets.ENV_FILE }}" > .env
+        umask 077
+        printf '%s\n' "$ENV_FILE" > .env
+        printf '\nDEPLOYMENT_VERSION=%s\n' "$GITHUB_SHA" >> .env
 
     - name: Install and Build
       run: |
@@ -73,3 +81,44 @@ jobs:
           npm ci --omit=dev
           export BACKEND_INTERNAL_URL="http://127.0.0.1:8421"
           pm2 restart all --update-env
+
+    - name: Prepare CN runtime from the same build
+      if: vars.REGIONAL_CN_ENABLED == 'true'
+      run: |
+        umask 077
+        npm prune --omit=dev --no-audit --no-fund
+        tar --exclude=.next/cache -czf mayumi-runtime.tgz .next node_modules package.json package-lock.json next.config.js public .env deploy/regional
+
+    - name: Copy CN runtime
+      if: vars.REGIONAL_CN_ENABLED == 'true'
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.CN_HOST }}
+        username: ${{ secrets.CN_USERNAME }}
+        key: ${{ secrets.CN_KEY }}
+        source: "mayumi-runtime.tgz"
+        target: "/opt/mayumi/releases/${{ github.sha }}"
+
+    - name: Synchronize CN HTTPS certificate
+      if: vars.REGIONAL_CN_ENABLED == 'true'
+      env:
+        HK_HOST: ${{ secrets.HOST }}
+        HK_USER: ${{ secrets.USERNAME }}
+        HK_KEY: ${{ secrets.KEY }}
+        CN_HOST: ${{ secrets.CN_HOST }}
+        CN_USER: ${{ secrets.CN_USERNAME }}
+        CN_KEY: ${{ secrets.CN_KEY }}
+      run: bash deploy/regional/sync-tls.sh
+
+    - name: Activate CN frontend
+      if: vars.REGIONAL_CN_ENABLED == 'true'
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.CN_HOST }}
+        username: ${{ secrets.CN_USERNAME }}
+        key: ${{ secrets.CN_KEY }}
+        script: |
+          set -e
+          release=/opt/mayumi/releases/${{ github.sha }}
+          tar -xzf "$release/mayumi-runtime.tgz" -C "$release" deploy/regional/activate-cn.sh
+          bash "$release/deploy/regional/activate-cn.sh" '${{ github.sha }}'

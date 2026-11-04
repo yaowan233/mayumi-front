@@ -1,0 +1,25 @@
+name: Refresh regional HTTPS certificate
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  synchronize:
+    if: vars.REGIONAL_CN_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Synchronize renewed certificate from HK
+        env:
+          HK_HOST: ${{ secrets.HOST }}
+          HK_USER: ${{ secrets.USERNAME }}
+          HK_KEY: ${{ secrets.KEY }}
+          CN_HOST: ${{ secrets.CN_HOST }}
+          CN_USER: ${{ secrets.CN_USERNAME }}
+          CN_KEY: ${{ secrets.CN_KEY }}
+        run: bash deploy/regional/sync-tls.sh
