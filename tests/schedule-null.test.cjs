@@ -9,7 +9,7 @@ function render(tabs, data) {
     const stubs = {React, useSearchParams: () => new URLSearchParams(), usePathname: () => '/schedule',
         useSWR: url => ({data: url.includes('/api/schedule?') ? data : null, mutate: () => {}}),
         siteConfig: {backend_url: ''}, useState: value => [value, () => {}],
-        NextLink: 'a', TeamComp: 'team', GroupComp: 'group', TournamentDrawBoard: 'draw'};
+        NextLink: 'a', TeamComp: 'team', GroupComp: 'group', TournamentDrawBoard: 'draw', StageNavigation: 'stages'};
     return new Function(...Object.keys(stubs), `${compiled}; return ScheduleComp;`)(...Object.values(stubs))({tabs, tournament_name: 'test', tournamentPlayers: {players: []}});
 }
 function stages(tree) {

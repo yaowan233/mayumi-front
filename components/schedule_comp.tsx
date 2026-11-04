@@ -54,18 +54,27 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
         (url: string) => requestDraw<{state: TournamentDraw | null}>(url), {refreshInterval: 15000, shouldRetryOnError: false});
     const publishedDraw = draw?.state?.matches.length ? draw.state : null;
     const showBracket = Boolean(publishedDraw && searchParams.get("view") === "bracket");
-    const [selectedStage, setSelectedStage] = useState(searchParams.get('stage') || initialStages.at(-1)?.stage_name || initialStages[0]?.stage_name || "");
+    const selectedStage = searchParams.get('stage') || scheduleStages.at(-1)?.stage_name || "";
     const selectedScheduleStage = scheduleStages.find((stage) => stage.stage_name === selectedStage) || scheduleStages.at(-1) || scheduleStages[0];
 
-    const handleStageChange = (stageName: string) => {
-        setSelectedStage(stageName);
+    const getScheduleHref = (updates: Record<string, string>) => {
+        const query = new URLSearchParams(searchParams.toString());
+        query.set("stage", selectedScheduleStage?.stage_name ?? selectedStage);
+        for (const [key, value] of Object.entries(updates)) query.set(key, value);
+        return `${pathname}?${query.toString()}`;
+    };
+    const navigateSchedule = (event: {preventDefault(): void}, updates: Record<string, string>) => {
+        // Both views use the loaded SWR data; keep query changes out of server navigation.
+        event.preventDefault();
+        const href = getScheduleHref(updates);
+        if (href !== `${pathname}?${searchParams.toString()}`) window.history.pushState(null, "", href);
     };
 
     return (
         <div className="w-full flex flex-col items-center">
             {publishedDraw && <nav aria-label="赛程显示方式" className="mb-4 flex max-w-full gap-2 rounded-xl bg-default-100/60 p-1">
-                <NextLink href={`${pathname}?view=list&stage=${encodeURIComponent(selectedStage)}`} scroll={false} aria-current={!showBracket ? "page" : undefined} className={`rounded-lg px-4 py-2 text-sm font-semibold ${!showBracket ? "bg-surface text-primary shadow-sm" : "text-default-500 hover:text-primary"}`}>赛程列表</NextLink>
-                <NextLink href={`${pathname}?view=bracket`} scroll={false} aria-current={showBracket ? "page" : undefined} className={`rounded-lg px-4 py-2 text-sm font-semibold ${showBracket ? "bg-surface text-primary shadow-sm" : "text-default-500 hover:text-primary"}`}>对阵图</NextLink>
+                <NextLink href={getScheduleHref({view: "list"})} prefetch={false} onNavigate={event => navigateSchedule(event, {view: "list"})} scroll={false} aria-current={!showBracket ? "page" : undefined} className={`rounded-lg px-4 py-2 text-sm font-semibold ${!showBracket ? "bg-surface text-primary shadow-sm" : "text-default-500 hover:text-primary"}`}>赛程列表</NextLink>
+                <NextLink href={getScheduleHref({view: "bracket"})} prefetch={false} onNavigate={event => navigateSchedule(event, {view: "bracket"})} scroll={false} aria-current={showBracket ? "page" : undefined} className={`rounded-lg px-4 py-2 text-sm font-semibold ${showBracket ? "bg-surface text-primary shadow-sm" : "text-default-500 hover:text-primary"}`}>对阵图</NextLink>
             </nav>}
             {showBracket && publishedDraw ? <div className="w-full pb-8"><TournamentDrawBoard state={publishedDraw}/></div> : <>
             <div className="w-full border-b border-zinc-200 dark:border-white/[0.08]">
@@ -76,10 +85,11 @@ export const ScheduleComp = ({tabs, tournament_name, tournamentPlayers}: {
                             <NextLink
                                 key={stage.stage_name}
                                 aria-current={active ? "true" : undefined}
-                                href={`${pathname}?stage=${encodeURIComponent(stage.stage_name)}`}
+                                href={getScheduleHref({stage: stage.stage_name})}
+                                prefetch={false}
+                                onNavigate={event => navigateSchedule(event, {stage: stage.stage_name})}
                                 scroll={false}
                                 className={`relative flex h-12 shrink-0 cursor-pointer items-center rounded-md px-1 text-lg font-bold transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${active ? "text-primary" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"}`}
-                                onClick={() => handleStageChange(stage.stage_name)}
                             >
                                 {stage.stage_name}
                                 {active && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary"/>}
