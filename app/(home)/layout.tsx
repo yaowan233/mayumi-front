@@ -1,4 +1,5 @@
 import {Navbar} from "@/components/navbar";
+import {PageContent} from "@/components/page-content";
 import React from "react";
 
 export default function HomeLayout({
@@ -9,9 +10,9 @@ export default function HomeLayout({
     return (
         <>
             <Navbar/>
-            <main className="w-full mx-auto px-6 pt-22 grow">
+            <PageContent className="w-full mx-auto px-6 pt-22 grow">
                 {children}
-            </main>
+            </PageContent>
         </>
     )
 }

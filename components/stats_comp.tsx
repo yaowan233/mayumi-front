@@ -353,7 +353,7 @@ const LeaderboardPanel = ({leaderboard, players = [], isTeamLeaderboard = false,
             <span className="text-sm text-default-500">{leaderboard.length} {isTeamLeaderboard ? "支队伍" : "名选手"}</span>
         </div>
         <div role="region" aria-label={label ?? (isTeamLeaderboard ? "资格赛队伍排名" : "个人 Rating 排名")} tabIndex={0} className="max-h-[60vh] min-h-[200px] min-w-0 max-w-full overflow-auto rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-white/5 dark:bg-zinc-900">
-            <table className="w-max min-w-full border-separate border-spacing-0 text-sm tabular-nums">
+            <table className="ranking-table w-max min-w-full border-separate border-spacing-0 text-sm tabular-nums">
                 <thead className="sticky top-0 z-20 bg-zinc-100 dark:bg-zinc-800">
                 <tr>
                     {columns.map((column) => {
@@ -535,7 +535,7 @@ const SingleMapCard = ({ map, roundName, scores, players, teams, showTeams }: {
 
     return (
         <Card
-            className="@container flex h-[500px] min-w-0 flex-col overflow-hidden border border-zinc-200 bg-white !p-0 shadow-lg dark:border-white/5 dark:bg-zinc-900"
+            className="map-score-card @container flex h-[500px] min-w-0 flex-col overflow-hidden border border-zinc-200 bg-white !p-0 shadow-lg dark:border-white/5 dark:bg-zinc-900"
         >
             {/* 1. 地图头部信息 */}
             <Card.Header className="relative h-[140px] shrink-0 overflow-hidden z-0 !p-0">
@@ -630,18 +630,6 @@ const SingleMapCard = ({ map, roundName, scores, players, teams, showTeams }: {
                     </div>
                 )}
             </Card.Content>
-            <style jsx>{`
-                :global(.map-score-scroll) {
-                    scrollbar-width: none;
-                    -ms-overflow-style: none;
-                }
-
-                :global(.map-score-scroll::-webkit-scrollbar) {
-                    width: 0;
-                    height: 0;
-                    display: none;
-                }
-            `}</style>
         </Card>
     )
 }

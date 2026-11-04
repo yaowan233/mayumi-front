@@ -1,4 +1,5 @@
 import {TournamentNavbar} from "@/components/navbar";
+import {PageContent} from "@/components/page-content";
 import {getTournamentInfo} from "@/lib/tournament_info";
 import {normalizeTournamentThemeColor} from "@/components/tournament_theme";
 
@@ -31,9 +32,9 @@ export default async function HomeLayout({
                 />
             )}
             <TournamentNavbar tournament_name={tournament}/>
-            <main className="relative z-10 w-full mx-auto px-6 pt-22 grow">
+            <PageContent className="relative z-10 w-full mx-auto px-6 pt-22 grow">
                 {children}
-            </main>
+            </PageContent>
         </div>
     )
 }

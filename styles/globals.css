@@ -35,6 +35,92 @@ body {
 
 html {
     font-size: 15px;
+    scrollbar-gutter: stable;
+    --motion-fast: 140ms;
+    --motion-enter: 180ms;
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Defaults for native controls; component-specific transitions take precedence. */
+@layer base {
+    :where(a, button, summary, input, textarea, select, [role="tab"]) {
+        transition-property: color, background-color, border-color, box-shadow;
+        transition-duration: var(--motion-fast);
+        transition-timing-function: var(--motion-ease);
+    }
+}
+
+.tabs__panel:not([hidden]):not([data-exiting="true"]),
+details[open] > :not(summary) {
+    animation: content-enter var(--motion-enter) ease-out;
+}
+
+.menu-reveal {
+    transform-origin: top;
+    animation: menu-enter var(--motion-enter) var(--motion-ease);
+}
+
+.navigation-feedback {
+    position: absolute;
+    inset: auto 0.75rem 0.2rem;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--accent);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.navigation-feedback[data-pending="true"] {
+    animation: navigation-pulse 900ms ease-in-out 120ms infinite;
+}
+
+.ranking-table tbody td {
+    transition: box-shadow var(--motion-fast) ease-out;
+}
+
+.ranking-table tbody tr:focus-within > td {
+    box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.map-score-card {
+    transition: border-color var(--motion-fast) ease-out, box-shadow var(--motion-fast) ease-out;
+}
+
+.map-score-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    scrollbar-gutter: stable;
+}
+
+.map-score-scroll:focus-within {
+    scrollbar-color: var(--muted) transparent;
+}
+
+@media (hover: hover) {
+    .ranking-table tbody tr:hover > td {
+        box-shadow: inset 0 0 0 999px color-mix(in srgb, var(--accent) 6%, transparent);
+    }
+    .map-score-card:hover {
+        border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+    }
+    .map-score-scroll:hover {
+        scrollbar-color: var(--muted) transparent;
+    }
+}
+
+@keyframes content-enter {
+    from { opacity: 0.75; }
+    to { opacity: 1; }
+}
+
+@keyframes menu-enter {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes navigation-pulse {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
 }
 
 /* Reserve the content layout immediately; avoid flashing on fast navigation. */
@@ -48,7 +134,17 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .page-skeleton { animation-duration: 0ms; }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-delay: 0ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .navigation-feedback[data-pending="true"] {
+        animation: none !important;
+        opacity: 1;
+    }
 }
 
 .recommendation-explorer :where(button, [role="button"], a[href], summary, select, input[type="checkbox"]):not(:disabled):not([aria-disabled="true"]):not([data-disabled]) {

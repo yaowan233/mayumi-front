@@ -9,20 +9,30 @@ export function StageNavigation({activeStage, children, className}: {
     className: string;
 }) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const revealedRef = useRef(false);
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
-        const reveal = () => {
+        const reveal = (smooth = false) => {
             const active = container.querySelector<HTMLElement>('[aria-current="true"]');
             if (!active) return;
             const bounds = container.getBoundingClientRect();
             const item = active.getBoundingClientRect();
             if (item.left < bounds.left || item.right > bounds.right) {
-                container.scrollLeft += item.left - bounds.left - (bounds.width - item.width) / 2;
+                container.scrollTo({
+                    left: container.scrollLeft + item.left - bounds.left - (bounds.width - item.width) / 2,
+                    behavior: smooth && !window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "instant",
+                });
             }
         };
-        reveal();
-        const observer = new ResizeObserver(reveal);
+        reveal(revealedRef.current);
+        revealedRef.current = true;
+        let width = container.clientWidth;
+        const observer = new ResizeObserver(() => {
+            if (width === container.clientWidth) return;
+            width = container.clientWidth;
+            reveal();
+        });
         observer.observe(container);
         return () => observer.disconnect();
     }, [activeStage]);

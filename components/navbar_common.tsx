@@ -61,7 +61,7 @@ export const UserStatus = () => {
             </button>
 
             {open && (
-                <div className="absolute right-0 top-12 z-[70] w-56 overflow-hidden rounded-xl border border-zinc-200 bg-white/95 py-2 text-sm text-zinc-900 shadow-2xl backdrop-blur-md dark:border-white/[0.08] dark:bg-zinc-950/95 dark:text-zinc-100">
+                <div className="menu-reveal absolute right-0 top-12 z-[70] w-56 overflow-hidden rounded-xl border border-zinc-200 bg-white/95 py-2 text-sm text-zinc-900 shadow-2xl backdrop-blur-md dark:border-white/[0.08] dark:bg-zinc-950/95 dark:text-zinc-100">
                     <div className="border-b border-zinc-200 px-4 py-3 dark:border-white/[0.08]">
                         <p className="font-semibold text-zinc-500 dark:text-zinc-400">登录用户</p>
                         <p className="truncate font-bold text-primary">{user.name}</p>

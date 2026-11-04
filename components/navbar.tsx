@@ -8,6 +8,7 @@ import {useState} from "react";
 import {GithubIcon, Logo} from "@/components/icons";
 import {ThemeSwitch} from "@/components/theme-switch";
 import {UserStatus} from "@/components/navbar_common";
+import {NavigationFeedback} from "@/components/navigation-feedback";
 import {siteConfig} from "@/config/site";
 
 type NavItem = {
@@ -30,15 +31,17 @@ const NavBrand = ({onClick}: { onClick?: React.MouseEventHandler<HTMLAnchorEleme
 const DesktopNavLink = ({item, active, onClick}: { item: NavItem; active: boolean; onClick: React.MouseEventHandler<HTMLAnchorElement> }) => (
     <NextLink
         className={clsx(
-            "rounded-md px-3 py-2 text-sm font-bold transition-colors",
+            "relative rounded-md px-3 py-2 text-sm font-bold transition-[color,background-color,transform] duration-150 motion-safe:active:scale-[0.98]",
             active
                 ? "bg-primary/15 text-primary"
                 : "text-zinc-800 hover:bg-zinc-900/[0.06] hover:text-zinc-950 dark:text-zinc-100 dark:hover:bg-white/[0.06] dark:hover:text-white"
         )}
         href={item.href}
+        aria-current={active ? "page" : undefined}
         onClick={onClick}
     >
         {item.label}
+        <NavigationFeedback/>
     </NextLink>
 );
 
@@ -75,7 +78,7 @@ const MobileMenu = ({
     if (!open) return null;
 
     return (
-        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-zinc-200/80 bg-white/95 px-4 py-4 shadow-2xl dark:border-white/[0.08] dark:bg-black/95 lg:hidden">
+        <div className="menu-reveal max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-zinc-200/80 bg-white/95 px-4 py-4 shadow-2xl dark:border-white/[0.08] dark:bg-black/95 lg:hidden">
             <div className="mx-auto flex max-w-7xl flex-col gap-1">
                 {children}
                 {items.map((item) => {
