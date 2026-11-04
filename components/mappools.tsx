@@ -3,7 +3,7 @@
 import JSZip from "jszip";
 import {downloadBeatmapset, type MirrorPreference} from "@/lib/mappool-download";
 import {saveAs} from "file-saver";
-import {useParams, useRouter, useSearchParams} from "next/navigation";
+import {useParams, useSearchParams} from "next/navigation";
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Button, TextArea} from "@heroui/react";
 import {StageNavigation} from "@/components/stage-navigation";
@@ -198,11 +198,9 @@ const CopyMappoolButton = ({stage}: {stage: Stage}) => {
 
 export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
     const searchParams = useSearchParams();
-    const router = useRouter();
     const params = useParams();
     const tournamentAbbr = params?.tournament ? decodeURIComponent(params.tournament as string) : "Tournament";
-    const initialStage = searchParams.get("stage") || tabs.at(-1)?.stage_name || tabs[0]?.stage_name;
-    const [selectedStage, setSelectedStage] = useState(initialStage);
+    const selectedStage = searchParams.get("stage") || tabs.at(-1)?.stage_name || tabs[0]?.stage_name;
     const [downloadState, setDownloadState] = useState({
         isOpen: false,
         progress: 0,
@@ -220,8 +218,10 @@ export const MappoolsComponents = ({tabs}: { tabs: Stage[] }) => {
     const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const handleStageChange = (stageName: string) => {
-        setSelectedStage(stageName);
-        router.replace(`?stage=${encodeURIComponent(stageName)}`);
+        const query = new URLSearchParams(searchParams.toString());
+        if (query.get("stage") === stageName) return;
+        query.set("stage", stageName);
+        window.history.pushState(null, "", `?${query.toString()}`);
     };
 
     const handleDownloadAll = async (stage: Stage, source: DownloadSource) => {

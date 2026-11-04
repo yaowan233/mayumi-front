@@ -1,5 +1,6 @@
 'use client'
-import {Button, Card, Chip, Tooltip} from "@heroui/react";
+import {buttonVariants, Card, Chip, Tooltip} from "@heroui/react";
+import NextLink from "next/link";
 import {ManagementListSkeleton} from "@/components/page_skeleton";
 import {useContext, useEffect, useState} from "react";
 import CurrentUserContext from "@/app/user_context";
@@ -121,14 +122,13 @@ export default function TournamentManagementPage() {
                 </div>
 
                 {isLoggedIn && (
-                    <Button
-                        variant="primary"
-                        onPress={() => window.location.assign("/create-tournament")}
-                        className="font-bold"
+                    <NextLink
+                        href="/create-tournament"
+                        className={`${buttonVariants({variant: "primary"})} font-bold`}
                     >
                         <PlusIcon/>
                         创建比赛
-                    </Button>
+                    </NextLink>
                 )}
             </div>
 
@@ -151,81 +151,75 @@ export default function TournamentManagementPage() {
                         const statusConfig = STATUS_CONFIG[info.status] || STATUS_CONFIG.draft;
 
                         return (
-                            <Card
+                            <NextLink
                                 key={info.tournament_name}
-                                role="link"
-                                tabIndex={0}
-                                onClick={() => window.location.assign(`/tournament-management/${info.abbreviation}`)}
-                                onKeyDown={(event) => {
-                                    if (event.key === "Enter" || event.key === " ") {
-                                        event.preventDefault();
-                                        window.location.assign(`/tournament-management/${info.abbreviation}`);
-                                    }
-                                }}
-                                className="group h-full min-h-[180px] cursor-pointer border border-default-200 bg-surface transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-default-100 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 dark:border-white/5 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                                href={`/tournament-management/${encodeURIComponent(info.abbreviation)}`}
+                                className="group block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                             >
-                                <Card.Header className="flex flex-row justify-between items-start px-6 pt-6 pb-0 gap-2">
-                                    {/* 比赛名称 */}
-                                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 flex-1"
-                                        title={info.tournament_name}>
-                                        {info.tournament_name}
-                                    </h3>
+                                <Card className="h-full min-h-[180px] border border-default-200 bg-surface transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-default-100 hover:shadow-lg dark:border-white/5 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+                                    <Card.Header className="flex flex-row justify-between items-start px-6 pt-6 pb-0 gap-2">
+                                        {/* 比赛名称 */}
+                                        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 flex-1"
+                                            title={info.tournament_name}>
+                                            {info.tournament_name}
+                                        </h3>
 
-                                    {/* --- 变化点：状态标签 --- */}
-                                    <Chip
-                                        color={statusConfig.color}
-                                        variant="soft"
-                                        size="sm"
-                                        className="capitalize border-none min-w-fit"
-                                    >
-                                        {statusConfig.label}
-                                    </Chip>
-                                </Card.Header>
+                                        {/* --- 变化点：状态标签 --- */}
+                                        <Chip
+                                            color={statusConfig.color}
+                                            variant="soft"
+                                            size="sm"
+                                            className="capitalize border-none min-w-fit"
+                                        >
+                                            {statusConfig.label}
+                                        </Chip>
+                                    </Card.Header>
 
-                                <Card.Content className="px-6 py-3 flex flex-col justify-between">
-                                    {/* 角色标签 */}
-                                    <div className="flex flex-wrap gap-2 mb-2">
-                                        {info.roles.map((role) => {
-                                            return (
-                                                <Chip
-                                                    key={role}
-                                                    size="sm"
-                                                    variant="soft"
-                                                    className={`font-semibold ${getRoleChipClass(role)}`}
-                                                >
-                                                    {role}
-                                                </Chip>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* --- 变化点：如果是“已驳回”，显示醒目的红色提示 --- */}
-                                    {info.status === 'rejected' && info.reject_reason && (
-                                        <Tooltip>
-                                            <Tooltip.Trigger>
-                                                <div className="mt-2 p-2 rounded-medium bg-danger-50 dark:bg-danger/10 border border-danger/20 flex items-start gap-2 text-danger text-xs font-medium cursor-help">
-                                                    <div className="mt-0.5"><AlertIcon /></div>
-                                                    <span className="line-clamp-2">驳回原因: {info.reject_reason}</span>
-                                                </div>
-                                            </Tooltip.Trigger>
-                                            <Tooltip.Content>{info.reject_reason}</Tooltip.Content>
-                                        </Tooltip>
-                                    )}
-
-                                    {/* 如果是待审核，可以给一个温馨提示 */}
-                                    {info.status === 'pending' && (
-                                        <div className="mt-2 text-xs text-warning-600 dark:text-warning-400">
-                                            正在等待管理员审核，期间您可以修改信息。
+                                    <Card.Content className="px-6 py-3 flex flex-col justify-between">
+                                        {/* 角色标签 */}
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {info.roles.map((role) => {
+                                                return (
+                                                    <Chip
+                                                        key={role}
+                                                        size="sm"
+                                                        variant="soft"
+                                                        className={`font-semibold ${getRoleChipClass(role)}`}
+                                                    >
+                                                        {role}
+                                                    </Chip>
+                                                );
+                                            })}
                                         </div>
-                                    )}
-                                </Card.Content>
 
-                                <Card.Footer className="px-6 pb-6 pt-0">
-                                    <div className="text-tiny text-default-500 group-hover:text-primary/80 group-hover:translate-x-1 transition-all duration-300 flex items-center gap-1 font-medium">
-                                        {info.status === 'rejected' ? '去修改' : '进入管理后台'} <span>→</span>
-                                    </div>
-                                </Card.Footer>
-                            </Card>
+                                        {/* --- 变化点：如果是“已驳回”，显示醒目的红色提示 --- */}
+                                        {info.status === 'rejected' && info.reject_reason && (
+                                            <Tooltip>
+                                                <Tooltip.Trigger>
+                                                    <div className="mt-2 p-2 rounded-medium bg-danger-50 dark:bg-danger/10 border border-danger/20 flex items-start gap-2 text-danger text-xs font-medium cursor-help">
+                                                        <div className="mt-0.5"><AlertIcon /></div>
+                                                        <span className="line-clamp-2">驳回原因: {info.reject_reason}</span>
+                                                    </div>
+                                                </Tooltip.Trigger>
+                                                <Tooltip.Content>{info.reject_reason}</Tooltip.Content>
+                                            </Tooltip>
+                                        )}
+
+                                        {/* 如果是待审核，可以给一个温馨提示 */}
+                                        {info.status === 'pending' && (
+                                            <div className="mt-2 text-xs text-warning-600 dark:text-warning-400">
+                                                正在等待管理员审核，期间您可以修改信息。
+                                            </div>
+                                        )}
+                                    </Card.Content>
+
+                                    <Card.Footer className="px-6 pb-6 pt-0">
+                                        <div className="text-tiny text-default-500 group-hover:text-primary/80 group-hover:translate-x-1 transition-all duration-300 flex items-center gap-1 font-medium">
+                                            {info.status === 'rejected' ? '去修改' : '进入管理后台'} <span>→</span>
+                                        </div>
+                                    </Card.Footer>
+                                </Card>
+                            </NextLink>
                         );
                     })}
                 </div>
@@ -235,13 +229,12 @@ export default function TournamentManagementPage() {
                     <EmptyIcon/>
                     <h3 className="text-xl font-bold mt-4 text-default-600">暂无管理的比赛</h3>
                     <p className="text-default-400 text-sm mb-6">您目前没有参与管理的赛事，或者还没有创建比赛。</p>
-                    <Button
-                        variant="secondary"
-                        onPress={() => window.location.assign("/create-tournament")}
-                        className="font-bold"
+                    <NextLink
+                        href="/create-tournament"
+                        className={`${buttonVariants({variant: "secondary"})} font-bold`}
                     >
                         立即创建新比赛
-                    </Button>
+                    </NextLink>
                 </div>
             )}
         </div>
