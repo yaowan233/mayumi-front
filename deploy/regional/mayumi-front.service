@@ -9,7 +9,6 @@ User=mayumi
 Group=mayumi
 WorkingDirectory=/opt/mayumi/web
 Environment=NODE_ENV=production
-Environment=BACKEND_INTERNAL_URL=http://127.0.0.1:18421
 Environment=PATH=/opt/mayumi/node/bin:/usr/bin:/bin
 Environment=NODE_OPTIONS=--max-old-space-size=160
 Environment=MALLOC_ARENA_MAX=2

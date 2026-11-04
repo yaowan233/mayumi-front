@@ -53,8 +53,16 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
-        source: "package.json,package-lock.json,.next,next.config.js,public,.env"
+        source: "package.json,package-lock.json,.next,next.config.js,public,.env,deploy/regional/nginx-hk-frontend-upstream.conf,deploy/regional/nginx-hk-frontend-routes.conf,deploy/regional/install-hk-routes.sh"
         target: "/home/ubuntu/meow"
+
+    - name: Configure HK service routes
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.KEY }}
+        script: sudo bash /home/ubuntu/meow/deploy/regional/install-hk-routes.sh
 
     - name: Restart PM2
       uses: appleboy/ssh-action@master
