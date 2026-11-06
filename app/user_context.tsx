@@ -1,6 +1,7 @@
 "use client";
 import React, {createContext, useCallback, useMemo} from "react";
 import useSWR, {SWRConfig} from "swr";
+import {usePathname} from "next/navigation";
 import type {Me} from "@/app/actions";
 import {siteConfig} from "@/config/site";
 import {fetchCurrentUser} from "@/lib/client-api";
@@ -16,6 +17,14 @@ interface CurrentUserContextType {
 }
 
 export function UserProvider({children}: {children: React.ReactNode}) {
+    const pathname = usePathname();
+    // Ticket credentials are cleared from the URL on first read. Account
+    // resolution must never remount this independent, one-time form.
+    if (pathname === "/config" || pathname?.startsWith("/config/")) return children;
+    return <AccountUserProvider>{children}</AccountUserProvider>;
+}
+
+function AccountUserProvider({children}: {children: React.ReactNode}) {
     const {data, isLoading, error, mutate} = useSWR<Me | null, Error>(
         `${siteConfig.backend_url.replace(/\/$/, "")}/api/me`, fetchCurrentUser,
         {revalidateOnFocus: false, shouldRetryOnError: false},

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import test from "node:test";
+import {inflateSync} from "node:zlib";
 
 import {
     GroupModelApiConnectionError,
@@ -85,6 +86,46 @@ test("the browser test checks declared OpenAI image support", async () => {
 
     const messages = body?.messages as Array<{content: Array<{type: string}>}>;
     assert.ok(messages[0].content.some((part) => part.type === "image_url"));
+});
+
+test("multimodal probes send a decodable 256px PNG for all supported provider formats", async () => {
+    for (const apiFormat of ["openai", "anthropic", "vertex"] as const) {
+        let image = "";
+        const fetchImpl: typeof fetch = async (_input, init) => {
+            const body = JSON.parse(String(init?.body));
+            if (apiFormat === "openai") image = body.messages[0].content.find((part: {type: string}) => part.type === "image_url").image_url.url.split(",")[1];
+            if (apiFormat === "anthropic") image = body.messages[0].content.find((part: {type: string}) => part.type === "image").source.data;
+            if (apiFormat === "vertex") image = body.contents[0].parts.find((part: {inlineData?: unknown}) => part.inlineData).inlineData.data;
+            return response(apiFormat === "openai" ? {choices: [{message: {content: "OK"}}]}
+                : apiFormat === "anthropic" ? {content: [{type: "text", text: "OK"}]}
+                    : {candidates: [{content: {parts: [{text: "OK"}]}}]});
+        };
+        await testGroupModelApiConnection({apiFormat, baseUrl: "https://provider.example/v1", apiKey: "synthetic-key", model: "vision-model", multimodal: true}, {fetchImpl});
+        const png = Buffer.from(image, "base64");
+        assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+        assert.equal(png.readUInt32BE(16), 256, `${apiFormat} probe width must satisfy provider minimum dimensions`);
+        assert.equal(png.readUInt32BE(20), 256, `${apiFormat} probe height must satisfy provider minimum dimensions`);
+        assert.equal(png[24], 8);
+        assert.equal(png[25], 2, "Use RGB without transparency for provider compatibility");
+        const compressed = [];
+        for (let offset = 8; offset < png.length;) {
+            const length = png.readUInt32BE(offset);
+            if (png.subarray(offset + 4, offset + 8).toString() === "IDAT") compressed.push(png.subarray(offset + 8, offset + 8 + length));
+            offset += 12 + length;
+        }
+        assert.equal(inflateSync(Buffer.concat(compressed)).length, (256 * 3 + 1) * 256);
+    }
+});
+
+test("image validation errors do not wrongly blame the Base URL or API key", async () => {
+    await assert.rejects(testGroupModelApiConnection({apiFormat: "openai", baseUrl: "https://provider.example/v1", apiKey: "synthetic-key", model: "vision-model", multimodal: true}, {
+        fetchImpl: async () => response({error: {message: "The image length and width do not meet the model restrictions."}}, 400),
+    }), (error: unknown) => {
+        assert.ok(error instanceof GroupModelApiConnectionError);
+        assert.match(error.message, /模型服务拒绝了测试请求/u);
+        assert.doesNotMatch(error.message, /Base URL.*不正确/u);
+        return true;
+    });
 });
 
 test("Anthropic credentials use the Messages API and browser opt-in header", async () => {
