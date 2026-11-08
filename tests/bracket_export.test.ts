@@ -202,6 +202,16 @@ test("blank and null draft seats are skipped without leaving gaps in exported ma
     }
 });
 
+test("match IDs may repeat in different rounds while exported IDs stay unique", () => {
+    const input = fixture();
+    input.rounds.push({stage_name: "Grand Final", start_time: "2026-09-11", is_lobby: false});
+    input.schedules.push({...input.schedules[0], stage_name: "Grand Final"});
+
+    const {bracket} = generateBracket(input);
+    assert.deepEqual(bracket.Matches.map((match) => match.ID), [1, 2]);
+    assert.deepEqual(bracket.Rounds.map((round) => round.Matches), [[1], [2]]);
+});
+
 test("an entirely unresolved round still exports its entrants and mappool", () => {
     const input = fixture();
     Object.assign(input.schedules[0], {team2: "", match_time: null});

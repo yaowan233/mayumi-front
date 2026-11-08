@@ -268,7 +268,7 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
         Completed: boolean; Losers: boolean; PicksBans: never[]; Current: boolean; Date: string;
         ConditionalMatches: never[]; Position: {X: number; Y: number};
     }[] = [];
-    const matchIds = new Set<string>();
+    const matchIds = new Map<number, Set<string>>();
     let skippedLobbies = 0;
     let skippedUnresolved = 0;
     for (const schedule of schedules) {
@@ -285,8 +285,12 @@ export function generateBracket(input: BracketExportInput, options: BracketExpor
             skippedUnresolved++;
             continue;
         }
-        if (!schedule.match_id || matchIds.has(schedule.match_id)) throw new Error("赛程存在空白或重复的比赛 ID");
-        matchIds.add(schedule.match_id);
+        const roundMatchIds = matchIds.get(roundIndex) ?? new Set<string>();
+        if (!schedule.match_id?.trim() || roundMatchIds.has(schedule.match_id)) {
+            throw new Error(`“${round.stage_name}”的赛程存在空白或重复的比赛 ID`);
+        }
+        roundMatchIds.add(schedule.match_id);
+        matchIds.set(roundIndex, roundMatchIds);
         const lookup = meta.is_group && !round.is_solo_qualifier ? teamKeys : soloKeys;
         const team1 = lookup.get(schedule.team1);
         const team2 = lookup.get(schedule.team2);
